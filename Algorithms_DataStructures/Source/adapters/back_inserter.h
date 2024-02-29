@@ -54,12 +54,12 @@ namespace collections {
 			return *this;
 		}
 
-		//back_insert_iterator& operator=(
-		//	typename list_t::value_type&& value
-		//) {
-		//	_list.insertBack(std::move(value));
-		//	return *this;
-		//}
+		back_insert_iterator& operator=(
+			typename list_t::value_type&& value
+		) {
+			_list.insertBack(std::move(value));
+			return *this;
+		}
 
 		back_insert_iterator& operator*() {
 			return *this;
