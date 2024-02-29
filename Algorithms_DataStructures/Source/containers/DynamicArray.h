@@ -19,6 +19,7 @@
 
 #include <assert.h>
 
+#include "../adapters/back_inserter.h"
 #include "../algorithms/arrays.h"
 #include "../algorithms/collection_algorithms.h"
 #include "../concepts/list.h"
@@ -108,8 +109,8 @@ namespace collections {
 		/// The DynamicArray to be copied.
 		/// </param> ----------------------------------------------------------
 		DynamicArray(const DynamicArray& copy) : DynamicArray(
-			copy.begin(),
-			copy.size(),
+			collections::from_range,
+			copy,
 			alloc_traits::select_on_container_copy_construction(copy._allocator)
 		) {
 
@@ -204,7 +205,7 @@ namespace collections {
 		DynamicArray(
 			std::initializer_list<value_type> init,
 			const allocator_type& alloc = allocator_type{}
-		) : DynamicArray(init.begin(), init.size(), alloc) {
+		) : DynamicArray(collections::from_range, init, alloc) {
 
 		}
 
@@ -245,7 +246,7 @@ namespace collections {
 		) : DynamicArray(alloc) {
 			if constexpr (std::forward_iterator<iterator>)
 				reserve(std::distance(begin, end));
-			insert(end(), begin, end);
+			collections::copy(begin, end, collections::back_inserter(*this));
 		}
 
 		// --------------------------------------------------------------------
@@ -275,7 +276,11 @@ namespace collections {
 		) : DynamicArray(alloc) {
 			if constexpr (std::ranges::forward_range<range>)
 				reserve(std::ranges::size(rg));
-			insert(end(), std::ranges::begin(rg), std::ranges::end(rg));
+			collections::copy(
+				std::ranges::begin(rg), 
+				std::ranges::end(rg), 
+				collections::back_inserter(*this)
+			);
 		}
 
 		// --------------------------------------------------------------------
@@ -318,7 +323,7 @@ namespace collections {
 				auto mid = std::next(other.begin(), this->size());
 				auto end = other.end();
 				collections::copy(start, mid, begin());
-				insert(end(), mid, end);
+				insert(this->end(), mid, end);
 			}
 			else {
 				collections::copy(other.begin(), other.end(), begin());
@@ -359,13 +364,16 @@ namespace collections {
 				swapMembers(*this, other);
 			}
 			else if (size() < other.size()) {
-				size_type size_diff = other.size() - size();
-				collections::move(other._array, &other._array[size()], _array);
-				moveAppendFrom(&other._array[size()], size_diff);
+				auto start = other.begin();
+				auto mid = std::next(other.begin(), this->size());
+				auto end = other.end();
+				collections::move(start, mid, begin());
+				collections::move(mid, end, std::back_inserter(*this));
 			}
 			else {
 				collections::move(other, _array);
-				removeAll(&_array[other.size()], end());
+				auto newEnd = std::next(begin(), other.size());
+				remove(newEnd, end());
 			}
 			return *this;
 		}
@@ -493,6 +501,18 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
+		/// Returns the number of elements contained by the array.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns the number of valid, constructed elements in the array.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] size_type size() const noexcept {
+			return _end - _array;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
 		/// Returns whether the array is empty and contains no elements.
 		/// </summary>
 		/// 
@@ -511,18 +531,6 @@ namespace collections {
 		void clear() noexcept {
 			destroyElements(_array, _end);
 			_end = _array;
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns the number of elements contained by the array.
-		/// </summary>
-		/// 
-		/// <returns>
-		/// Returns the number of valid, constructed elements in the array.
-		/// </returns> --------------------------------------------------------
-		[[nodiscard]] size_type size() const noexcept {
-			return _end - _array;
 		}
 
 		// --------------------------------------------------------------------
@@ -569,7 +577,8 @@ namespace collections {
 		/// </value> ----------------------------------------------------------
 		void resize(size_type size, const_reference value = value_type{}) {
 			reserve(size);
-			constructElements(_end, _array + size, value);
+			for (size_type i = this->size(); i < size; ++i)
+				constructElement(_end, _array + size, value);
 			_end = _array + size;
 		}
 
@@ -704,7 +713,36 @@ namespace collections {
 		/// <param name="element">
 		/// The element to be inserted.
 		/// </param> ----------------------------------------------------------
-		void insert(iterator position, const_reference element) {
+		void insert(const_iterator position, const_reference element) {
+			size_type offset = position - _array;
+			ensureCapacity();
+			iterator pos = _array + offset;
+
+			if (pos == _end)
+				constructElement(end(), element);
+			else {
+				constructElement(end());
+				collections::shiftArray(pos, end(), 1);
+				*pos = element;
+			}
+
+			++_end;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// In-place inserts the given element into the array before the given 
+		/// iterator position, and maintains stable order of the existing 
+		/// elements. 
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The iterator position to insert the element before.
+		/// </param>
+		/// <param name="element">
+		/// The element to be inserted in place.
+		/// </param> ----------------------------------------------------------
+		void insert(const_iterator position, value_type&& element) {
 			size_type offset = position - _array;
 			ensureCapacity();
 			position = _array + offset;
@@ -718,6 +756,31 @@ namespace collections {
 			}
 
 			++_end;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts the given range into the array before the given 
+		/// iterator position, and maintains stable order of the existing 
+		/// elements. 
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The iterator position to insert the element before.
+		/// </param>
+		/// <param name="begin">
+		/// The beginning iterator of the range to insert.
+		/// </param>
+		/// <param name="end">
+		/// The end iterator of the range to insert.
+		/// </param> ----------------------------------------------------------
+		template <
+			std::input_iterator in_iterator, 
+			std::sentinel_for<iterator> sentinel
+		>
+		void insert(const_iterator pos, in_iterator begin, sentinel end) {
+			while (begin != end)
+				insert(pos, begin++);
 		}
 
 		// --------------------------------------------------------------------
@@ -811,9 +874,9 @@ namespace collections {
 		/// <param name="position">
 		/// The iterator position of the element to be removed.
 		/// </param> ----------------------------------------------------------
-		void remove(iterator position) {
+		void remove(const_iterator position) {
 			if (position != (_end - 1))
-				collections::shiftArray(position + 1, _end, -1);
+				collections::shiftArray(std::next(position), _end, -1);
 			destroyElement((_end--) - 1);
 		}
 
@@ -872,7 +935,7 @@ namespace collections {
 		/// <param name="range">
 		/// An index range with a start and end member.
 		/// </param> ----------------------------------------------------------
-		void removeAll(const IndexRange& range) {
+		void remove(const IndexRange& range) {
 			validateIndexExists(range.begin);
 			validateIndexInRange(range.end);
 			
@@ -886,7 +949,7 @@ namespace collections {
 		/// <summary>
 		/// Removes all elements in the given iterator range [begin, end).
 		/// </summary> --------------------------------------------------------
-		void removeAll(iterator begin, iterator end) {
+		void remove(const_iterator begin, const_iterator end) {
 			int64_t range_size = end - begin;
 			collections::shiftArray(end, _end, -range_size);
 			destroyElements(_end - range_size, _end);
@@ -1058,6 +1121,11 @@ namespace collections {
 			alloc_traits::destroy(_allocator, ptr);
 		}
 
+		void destroyElements(pointer begin, pointer end) {
+			for ( ; begin != end; ++begin)
+				destroyElement(begin);
+		}
+
 		void releaseResources() {
 			if (_array != nullptr) {
 				clear();
@@ -1127,11 +1195,7 @@ namespace collections {
 		//		constructElement(begin, std::forward<Args>(args)...);
 		//}
 
-		//void destroyElements(pointer begin, pointer end) {
-		//	for ( ; begin != end; ++begin)
-		//		destroyElement(begin);
-		//}
-		// 
+		
 		//template <std::input_iterator iterator>
 		//void copyAppendFrom(iterator it, size_type size) {
 		//	if (_capacity < this->size() + size)

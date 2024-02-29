@@ -299,7 +299,6 @@ namespace collection_tests {
 		DefaultConstructorCreatesEmptyObject,
 		InitializationConstructorSetsContents,
 		IteratorRangeConstructorSetsContents,
-		IteratorSizeConstructorSetsContents,
 		RangeConstructorSetsContents,
 		CollectionEqualityDependsOnSizeAndElements,
 		CopyConstructorDeepCopiesObject,

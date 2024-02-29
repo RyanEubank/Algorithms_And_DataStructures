@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Source\adapters\back_inserter.h" />
     <ClInclude Include="Source\adapters\Queue.h" />
     <ClInclude Include="Source\adapters\Stack.h" />
     <ClInclude Include="Source\adapters\TreeRangeAdapters.h" />

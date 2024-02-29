@@ -307,13 +307,9 @@ namespace collection_tests {
 
 		collection obj(collections::from_range, input);
 
-		auto posBefore = obj.begin();
-		posBefore++;
-
+		auto posBefore = std::next(obj.begin());
 		obj.insert(posBefore, value);
-
-		auto posAfter = obj.begin();
-		posAfter++;
+		auto posAfter = std::next(obj.begin());
 
 		EXPECT_EQ(obj.size(), input.size() + 1);
 		EXPECT_EQ(obj[0], input[0]);
@@ -472,8 +468,7 @@ namespace collection_tests {
 
 		collection obj(collections::from_range, input);
 
-		auto iterator = obj.begin();
-		iterator++;
+		auto iterator = std::next(obj.begin());
 		auto removedElement = *iterator;
 
 		obj.remove(iterator);
@@ -496,7 +491,7 @@ namespace collection_tests {
 		collection obj(collections::from_range, input);
 		EXPECT_EQ(obj.size(), input.size());
 
-		obj.removeAll({.begin = 0, .end = 2});
+		obj.remove({.begin = 0, .end = 2});
 		EXPECT_EQ(obj.size(), input.size() - 2);
 		EXPECT_EQ(obj[0], input[2]);
 	}
@@ -519,11 +514,11 @@ namespace collection_tests {
 		auto unsafeRange = IndexRange{ .begin = input.size(), .end = input.size() + 1 };
 		auto unsafeOutOfOrder = IndexRange{ .begin = input.size() - 1, .end = 0 };
 
-		EXPECT_NO_THROW(obj.removeAll(safeRange));
-		EXPECT_THROW(obj.removeAll(unsafeBegin), std::out_of_range);
-		EXPECT_THROW(obj.removeAll(unsafeEnd), std::out_of_range);
-		EXPECT_THROW(obj.removeAll(unsafeRange), std::out_of_range);
-		EXPECT_THROW(obj.removeAll(unsafeOutOfOrder), std::exception);
+		EXPECT_NO_THROW(obj.remove(safeRange));
+		EXPECT_THROW(obj.remove(unsafeBegin), std::out_of_range);
+		EXPECT_THROW(obj.remove(unsafeEnd), std::out_of_range);
+		EXPECT_THROW(obj.remove(unsafeRange), std::out_of_range);
+		EXPECT_THROW(obj.remove(unsafeOutOfOrder), std::exception);
 	}
 
 	// ------------------------------------------------------------------------
@@ -539,11 +534,9 @@ namespace collection_tests {
 		EXPECT_EQ(obj.size(), input.size());
 
 		auto begin = obj.begin();
-		auto end = begin;
-		end++;
-		end++;
+		auto end = std::next(begin, 2);
 
-		obj.removeAll(begin, end);
+		obj.remove(begin, end);
 
 		EXPECT_EQ(obj.size(), input.size() - 2);
 		EXPECT_EQ(obj[0], input[2]);

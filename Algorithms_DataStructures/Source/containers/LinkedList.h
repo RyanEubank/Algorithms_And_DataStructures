@@ -1195,7 +1195,13 @@ namespace collections {
 				return lhs._node == rhs._node;
 			}
 		};
+
+		static_assert(
+			std::bidirectional_iterator<iterator>,
+			"LinkedListIterator is not a valid bidirectional iterator."
+		);
 	};
+
 
 	static_assert(
 		list<LinkedList<int>>,

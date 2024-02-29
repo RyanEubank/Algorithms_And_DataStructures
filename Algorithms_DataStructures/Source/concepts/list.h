@@ -52,13 +52,17 @@ namespace collections {
 	/// </list>
 	/// 
 	/// </summary> ------------------------------------------------------------
-	template <class T, class begin_it = T*, class end_it = T*>
+	template <
+		class T, 
+		class begin_it = typename T::iterator, 
+		class end_it = typename T::iterator
+	>
 	concept list = 
 		collection<T> &&
 		std::ranges::forward_range<T> &&
 		indexable<T, typename T::value_type, typename T::size_type> &&
 		std::input_iterator<begin_it> &&
-		std::sentinel_for<begin_it, end_it> &&
+		std::sentinel_for<end_it, begin_it> &&
 		requires(
 			T& c1,
 			const T& c2,
