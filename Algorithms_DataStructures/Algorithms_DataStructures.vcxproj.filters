@@ -108,9 +108,6 @@
     <ClInclude Include="Source\algorithms\search.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\algorithms\arrays.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\adapters\back_inserter.h">
       <Filter>Header Files</Filter>
     </ClInclude>

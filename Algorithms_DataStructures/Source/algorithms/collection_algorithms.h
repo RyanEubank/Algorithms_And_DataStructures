@@ -530,6 +530,81 @@ namespace collections {
 
 	inline constexpr move_ move;
 
+	struct shift_ {
+	private:
+		
+		constexpr void doShift(auto begin, auto end, int64_t amount) const {
+			while (begin != end) {
+				*std::next(begin, amount) = *begin;
+				begin++;
+			}
+		}
+
+	public:
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Performs a shift of the range specified by the given iterator pair
+		/// (begin, end].
+		/// </summary>
+		/// 
+		/// <typeparam name="iterator">
+		/// The type of the bidirectional iterator being iterated over.
+		/// </typeparam>
+		/// <typeparam name="sentinel">
+		/// The type of the sentinel or end iterator.
+		/// </typeparam>
+		/// 
+		/// <param name="begin">
+		/// The beginning iterator of the range being shifted.
+		/// </param>
+		/// <param name="end">
+		/// The end iterator of the range being shifted.
+		/// </param>
+		/// <param name="shiftAmount">
+		/// The amount to shift the range by.
+		/// </param> ----------------------------------------------------------
+		template <
+			std::bidirectional_iterator iterator,
+			std::sentinel_for<iterator> sentinel
+		>
+		constexpr void operator()(
+			iterator begin, 
+			sentinel end, 
+			int64_t shiftAmount
+		) const {
+			if (shiftAmount > 0) {
+				auto b = std::reverse_iterator(end);
+				auto e = std::reverse_iterator(begin);
+				doShift(b, e, -shiftAmount);
+			}
+			else 
+				doShift(begin, end, shiftAmount);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Performs a shift of the given range.
+		/// </summary>
+		/// 
+		/// <typeparam name="range">
+		/// The type of the range being shifted.
+		/// </typeparam>
+		/// 
+		/// <param name="r">
+		/// The range to be shifted.
+		/// </param>
+		/// <param name="shiftAmount">
+		/// The amount or number of steps to shift the range by.
+		/// </param> --------------------------------------------------------
+		template<std::ranges::bidirectional_range range>
+		constexpr void operator()(range&& rg, int64_t shiftAmount) const {
+			(*this)(std::ranges::begin(rg), std::ranges::end(rg), shiftAmount);
+		}
+	};
+
+	inline constexpr shift_ shift;
+
 	struct stream_ {
 
 		// --------------------------------------------------------------------

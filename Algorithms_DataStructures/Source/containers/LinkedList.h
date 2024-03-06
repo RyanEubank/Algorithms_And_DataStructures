@@ -304,9 +304,29 @@ namespace collections {
 		/// <returns>
 		/// Returns this LinkedList with the copied data.
 		/// </returns> --------------------------------------------------------
-		LinkedList& operator=(LinkedList other) noexcept {
-			swap(*this, other);
-			return *this;
+		LinkedList& operator=(const LinkedList& other) {
+			throw std::exception("Not yet implemented.");
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Moves Assignment Operator ~~~
+		/// 
+		/// <para>
+		/// Moves the data from the specified LinkedList to this one.
+		/// </para></summary>
+		/// 
+		/// <param name="other">
+		/// The LinkedList to copy from.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns this LinkedList with the moved data.
+		/// </returns> --------------------------------------------------------
+		LinkedList& operator=(LinkedList&& other) 
+			noexcept(alloc_traits::is_always_equal::value) 
+		{
+			throw std::exception("Not yet implemented.");
 		}
 
 		// --------------------------------------------------------------------
@@ -539,6 +559,54 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
+		/// Inserts a copy of the given element at the front of the list.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// Const lvalue reference to the element to be inserted.
+		/// </param> ----------------------------------------------------------
+		void insertFront(const_reference element) {
+			insertAt(_head, element);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts a copy of the given element at the front of the list.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// Rvalue reference to the element to be inserted.
+		/// </param> ----------------------------------------------------------
+		void insertFront(value_type&& element) {
+			insertAt(_head, element);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts a copy of the given element at the back of the list.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// Const lvalue reference to the element to be inserted.
+		/// </param> ----------------------------------------------------------
+		void insertBack(const_reference element) {
+			insertAt(nullptr, element);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts a copy of the given element at the back of the list.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// Rvalue reference to the element to be inserted.
+		/// </param> ----------------------------------------------------------
+		void insertBack(value_type&& element) {
+			insertAt(nullptr, element);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
 		/// Inserts the element into the list at the given index,
 		/// and maintains stable order of the existing elements. Throws an 
 		/// exception if the index in invalid.
@@ -548,14 +616,27 @@ namespace collections {
 		/// The index to insert the element at.
 		/// </param> 
 		/// <param name="element">
-		/// The element to be inserted.
+		/// Const lvalue reference to the element to be inserted.
 		/// </param> ----------------------------------------------------------
-		void insert(const Index& index, const_reference element) {
-			size_type i = index.get();
-			validateIndexInRange(i);
-			node* location = getNodeAt(i);
-			node* newNode = createNode(element);
-			insertAt(location, newNode);
+		void insert(Index index, const_reference element) {
+			insertAt(index, element);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts the element into the list at the given index,
+		/// and maintains stable order of the existing elements. Throws an 
+		/// exception if the index in invalid.
+		/// </summary>
+		/// 
+		/// <param name="index">
+		/// The index to insert the element at.
+		/// </param> 
+		/// <param name="element">
+		/// Rvalue reference to the element to be inserted.
+		/// </param> ----------------------------------------------------------
+		void insert(Index index, value_type&& element) {
+			insertAt(index, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -568,37 +649,50 @@ namespace collections {
 		/// The iterator position to insert the element before.
 		/// </param>
 		/// <param name="element">
-		/// The element to be inserted.
+		/// Const lvalue reference to the element to be inserted.
 		/// </param> ----------------------------------------------------------
-		void insert(iterator position, const_reference element) {
-			node* newNode = createNode(element);
-			insertAt(position._node, newNode);
-		}
-		
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Inserts a copy of the given element at the front of the list.
-		/// </summary>
-		/// 
-		/// <param name="element">
-		/// The element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertFront(const_reference element) {
-			node* newNode = createNode(element);
-			insertAt(_head, newNode);
+		void insert(const_iterator position, const_reference element) {
+			insertAt(position._node, element);
 		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Inserts a copy of the given element at the back of the list.
+		/// Inserts the given element into the list before the given iterator 
+		/// position.
 		/// </summary>
 		/// 
+		/// <param name="position">
+		/// The iterator position to insert the element before.
+		/// </param>
 		/// <param name="element">
-		/// The element to be inserted.
+		/// Rvalue reference to the element to be inserted.
 		/// </param> ----------------------------------------------------------
-		void insertBack(const_reference element) {
-			node* newNode = createNode(element);
-			insertAt(nullptr, newNode);
+		void insert(const_iterator position, value_type&& element) {
+			insertAt(position._node, element);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts the given range into the list before the given iterator 
+		/// position.
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The iterator position to insert the element before.
+		/// </param>
+		/// <param name="begin">
+		/// The beginning iterator of the range to insert.
+		/// </param>
+		/// <param name="end">
+		/// The end iterator of the range to insert.
+		/// </param> ----------------------------------------------------------
+		template <
+			std::input_iterator in_iterator,
+			std::sentinel_for<in_iterator> sentinel
+		>
+		void insert(const_iterator pos, in_iterator begin, sentinel end) {
+			while (begin != end)
+				insertAt(const_cast<iterator>(pos), *begin++);
 		}
 
 		// --------------------------------------------------------------------
@@ -625,7 +719,7 @@ namespace collections {
 		/// <param name="position">
 		/// The iterator position of the element to be removed.
 		/// </param> ----------------------------------------------------------
-		void remove(iterator position) {
+		void remove(const_iterator position) {
 			removeNode(position._node);
 		}
 
@@ -653,7 +747,7 @@ namespace collections {
 		/// <param name="range">
 		/// An index range with a start and end member.
 		/// </param> ----------------------------------------------------------
-		void removeAll(const IndexRange& range) {
+		void remove(IndexRange range) {
 			validateIndexExists(range.begin);
 			validateIndexInRange(range.end);
 
@@ -667,12 +761,74 @@ namespace collections {
 		/// <summary>
 		/// Removes all elements in the given iterator range [begin, end).
 		/// </summary> --------------------------------------------------------
-		void removeAll(iterator begin, iterator end) {
+		void remove(const_iterator begin, const_iterator end) {
 			while (begin != end) {
 				node* n = begin._node;
 				++begin;
 				removeNode(n);
 			}
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Constructs the element in-place with the provided arguments at the 
+		/// front of the list.
+		/// </summary>
+		/// 
+		/// <param name="args">
+		/// The arguments to construct the new element with.
+		/// </param> ----------------------------------------------------------
+		template <class ...Args>
+		void emplaceFront(Args&&... args) {
+			throw std::exception("Not yet implemented.");
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Constructs the element in-place with the provided arguments at the 
+		/// back of the list.
+		/// </summary>
+		/// 
+		/// <param name="args">
+		/// The arguments to construct the new element with.
+		/// </param> ----------------------------------------------------------
+		template <class ...Args>
+		void emplaceBack(Args&&... args) {
+			throw std::exception("Not yet implemented.");
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Constructs the element in-place with the provided arguments at the 
+		/// given index. Throws an exception if the index in invalid.
+		/// </summary>
+		/// 
+		/// <param name="index">
+		/// The index to insert the element at.
+		/// </param> 
+		/// <param name="args">
+		/// The arguments to construct the new element with.
+		/// </param> ----------------------------------------------------------
+		template <class ...Args>
+		void emplace(Index index, Args&&... args) {
+			throw std::exception("Not yet implemented.");
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Constructs the given element in-place with the provided arguments
+		/// before the given iterator position.
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The iterator position to insert the element before.
+		/// </param>
+		/// <param name="args">
+		///The arguments to construct the new element with.
+		/// </param> ----------------------------------------------------------
+		template <class ...Args>
+		void emplace(const_iterator position, Args&&... args) {
+			throw std::exception("Not yet implemented.");
 		}
 
 		// --------------------------------------------------------------------
@@ -687,21 +843,10 @@ namespace collections {
 		/// <param name="b">
 		/// The second list to be swapped.
 		/// </param> ----------------------------------------------------------
-		friend void swap(
-			LinkedList<value_type>& a, 
-			LinkedList<value_type>& b
-		) noexcept {
-			using std::swap;
-			using alloc_traits = std::allocator_traits<allocator_type>;
-
-			swap(a._size, b._size);
-			swap(a._head, b._head);
-			swap(a._tail, b._tail);
-
-			if constexpr (alloc_traits::propagate_on_container_swap::value) {
-				swap(a._allocator, b._allocator);
-				swap(a._node_allocator, b._node_allocator);
-			}
+		friend void swap(LinkedList& a, LinkedList& b) 
+			noexcept(alloc_traits::is_always_equal::value) 
+		{
+			throw std::exception("Not yet implemented.");
 		}
 
 		// --------------------------------------------------------------------
@@ -818,8 +963,7 @@ namespace collections {
 
 			for (size_type i = 0; i < size; ++i) {
 				is >> v;
-				node* n = list.createNode(std::move(v));
-				list.insertAt(nullptr, n);
+				list.insertAt(nullptr, std::move(v));
 			}
 
 			return is;
@@ -832,8 +976,9 @@ namespace collections {
 			struct _node* _next;
 			struct _node* _prev;
 
-			_node(const_reference element) :
-				_element(element),
+			template <class... Args>
+			_node(Args&&... args) :
+				_element(std::forward<Args>(args)...),
 				_next(nullptr),
 				_prev(nullptr)
 			{}
@@ -853,7 +998,7 @@ namespace collections {
 			alloc_traits::deallocate(_node_allocator, n, 1);
 		}
 
-		template <class ... Args>
+		template <class... Args>
 		void constructNode(node* n, Args&&... args) {
 			alloc_traits::construct(
 				_node_allocator, 
@@ -866,7 +1011,7 @@ namespace collections {
 			alloc_traits::destroy(_node_allocator, n);
 		}
 
-		template <class ... Args>
+		template <class... Args>
 		[[nodiscard]] node* createNode(Args&&... args) {
 			node* n = allocate();
 			constructNode(n, std::forward<Args>(args)...);
@@ -934,7 +1079,10 @@ namespace collections {
 				n->_next->_prev = n->_prev;
 		}
 
-		void insertAt(node* location, node* newNode) {
+		template <class... Args>
+		void insertAt(node* location, Args&&... args) {
+			node* newNode = createNode(std::forward<Args>(args)...);
+
 			if (isEmpty()) {
 				_head = newNode;
 				_tail = newNode;
@@ -951,6 +1099,14 @@ namespace collections {
 				linkBefore(location, newNode);
 
 			_size++;
+		}
+
+		template <class... Args>
+		void insertAt(Index index, Args&&... args) {
+			size_type i = index.get();
+			validateIndexInRange(i);
+			node* location = getNodeAt(i);
+			insertAt(location, std::forward<Args>(args)...);
 		}
 
 		void updateEndsOnRemove(node* n) {

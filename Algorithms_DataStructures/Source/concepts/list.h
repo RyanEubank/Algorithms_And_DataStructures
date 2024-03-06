@@ -55,7 +55,8 @@ namespace collections {
 	template <
 		class T, 
 		class begin_it = typename T::iterator, 
-		class end_it = typename T::iterator
+		class end_it = typename T::iterator,
+		class ...Args
 	>
 	concept list = 
 		collection<T> &&
@@ -66,29 +67,37 @@ namespace collections {
 		requires(
 			T& c1,
 			const T& c2,
-			typename T::const_reference element,
+			typename T::const_reference lval_element,
 			typename T::value_type&& rval_element,
-			const Index& index,
-			IndexRange& index_range,
-			typename T::const_iterator pos,
+			Index index,
+			IndexRange index_range,
+			typename T::const_iterator position,
 			begin_it begin,
-			end_it end
+			end_it end,
+			Args&&... args
 		) {
 			{ c1.front() } -> std::same_as<typename T::reference>;
 			{ c2.front() } -> std::same_as<typename T::const_reference>;
 			{ c1.back() } -> std::same_as<typename T::reference>;
 			{ c2.back() } -> std::same_as<typename T::const_reference>;
-			{ c1.insertFront(element) };
-			{ c1.insertBack(element) };
-			{ c1.insert(index, element) };
-			{ c1.insert(pos, element) };
-			{ c1.insert(pos, rval_element) };
-			{ c1.insert(pos, begin, end) };
+			{ c1.insertFront(lval_element) };
+			{ c1.insertFront(rval_element) };
+			{ c1.insertBack(lval_element) };
+			{ c1.insertBack(rval_element) };
+			{ c1.insert(index, lval_element) };
+			{ c1.insert(index, rval_element) };
+			{ c1.insert(position, lval_element) };
+			{ c1.insert(position, rval_element) };
+			{ c1.insert(position, begin, end) };
 			{ c1.removeFront() };
 			{ c1.removeBack() };
 			{ c1.remove(index) };
-			{ c1.remove(pos) };
+			{ c1.remove(position) };
 			{ c1.remove(index_range) };
-			{ c1.remove(pos, pos) };
+			{ c1.remove(position, position) };
+			{ c1.emplaceFront(args...) };
+			{ c1.emplaceBack(args...) };
+			{ c1.emplace(index, args...) };
+			{ c1.emplace(position, args...) };
 		};
 }

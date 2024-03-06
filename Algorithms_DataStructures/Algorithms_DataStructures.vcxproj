@@ -151,7 +151,6 @@
     <ClInclude Include="Source\adapters\Queue.h" />
     <ClInclude Include="Source\adapters\Stack.h" />
     <ClInclude Include="Source\adapters\TreeRangeAdapters.h" />
-    <ClInclude Include="Source\algorithms\arrays.h" />
     <ClInclude Include="Source\algorithms\collection_algorithms.h" />
     <ClInclude Include="Source\algorithms\search.h" />
     <ClInclude Include="Source\concepts\associative.h" />
