@@ -122,7 +122,11 @@
   <ItemGroup>
     <ClInclude Include="dynamic_array_test_fixture.h" />
     <ClInclude Include="linked_list_test_fixture.h" />
-    <ClInclude Include="list_tests.h" />
+    <ClInclude Include="sequential_collection_access_tests.h" />
+    <ClInclude Include="sequential_collection_insert_tests.h" />
+    <ClInclude Include="sequential_collection_emplace_tests.h" />
+    <ClInclude Include="sequential_collection_remove_tests.h" />
+    <ClInclude Include="sequential_collection_tests.h" />
     <ClInclude Include="mock_allocator.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="test_inputs.h" />
@@ -159,10 +163,16 @@
       </PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="dynamic_array_collection_interface_tests.cpp" />
-    <ClCompile Include="dynamic_array_list_interface_tests.cpp" />
-    <ClCompile Include="dynamic_array_tests.cpp" />
+    <ClCompile Include="dynamic_array_emplace_tests.cpp" />
+    <ClCompile Include="dynamic_array_access_tests.cpp" />
+    <ClCompile Include="dynamic_array_allocation_tests.cpp" />
+    <ClCompile Include="dynamic_array_removal_tests.cpp" />
     <ClCompile Include="linked_list_collection_interface_tests.cpp" />
-    <ClCompile Include="linked_list_list_interface_tests.cpp" />
+    <ClCompile Include="linked_list_emplace_tests.cpp" />
+    <ClCompile Include="linked_list_insertion_tests.cpp" />
+    <ClCompile Include="linked_list_access_tests.cpp" />
+    <ClCompile Include="dynamic_array_insertion_tests.cpp" />
+    <ClCompile Include="linked_list_removal_tests.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

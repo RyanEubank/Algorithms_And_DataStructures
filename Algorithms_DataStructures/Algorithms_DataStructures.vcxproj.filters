@@ -21,7 +21,7 @@
     <ClInclude Include="Source\WIP\IQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\concepts\list.h">
+    <ClInclude Include="Source\concepts\sequential.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\WIP\IPriorityQueue.h">

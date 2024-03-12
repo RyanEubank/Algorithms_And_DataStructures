@@ -21,7 +21,7 @@
 
 #include "../adapters/back_inserter.h"
 #include "../algorithms/collection_algorithms.h"
-#include "../concepts/list.h"
+#include "../concepts/sequential.h"
 
 namespace collections {
 
@@ -243,8 +243,6 @@ namespace collections {
 			sentinel end,
 			const allocator_type& alloc = allocator_type{}
 		) : DynamicArray(alloc) {
-			if constexpr (std::forward_iterator<iterator>)
-				reserve(std::distance(begin, end));
 			insert(_end, begin, end);
 		}
 
@@ -273,8 +271,6 @@ namespace collections {
 			range&& rg,
 			const allocator_type& alloc = allocator_type{}
 		) : DynamicArray(alloc) {
-			if constexpr (std::ranges::forward_range<range>)
-				reserve(std::ranges::size(rg));
 			insert(_end, std::ranges::begin(rg), std::ranges::end(rg));
 		}
 
@@ -804,22 +800,31 @@ namespace collections {
 			std::input_iterator in_iterator, 
 			std::sentinel_for<in_iterator> sentinel
 		>
-		void insert(const_iterator pos, in_iterator begin, sentinel end) {
-			size_type offset = pos - _array;
+		void insert(const_iterator position, in_iterator begin, sentinel end) {
+			insertAt(const_cast<iterator>(position), begin, end);
+		}
 
-			if constexpr (std::forward_iterator<in_iterator>) {
-				auto total = this->size() + std::distance(begin, end);
-
-				if (_capacity < total) {
-					reserve(total);
-					pos = _array + offset;
-				}
-			}
-			
-			while (begin != end) {
-				insertAt(const_cast<iterator>(pos), *begin++);
-				pos = _array + ++offset;
-			}
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts the given range into the array before the given index, and 
+		/// maintains stable order of the existing elements. 
+		/// </summary>
+		/// 
+		/// <param name="index">
+		/// The index to insert the elements before.
+		/// </param>
+		/// <param name="begin">
+		/// The beginning iterator of the range to insert.
+		/// </param>
+		/// <param name="end">
+		/// The end iterator of the range to insert.
+		/// </param> ----------------------------------------------------------
+		template <
+			std::input_iterator in_iterator,
+			std::sentinel_for<in_iterator> sentinel
+		>
+		void insert(Index index, in_iterator begin, sentinel end) {
+			insertAt(_array + index.get(), begin, end);
 		}
 
 		// --------------------------------------------------------------------
@@ -989,7 +994,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplaceFront(Args&&... args) {
-			throw std::exception("Not yet implemented.");
+			insertAt(_array, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1003,7 +1008,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplaceBack(Args&&... args) {
-			throw std::exception("Not yet implemented.");
+			insertAt(_end, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1021,7 +1026,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplace(Index index, Args&&... args) {
-			throw std::exception("Not yet implemented.");
+			insertAt(index, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1039,7 +1044,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplace(const_iterator position, Args&&... args) {
-			throw std::exception("Not yet implemented.");
+			insertAt(const_cast<iterator>(position), std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1065,9 +1070,8 @@ namespace collections {
 
 			if (isAllocEqual)
 				swapMembers(a, b);
-			else if (propagate) {
+			else if (propagate) 
 				swapAll(a, b);
-			}
 			else
 				throw std::exception("Swap on unequal, stateful allocators");
 		}
@@ -1210,10 +1214,7 @@ namespace collections {
 		template <class ... Args>
 		void constructElement(pointer ptr, Args&&... args) {
 			alloc_traits::construct(
-				_allocator, 
-				ptr, 
-				std::forward<Args>(args)...
-			);
+				_allocator, ptr, std::forward<Args>(args)...);
 		}
 
 		void destroyElement(pointer ptr) {
@@ -1221,8 +1222,8 @@ namespace collections {
 		}
 
 		void destroyElements(pointer begin, pointer end) {
-			for ( ; begin != end; ++begin)
-				destroyElement(begin);
+			while (begin != end)
+				destroyElement(begin++);
 		}
 
 		void releaseResources() {
@@ -1245,7 +1246,6 @@ namespace collections {
 					destroyElements(destination, offset);
 					deallocate(destination, capacity);
 					throw;
-
 				}
 			}
 		}
@@ -1287,8 +1287,8 @@ namespace collections {
 			if (pos == _end)
 				constructElement(_end++, std::forward<T>(element));
 			else {
-				constructElement(_end);
-				collections::shift(pos, _end++, 1);
+				constructElement(_end, *(_end - 1));
+				collections::shift(pos, _end++ - 1, 1);
 				*pos = std::forward<T>(element);
 			}
 		}
@@ -1300,16 +1300,55 @@ namespace collections {
 			insertAt(_array + i, std::forward<T>(element));
 		}
 
+		template <
+			std::input_iterator in_iterator,
+			std::sentinel_for<in_iterator> sentinel
+		>
+		void insertAt(iterator position, in_iterator begin, sentinel end) {
+			size_type offset = position - _array;
+			while (begin != end) {
+				insertAt(const_cast<iterator>(position), *begin++);
+				position = _array + (++offset);
+			}
+		}
+
+		template <
+			std::forward_iterator fwd_iterator,
+			std::sentinel_for<fwd_iterator> sentinel
+		>
+		void insertAt(iterator position, fwd_iterator begin, sentinel end) {
+			size_type offset = position - _array;
+			size_type range_size = std::distance(begin, end);
+			size_type total = size() + range_size;
+
+			if (_capacity < total)
+				reserve(total);
+
+			position = _array + offset;
+			if (position == _end) {
+				while (begin != end)
+					constructElement(_end++, *begin++);
+			}
+			else{
+				auto next = _end;
+				for (size_type i = 0; i < range_size; ++i)
+					constructElement(next++, *(_end - range_size + i));
+				collections::shift(position, _end - range_size, range_size);
+				while (begin != end)
+					*position++ = *begin++;
+			}
+		}
+
 		void ensureCapacity() {
 			if (_array == nullptr)
-				reserve(1);
-			if (size() >= _capacity)
+				reserve(5);
+			else if (size() >= _capacity)
 				expand();
 		}
 
 		void expand() {
 			if (_capacity >= MAX_CAPACITY) 
-				throwAllocationError(ERR_MAX_SIZE);
+				allocationError(ERR_MAX_SIZE);
 
 			size_type doubledSize = size() << 1;
 			if (doubledSize < size())
@@ -1320,26 +1359,26 @@ namespace collections {
 
 		void validateCapacity(size_type capacity) {
 			if (capacity > _capacity && capacity > MAX_CAPACITY) 
-				throwAllocationError(ERR_MAX_SIZE);
-			else if (capacity < size())
-				throwAllocationError(ERR_TOO_SMALL);
+				allocationError(ERR_MAX_SIZE);
+			if (capacity < size())
+				allocationError(ERR_TOO_SMALL);
 		}
 
 		void validateIndexExists(size_type index) const {
-			if (index >= size())
-				throwInvalidIndex(index);
+			[[unlikely]] if (index >= size())
+				invalidIndex(index);
 		}
 
 		void validateIndexInRange(size_type index) const {
-			if (index > size())
-				throwInvalidIndex(index);
+			[[unlikely]] if (index > size())
+				invalidIndex(index);
 		}
 
-		[[noreturn]] void throwAllocationError(std::string msg) {
+		[[noreturn]] void allocationError(std::string msg) {
 			throw std::length_error("Allocation failed: " + msg);
 		}
 
-		[[noreturn]] void throwInvalidIndex(size_t index) const {
+		[[noreturn]] void invalidIndex(size_t index) const {
 			constexpr auto INVALID_INDEX = "Invalid Index: out of range.";
 			std::stringstream err{};
 
@@ -1363,7 +1402,7 @@ namespace collections {
 	};
 
 	static_assert(
-		list<DynamicArray<int>>,
+		sequential<DynamicArray<int>>,
 		"DynamicArray does not implement the list interface."
 	);
 }

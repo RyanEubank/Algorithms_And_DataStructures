@@ -58,7 +58,7 @@ namespace collections {
 		class end_it = typename T::iterator,
 		class ...Args
 	>
-	concept list = 
+	concept sequential = 
 		collection<T> &&
 		std::ranges::forward_range<T> &&
 		indexable<T, typename T::value_type, typename T::size_type> &&
@@ -89,6 +89,7 @@ namespace collections {
 			{ c1.insert(position, lval_element) };
 			{ c1.insert(position, rval_element) };
 			{ c1.insert(position, begin, end) };
+			{ c1.insert(index, begin, end) };
 			{ c1.removeFront() };
 			{ c1.removeBack() };
 			{ c1.remove(index) };

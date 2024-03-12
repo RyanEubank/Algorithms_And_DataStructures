@@ -24,7 +24,7 @@ namespace collection_tests {
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		DynamicArrayTest,
-		CollectionTest,
+		CollectionTests,
 		collection_types
 	);
 }

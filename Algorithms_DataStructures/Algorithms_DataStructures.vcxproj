@@ -172,7 +172,7 @@
     <ClInclude Include="Source\WIP\OpenAddressingHashTable.h" />
     <ClInclude Include="Source\WIP\IBinaryTree.h" />
     <ClInclude Include="Source\concepts\collection.h" />
-    <ClInclude Include="Source\concepts\list.h" />
+    <ClInclude Include="Source\concepts\sequential.h" />
     <ClInclude Include="Source\WIP\IHashTable.h" />
     <ClInclude Include="Source\WIP\IPriorityQueue.h" />
     <ClInclude Include="Source\WIP\IQueue.h" />

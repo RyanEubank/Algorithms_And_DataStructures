@@ -24,7 +24,7 @@ namespace collection_tests {
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		LinkedListTest,
-		CollectionTest,
+		CollectionTests,
 		collection_types
 	);
 }

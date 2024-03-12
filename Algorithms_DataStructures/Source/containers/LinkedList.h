@@ -18,7 +18,7 @@
 #pragma once
 
 #include "../algorithms/collection_algorithms.h"
-#include "../concepts/list.h"
+#include "../concepts/sequential.h"
 #include "../util/NamedType.h"
 
 namespace collections {
@@ -690,9 +690,35 @@ namespace collections {
 			std::input_iterator in_iterator,
 			std::sentinel_for<in_iterator> sentinel
 		>
-		void insert(const_iterator pos, in_iterator begin, sentinel end) {
-			while (begin != end)
-				insertAt(const_cast<iterator>(pos), *begin++);
+		void insert(const_iterator position, in_iterator begin, sentinel end) {
+			while (begin != end) 
+				insertAt(position._node, *begin++);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts the given range into the list before the given iterator 
+		/// position.
+		/// </summary>
+		/// 
+		/// <param name="index">
+		/// The index to insert the elements before.
+		/// </param>
+		/// <param name="begin">
+		/// The beginning iterator of the range to insert.
+		/// </param>
+		/// <param name="end">
+		/// The end iterator of the range to insert.
+		/// </param> ----------------------------------------------------------
+		template <
+			std::input_iterator in_iterator,
+			std::sentinel_for<in_iterator> sentinel
+		>
+		void insert(Index index, in_iterator begin, sentinel end) {
+			size_type i = index.get();
+			validateIndexInRange(i);
+			iterator pos = iterator(getNodeAt(i));
+			insert(pos, begin, end);
 		}
 
 		// --------------------------------------------------------------------
@@ -1360,7 +1386,7 @@ namespace collections {
 
 
 	static_assert(
-		list<LinkedList<int>>,
+		sequential<LinkedList<int>>,
 		"LinkedList does not implement the list interface."
 	);
 }

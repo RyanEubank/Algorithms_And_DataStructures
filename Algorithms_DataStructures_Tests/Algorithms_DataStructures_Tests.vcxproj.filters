@@ -4,22 +4,40 @@
     <ClCompile Include="..\packages\gmock.1.11.0\lib\native\src\gtest\src\gtest_main.cc" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="collection_tests.h">
-      <Filter>data_structure_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="dynamic_array_tests.cpp">
+    <ClCompile Include="dynamic_array_allocation_tests.cpp">
       <Filter>data_structure_tests\dynamic_array_tests</Filter>
     </ClCompile>
     <ClCompile Include="dynamic_array_collection_interface_tests.cpp">
       <Filter>data_structure_tests\dynamic_array_tests</Filter>
     </ClCompile>
-    <ClCompile Include="dynamic_array_list_interface_tests.cpp">
+    <ClCompile Include="dynamic_array_access_tests.cpp">
       <Filter>data_structure_tests\dynamic_array_tests</Filter>
     </ClCompile>
     <ClCompile Include="linked_list_collection_interface_tests.cpp">
       <Filter>data_structure_tests\linked_list_tests</Filter>
     </ClCompile>
-    <ClCompile Include="linked_list_list_interface_tests.cpp">
+    <ClCompile Include="linked_list_access_tests.cpp">
+      <Filter>data_structure_tests\linked_list_tests</Filter>
+    </ClCompile>
+    <ClCompile Include="collection_tests.h">
+      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamic_array_insertion_tests.cpp">
+      <Filter>data_structure_tests\dynamic_array_tests</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamic_array_emplace_tests.cpp">
+      <Filter>data_structure_tests\dynamic_array_tests</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamic_array_removal_tests.cpp">
+      <Filter>data_structure_tests\dynamic_array_tests</Filter>
+    </ClCompile>
+    <ClCompile Include="linked_list_insertion_tests.cpp">
+      <Filter>data_structure_tests\linked_list_tests</Filter>
+    </ClCompile>
+    <ClCompile Include="linked_list_removal_tests.cpp">
+      <Filter>data_structure_tests\linked_list_tests</Filter>
+    </ClCompile>
+    <ClCompile Include="linked_list_emplace_tests.cpp">
       <Filter>data_structure_tests\linked_list_tests</Filter>
     </ClCompile>
   </ItemGroup>
@@ -29,19 +47,31 @@
       <Filter>data_structure_tests\mocks</Filter>
     </ClInclude>
     <ClInclude Include="test_inputs.h">
-      <Filter>data_structure_tests\types</Filter>
+      <Filter>data_structure_tests\element_types</Filter>
     </ClInclude>
     <ClInclude Include="test_types.h">
-      <Filter>data_structure_tests\types</Filter>
-    </ClInclude>
-    <ClInclude Include="list_tests.h">
-      <Filter>data_structure_tests</Filter>
+      <Filter>data_structure_tests\element_types</Filter>
     </ClInclude>
     <ClInclude Include="dynamic_array_test_fixture.h">
       <Filter>data_structure_tests\dynamic_array_tests</Filter>
     </ClInclude>
     <ClInclude Include="linked_list_test_fixture.h">
       <Filter>data_structure_tests\linked_list_tests</Filter>
+    </ClInclude>
+    <ClInclude Include="sequential_collection_tests.h">
+      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
+    </ClInclude>
+    <ClInclude Include="sequential_collection_insert_tests.h">
+      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
+    </ClInclude>
+    <ClInclude Include="sequential_collection_emplace_tests.h">
+      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
+    </ClInclude>
+    <ClInclude Include="sequential_collection_remove_tests.h">
+      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
+    </ClInclude>
+    <ClInclude Include="sequential_collection_access_tests.h">
+      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -51,14 +81,17 @@
     <Filter Include="data_structure_tests\mocks">
       <UniqueIdentifier>{d2ce255f-7483-4e8f-80e9-cac29c87f6e4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="data_structure_tests\types">
-      <UniqueIdentifier>{f6a2655a-5e0a-4b80-b1bf-a7333d8f3559}</UniqueIdentifier>
-    </Filter>
     <Filter Include="data_structure_tests\dynamic_array_tests">
       <UniqueIdentifier>{b3fba44d-6226-4712-99d1-f6fcd42a1a52}</UniqueIdentifier>
     </Filter>
     <Filter Include="data_structure_tests\linked_list_tests">
       <UniqueIdentifier>{c5da350e-37fb-45df-b6b7-d3e05ce3f006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="data_structure_tests\interface_test_suite_templates">
+      <UniqueIdentifier>{c427024e-a4a4-43fb-be15-16648c81a2b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="data_structure_tests\element_types">
+      <UniqueIdentifier>{f6a2655a-5e0a-4b80-b1bf-a7333d8f3559}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

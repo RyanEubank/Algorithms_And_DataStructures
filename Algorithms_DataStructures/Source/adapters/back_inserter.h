@@ -22,12 +22,12 @@
 #include <ranges>
 #include <vector>
 
-#include "../concepts/list.h"
+#include "../concepts/sequential.h"
 #include "../containers/DynamicArray.h"
 
 namespace collections {
 
-	template <class list_t>
+	template <class collection>
 	class back_insert_iterator {
 	public:
 		
@@ -37,27 +37,27 @@ namespace collections {
 		using reference = void;
 		using iterator_category = std::output_iterator_tag;
 
-		explicit back_insert_iterator(list_t& l) : _list(l) {}
+		explicit back_insert_iterator(collection& c) : _collection(c) {}
 		back_insert_iterator(const back_insert_iterator& it) = default;
 		back_insert_iterator(back_insert_iterator&& it) = default;
 		~back_insert_iterator() = default;
 
 		back_insert_iterator& operator=(const back_insert_iterator& other) {
-			_list = other._list;
+			_collection = other._collection;
 			return *this;
 		}
 
 		back_insert_iterator& operator=(
-			const typename list_t::value_type& value
+			const typename collection::value_type& value
 		) {
-			_list.insertBack(value);
+			_collection.insertBack(value);
 			return *this;
 		}
 
 		back_insert_iterator& operator=(
-			typename list_t::value_type&& value
+			typename collection::value_type&& value
 		) {
-			_list.insertBack(std::move(value));
+			_collection.insertBack(std::move(value));
 			return *this;
 		}
 
@@ -74,17 +74,12 @@ namespace collections {
 		}
 
 	private:
-		list_t& _list;
+		collection& _collection;
 
 	};
 
-	//static_assert(
-	//	std::output_iterator<back_insert_iterator<DynamicArray<int>>, int>,
-	//	"back_insert_iterator does not meet output iterator requirements."
-	//);
-
-	template <list list_t>
-	back_insert_iterator<list_t> back_inserter(list_t& l) {
-		return back_insert_iterator{ l };
+	template <sequential collection>
+	back_insert_iterator<collection> back_inserter(collection& c) {
+		return back_insert_iterator{ c };
 	}
 }

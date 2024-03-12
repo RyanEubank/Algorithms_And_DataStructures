@@ -19,7 +19,6 @@
 
 #include "pch.h"
 #include "collection_tests.h"
-#include "list_tests.h"
 #include "mock_allocator.h"
 #include "test_types.h"
 
@@ -38,7 +37,7 @@ namespace collection_tests {
 
 	template <class params>
 	class LinkedListTest :
-		public CollectionTest<params>,
+		public CollectionTests<params>,
 		public MockAllocatorTest<typename params::element_t>
 	{
 	protected:

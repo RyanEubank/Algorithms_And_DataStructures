@@ -16,15 +16,16 @@
  * ========================================================================= */
 
 #include "pch.h"
-#include "linked_list_test_fixture.h"
+#include "dynamic_array_test_fixture.h"
+#include "sequential_collection_emplace_tests.h"
 
 namespace collection_tests {
 
-	using collection_types = instantiate_with_elements<LinkedListTestTypes>;
+	using collection_types = instantiate_with_elements<DynamicArrayTestTypes>;
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
-		LinkedListTest,
-		ListTest,
+		DynamicArrayTest,
+		SequentialCollectionEmplaceTests,
 		collection_types
 	);
 }

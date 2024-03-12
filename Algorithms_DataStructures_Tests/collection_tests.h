@@ -26,18 +26,18 @@ namespace collection_tests {
 	using namespace collections;
 
 	template<class params> requires collection<typename params::collection_t>
-	class CollectionTest : public testing::Test {
+	class CollectionTests : public testing::Test {
 	protected:
 		struct test_case_data<typename params::element_t> testInput {};
 	};
 
-	TYPED_TEST_SUITE_P(CollectionTest);
+	TYPED_TEST_SUITE_P(CollectionTests);
 
 	// ------------------------------------------------------------------------
 	/// <summary>
 	/// Tests that a default constructed collection is initially empty.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, DefaultConstructorCreatesEmptyObject) {
+	TYPED_TEST_P(CollectionTests, DefaultConstructorCreatesEmptyObject) {
 		using collection = typename TypeParam::collection_t;
 
 		const collection obj{};
@@ -50,7 +50,7 @@ namespace collection_tests {
 	/// Tests that a collection constructed with an initialization list
 	/// correctly sets the contents.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, InitializationConstructorSetsContents) {
+	TYPED_TEST_P(CollectionTests, InitializationConstructorSetsContents) {
 		using collection = typename TypeParam::collection_t;
 		auto input = this->testInput.control();
 		auto data = input.data();
@@ -68,7 +68,7 @@ namespace collection_tests {
 	/// Tests that the collection can be constructed correctly from an iterator
 	/// pair.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, IteratorRangeConstructorSetsContents) {
+	TYPED_TEST_P(CollectionTests, IteratorRangeConstructorSetsContents) {
 		using collection = typename TypeParam::collection_t;
 		auto input = this->testInput.control();
 
@@ -84,7 +84,7 @@ namespace collection_tests {
 	/// <summary>
 	/// Tests that the collection can be constructed correctly from a range.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, RangeConstructorSetsContents) {
+	TYPED_TEST_P(CollectionTests, RangeConstructorSetsContents) {
 		using collection = typename TypeParam::collection_t;
 		auto input = this->testInput.control();
 
@@ -100,7 +100,7 @@ namespace collection_tests {
 	/// <summary>
 	/// Tests that collection equality will correctly test for collection size.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, CollectionEqualityDependsOnSizeAndElements) {
+	TYPED_TEST_P(CollectionTests, CollectionEqualityDependsOnSizeAndElements) {
 		using collection = typename TypeParam::collection_t;
 		auto control_input = this->testInput.control();
 		auto diff_elements_input = this->testInput.different_elements();
@@ -122,7 +122,7 @@ namespace collection_tests {
 	/// elements allowing the original to be destroyed without effecting the
 	/// copy.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, CopyConstructorDeepCopiesObject) {
+	TYPED_TEST_P(CollectionTests, CopyConstructorDeepCopiesObject) {
 		using collection = typename TypeParam::collection_t;
 		auto input = this->testInput.control();
 
@@ -141,7 +141,7 @@ namespace collection_tests {
 	/// ownership of the elements allowing the original to be destroyed without 
 	/// effecting the new owner.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, MoveConstructorTransfersObject) {
+	TYPED_TEST_P(CollectionTests, MoveConstructorTransfersObject) {
 		using collection = typename TypeParam::collection_t;
 		auto input = this->testInput.control();
 
@@ -162,7 +162,7 @@ namespace collection_tests {
 	/// Tests that the collection correctly manages memory when assigned with
 	/// copy assignment.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, CopyAssignmentCorrectlyAssignsContents) {
+	TYPED_TEST_P(CollectionTests, CopyAssignmentCorrectlyAssignsContents) {
 		using collection = typename TypeParam::collection_t;
 		auto control_input = this->testInput.control();
 		auto diff_input = this->testInput.different_elements();
@@ -197,7 +197,7 @@ namespace collection_tests {
 	/// Tests that the collection correctly manages memory when moved with
 	/// move assignment.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, MoveAssignmentTransfersObject) {
+	TYPED_TEST_P(CollectionTests, MoveAssignmentTransfersObject) {
 		using collection = typename TypeParam::collection_t;
 		auto input = this->testInput.control();
 
@@ -221,7 +221,7 @@ namespace collection_tests {
 	/// a collection equal to another will also report equality in a transfer
 	/// collection after a swap.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, SwapChangesElementsCorrectly) {
+	TYPED_TEST_P(CollectionTests, SwapChangesElementsCorrectly) {
 		using collection = typename TypeParam::collection_t;
 		auto control_input = this->testInput.control();
 		auto diff_elements_input = this->testInput.different_elements();
@@ -245,7 +245,7 @@ namespace collection_tests {
 	/// into the collection maintaining the collection size, i.e. does not
 	/// lose elements.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, IOStreamOperatorsMaintainObject) {
+	TYPED_TEST_P(CollectionTests, IOStreamOperatorsMaintainObject) {
 		using collection = typename TypeParam::collection_t;
 		auto input = this->testInput.control();
 
@@ -266,7 +266,7 @@ namespace collection_tests {
 	/// Tests that an empty collection can be cleared without raising an 
 	/// exception.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, EmptyObjectCanBeClearedWithoutError) {
+	TYPED_TEST_P(CollectionTests, EmptyObjectCanBeClearedWithoutError) {
 		using collection = typename TypeParam::collection_t;
 
 		collection obj{};
@@ -279,7 +279,7 @@ namespace collection_tests {
 	/// Tests that a non-empty collection can be cleared without raising an 
 	/// exception.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTest, ClearEmptiesObject) {
+	TYPED_TEST_P(CollectionTests, ClearEmptiesObject) {
 		using collection = typename TypeParam::collection_t;
 		auto input = this->testInput.control();
 
@@ -295,7 +295,7 @@ namespace collection_tests {
 	}
 
 	REGISTER_TYPED_TEST_SUITE_P(
-		CollectionTest,
+		CollectionTests,
 		DefaultConstructorCreatesEmptyObject,
 		InitializationConstructorSetsContents,
 		IteratorRangeConstructorSetsContents,

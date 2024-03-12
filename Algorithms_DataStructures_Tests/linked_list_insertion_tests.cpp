@@ -15,34 +15,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * ========================================================================= */
 
-#pragma once
-
 #include "pch.h"
-#include "collection_tests.h"
-#include "mock_allocator.h"
-#include "test_types.h"
-
-#include "../Algorithms_DataStructures/Source/containers/DynamicArray.h"
+#include "linked_list_test_fixture.h"
+#include "sequential_collection_insert_tests.h"
 
 namespace collection_tests {
 
-	using testing::_;
-	using namespace collections;
+	using collection_types = instantiate_with_elements<LinkedListTestTypes>;
 
-	template <class T>
-	struct DynamicArrayTestTypes {
-		using element_t = T;
-		using collection_t = DynamicArray<T>;
-	};
-
-	template <class params>
-	class DynamicArrayTest :
-		public CollectionTests<params>,
-		public MockAllocatorTest<typename params::element_t>
-	{
-	protected:
-		using element_t = params::element_t;
-		using collection_t = params::collection_t;
-		using mock_t = DynamicArray<element_t, MockAllocatorWrapper<element_t>>;
-	};
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		LinkedListTest,
+		SequentialCollectionInsertTests,
+		collection_types
+	);
 }
