@@ -130,7 +130,7 @@ namespace collections {
 		DynamicArray(DynamicArray&& other) noexcept(
 			std::is_nothrow_move_constructible_v<allocator_type>
 		) : DynamicArray(std::move(other._allocator)) {
-			swapMembers(*this, other);
+			swapData(*this, other);
 		}
 
 		// --------------------------------------------------------------------
@@ -336,9 +336,10 @@ namespace collections {
 		/// <returns>
 		/// Returns the caller with the copied data.
 		/// </returns> --------------------------------------------------------
-		DynamicArray& operator=(DynamicArray&& other) 
-			noexcept(alloc_traits::is_always_equal::value) 
-		{
+		DynamicArray& operator=(DynamicArray&& other) noexcept(
+			alloc_traits::propagate_on_container_move_assignment::value || 
+			alloc_traits::is_always_equal::value
+		) {
 			constexpr bool propagate = 
 				alloc_traits::propagate_on_container_move_assignment::value;
 			constexpr bool alwaysEqual =
@@ -347,9 +348,9 @@ namespace collections {
 			bool equalAllocators = this->_allocator == other._allocator;
 
 			if constexpr (alwaysEqual)
-				swapMembers(*this, other);
+				swapData(*this, other);
 			else if (equalAllocators)
-				swapMembers(*this, other);
+				swapData(*this, other);
 			else if (propagate)
 				swapAll(*this, other);
 			else
@@ -891,10 +892,8 @@ namespace collections {
 		/// The iterator position of the element to be removed.
 		/// </param> ----------------------------------------------------------
 		void remove(const_iterator position) {
-			if (position != (_end - 1)) {
-				iterator pos = _array + (position - _array) + 1;
-				collections::shift(pos, _end, -1);
-			}
+			if (position++ != (_end - 1)) 
+				collections::shift(const_cast<iterator>(position), _end, -1);
 			destroyElement((_end--) - 1);
 		}
 
@@ -924,10 +923,8 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		void removeUnstable(const_iterator position) {
 			using std::swap;
-			if (position != _end - 1) {
-				iterator pos = _array + (position - _array);
-				swap(*pos, *(_end - 1));
-			}
+			if (position != _end - 1) 
+				swap(*const_cast<iterator>(position), *(_end - 1));
 			destroyElement((_end--) - 1);
 		}
 
@@ -971,11 +968,8 @@ namespace collections {
 		/// </summary> --------------------------------------------------------
 		void remove(const_iterator begin, const_iterator end) {
 			int64_t range_size = end - begin;
-
-			iterator pos = _array + (end - _array);
-			collections::shift(pos, _end, -range_size);
+			collections::shift(const_cast<iterator>(end), _end, -range_size);
 			destroyElements(_end - range_size, _end);
-
 			_end -= range_size;
 		}
 
@@ -1060,12 +1054,15 @@ namespace collections {
 		{
 			constexpr bool propagate = 
 				alloc_traits::propagate_on_container_swap::value;
+			constexpr bool alwaysEqual = 
+				alloc_traits::is_always_equal::value;
 
-			bool isAllocEqual = alloc_traits::is_always_equal::value ||
-				a._allocator == b._allocator;
+			bool equalAllocators = a._allocator == b._allocator;
 
-			if (isAllocEqual)
-				swapMembers(a, b);
+			if constexpr (alwaysEqual)
+				swapData(a, b);
+			else if (equalAllocators)
+				swapData(a, b);
 			else if (propagate) 
 				swapAll(a, b);
 			else
@@ -1177,13 +1174,14 @@ namespace collections {
 			std::basic_istream<char_t>& is,
 			DynamicArray& arr
 		) {
+			// TODO: optimize constructing values directly from stream.
 			size_type size = 0;
 			is >> size;
 
 			arr.clear();
 			arr.resize(size);
 
-			for (size_type i = 0; i < size; ++i)
+			for (size_type i = 0; i < size; ++i) 
 				is >> arr[i];
 
 			return is;
@@ -1339,6 +1337,7 @@ namespace collections {
 			std::sentinel_for<fwd_iterator> sentinel
 		>
 		void insertAt(iterator position, fwd_iterator begin, sentinel end) {
+			// TODO: Refactor for readability
 			size_type offset = position - _array;
 			size_type range_size = std::distance(begin, end);
 			size_type total = size() + range_size;
@@ -1409,7 +1408,7 @@ namespace collections {
 			throw std::out_of_range(err.str().c_str());
 		}
 
-		friend void swapMembers(DynamicArray& a, DynamicArray& b) noexcept {
+		friend void swapData(DynamicArray& a, DynamicArray& b) noexcept {
 			using std::swap;
 			swap(a._array, b._array);
 			swap(a._end, b._end);
@@ -1419,7 +1418,7 @@ namespace collections {
 		friend void swapAll(DynamicArray& a, DynamicArray& b) noexcept {
 			using std::swap;
 			swap(a._allocator, b._allocator);
-			swapMembers(a, b);
+			swapData(a, b);
 		}
 	};
 
