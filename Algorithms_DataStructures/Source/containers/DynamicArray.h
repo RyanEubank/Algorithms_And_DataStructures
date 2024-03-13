@@ -127,9 +127,9 @@ namespace collections {
 		/// <param name="other">
 		/// The DynamicArray to be moved into this one.
 		/// </param> ----------------------------------------------------------
-		DynamicArray(DynamicArray&& other) 
-			noexcept(std::is_nothrow_move_constructible_v<allocator_type>) :
-		DynamicArray(std::move(other._allocator)) {
+		DynamicArray(DynamicArray&& other) noexcept(
+			std::is_nothrow_move_constructible_v<allocator_type>
+		) : DynamicArray(std::move(other._allocator)) {
 			swapMembers(*this, other);
 		}
 
@@ -204,7 +204,7 @@ namespace collections {
 		DynamicArray(
 			std::initializer_list<value_type> init,
 			const allocator_type& alloc = allocator_type{}
-		) : DynamicArray(collections::from_range, init, alloc) {
+		) : DynamicArray(init.begin(), init.end(), alloc) {
 
 		}
 
@@ -270,8 +270,8 @@ namespace collections {
 			from_range_t tag,
 			range&& rg,
 			const allocator_type& alloc = allocator_type{}
-		) : DynamicArray(alloc) {
-			insert(_end, std::ranges::begin(rg), std::ranges::end(rg));
+		) : DynamicArray(std::ranges::begin(rg), std::ranges::end(rg), alloc) {
+
 		}
 
 		// --------------------------------------------------------------------
@@ -303,20 +303,20 @@ namespace collections {
 		DynamicArray& operator=(const DynamicArray& other) {
 			constexpr bool propagate = 
 				alloc_traits::propagate_on_container_copy_assignment::value;
+			constexpr bool alwaysEqual = 
+				alloc_traits::is_always_equal::value;
 
-			if (propagate && this->_allocator != other._allocator) {
+			bool equalAllocators = this->_allocator == other._allocator;
+
+			if constexpr (alwaysEqual)
+				elementWiseCopyAssign(other);
+			else if (propagate && !equalAllocators) {
 				releaseResources();
 				_allocator = other._allocator;
 				insert(_end, other._array, other._end);
 			}
-			else if (size() < other.size()) {
-				collections::copy(other._array, other._array + size(), _array);
-				insert(_end, other._array + size(), other._end);
-			}
-			else {
-				collections::copy(other, _array);
-				remove(_array + other.size(), _end);
-			}
+			else
+				elementWiseCopyAssign(other);
 			
 			return *this;
 		}
@@ -341,24 +341,20 @@ namespace collections {
 		{
 			constexpr bool propagate = 
 				alloc_traits::propagate_on_container_move_assignment::value;
-			constexpr bool alwaysEqual = alloc_traits::is_always_equal::value;
+			constexpr bool alwaysEqual =
+				alloc_traits::is_always_equal::value;
 
-			if (alwaysEqual || this->_allocator == other._allocator)
+			bool equalAllocators = this->_allocator == other._allocator;
+
+			if constexpr (alwaysEqual)
 				swapMembers(*this, other);
-			else if (propagate) 
+			else if (equalAllocators)
+				swapMembers(*this, other);
+			else if (propagate)
 				swapAll(*this, other);
-			else if (size() < other.size()) {
-				collections::move(other._array, other._array + size(), _array);
-				insert(
-					_end, 
-					std::move_iterator(other._array + size()), 
-					std::move_iterator(other._end)
-				);
-			}
-			else {
-				collections::move(other, _array);
-				remove(_array + other.size(), _end);
-			}
+			else
+				elementwiseMoveAssign(other);
+
 			return *this;
 		}
 
@@ -1276,6 +1272,32 @@ namespace collections {
 			_array = copy;
 			_end = copy + size;
 			_capacity = capacity;
+		}
+
+		void elementWiseCopyAssign(const DynamicArray& other) {
+			if (size() < other.size()) {
+				collections::copy(other._array, other._array + size(), _array);
+				insert(_end, other._array + size(), other._end);
+			}
+			else {
+				collections::copy(other, _array);
+				remove(_array + other.size(), _end);
+			}
+		}
+
+		void elementwiseMoveAssign(DynamicArray&& other) {
+			if (size() < other.size()) {
+				collections::move(other._array, other._array + size(), _array);
+				insert(
+					_end,
+					std::move_iterator(other._array + size()),
+					std::move_iterator(other._end)
+				);
+			}
+			else {
+				collections::move(other, _array);
+				remove(_array + other.size(), _end);
+			}
 		}
 
 		template <class T> 
