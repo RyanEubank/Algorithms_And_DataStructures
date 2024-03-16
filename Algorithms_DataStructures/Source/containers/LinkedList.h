@@ -105,7 +105,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		LinkedList(const LinkedList& copy) : LinkedList(
 			copy.begin(),
-			copy.size(),
+			copy.end(),
 			alloc_traits::select_on_container_copy_construction(copy._allocator)
 		) {
 			
@@ -123,13 +123,10 @@ namespace collections {
 		/// <param name="other">
 		/// The LinkedList to be moved into this one.
 		/// </param> ----------------------------------------------------------
-		LinkedList(LinkedList&& other) noexcept : 
-			LinkedList(std::move(other._allocator)
-		) {
-			using std::swap;
-			swap(_head, other._head);
-			swap(_tail, other._tail);
-			swap(_size, other._size);
+		LinkedList(LinkedList&& other) noexcept(
+			std::is_nothrow_move_constructible_v<allocator_type>
+		) : LinkedList(std::move(other._allocator)) {
+			swapData(*this, other);
 		}
 
 		// --------------------------------------------------------------------
@@ -174,41 +171,8 @@ namespace collections {
 		LinkedList(
 			std::initializer_list<value_type> init,
 			const allocator_type& alloc = allocator_type{}
-		) : LinkedList(init.begin(), init.size(), alloc) {
+		) : LinkedList(init.begin(), init.end(), alloc) {
 		
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// ~~~ Iterator Constructor ~~~
-		/// 
-		/// <para>
-		/// Constructs a LinkedList with the a copy of the elements starting
-		/// at the given iterator up to the specified size.
-		/// </para></summary>
-		/// 
-		/// <typeparam name="iterator">
-		/// The type of the beginning iterator to copy from.
-		/// </typeparam>
-		/// 
-		/// <param name="begin">
-		/// The iterator to start copying from.
-		/// </param>
-		/// <param name="size">
-		/// The size of the iterator range to copy from.
-		/// </param>
-		/// <param name="alloc">
-		/// The allocator instance used by the list. Default constructs the 
-		/// allocator_type if unspecified.
-		/// </param> ----------------------------------------------------------
-		template <std::input_iterator iterator>
-		LinkedList(
-			iterator it,
-			size_type size,
-			const allocator_type& alloc = allocator_type{}
-		) : LinkedList(alloc) {
-			for (size_type i = 0; i < size; ++i)
-				insertBack(*it++);
 		}
 
 		// --------------------------------------------------------------------
@@ -246,8 +210,8 @@ namespace collections {
 			sentinel end,
 			const allocator_type& alloc = allocator_type{}
 		) : LinkedList(alloc) {
-			for (; begin != end; ++begin)
-				insertBack(*begin);		
+			while (begin != end)
+				insertBack(*begin++);		
 		}
 
 		// --------------------------------------------------------------------
@@ -305,7 +269,25 @@ namespace collections {
 		/// Returns this LinkedList with the copied data.
 		/// </returns> --------------------------------------------------------
 		LinkedList& operator=(const LinkedList& other) {
-			throw std::exception("Not yet implemented.");
+			constexpr bool propagate = 
+				alloc_traits::propagate_on_container_copy_assignment::value;
+			constexpr bool alwaysEqual = 
+				alloc_traits::is_always_equal::value;
+
+			bool equalAllocators = this->_allocator == other._allocator;
+
+			if constexpr (alwaysEqual)
+				elementWiseCopyAssign(other);
+			else if (propagate && !equalAllocators) {
+				clear();
+				_allocator = other._allocator;
+				_node_allocator = other._node_allocator;
+				insert(end(), other.begin(), other.end());
+			}
+			else
+				elementWiseCopyAssign(other);
+			
+			return *this;
 		}
 
 		// --------------------------------------------------------------------
@@ -326,7 +308,23 @@ namespace collections {
 		LinkedList& operator=(LinkedList&& other) 
 			noexcept(alloc_traits::is_always_equal::value) 
 		{
-			throw std::exception("Not yet implemented.");
+			constexpr bool propagate = 
+				alloc_traits::propagate_on_container_move_assignment::value;
+			constexpr bool alwaysEqual =
+				alloc_traits::is_always_equal::value;
+
+			bool equalAllocators = this->_allocator == other._allocator;
+
+			if constexpr (alwaysEqual)
+				swapData(*this, other);
+			else if (equalAllocators)
+				swapData(*this, other);
+			else if (propagate)
+				swapAll(*this, other);
+			else
+				elementwiseMoveAssign(other);
+
+			return *this;
 		}
 
 		// --------------------------------------------------------------------
@@ -788,8 +786,9 @@ namespace collections {
 		/// Removes all elements in the given iterator range [begin, end).
 		/// </summary> --------------------------------------------------------
 		void remove(const_iterator begin, const_iterator end) {
+			node* n = nullptr;
 			while (begin != end) {
-				node* n = begin._node;
+				n = begin._node;
 				++begin;
 				removeNode(n);
 			}
@@ -872,7 +871,21 @@ namespace collections {
 		friend void swap(LinkedList& a, LinkedList& b) 
 			noexcept(alloc_traits::is_always_equal::value) 
 		{
-			throw std::exception("Not yet implemented.");
+			constexpr bool propagate = 
+				alloc_traits::propagate_on_container_swap::value;
+			constexpr bool alwaysEqual = 
+				alloc_traits::is_always_equal::value;
+
+			bool equalAllocators = a._allocator == b._allocator;
+
+			if constexpr (alwaysEqual)
+				swapData(a, b);
+			else if (equalAllocators)
+				swapData(a, b);
+			else if (propagate) 
+				swapAll(a, b);
+			else
+				throw std::exception("Swap on unequal, stateful allocators");
 		}
 
 		// --------------------------------------------------------------------
@@ -980,6 +993,7 @@ namespace collections {
 			std::basic_istream<char_t>& is,
 			LinkedList& list
 		) {
+			// TODO: refactor and optimize
 			value_type v{};
 			size_type size = 0;
 			node* n = nullptr;
@@ -1105,6 +1119,31 @@ namespace collections {
 				n->_next->_prev = n->_prev;
 		}
 
+		void assignFrom(const_iterator begin, const_iterator end) {
+			iterator destination = this->begin();
+			while (destination != this->end()) 
+				*destination++ = *begin++;
+			insert(this->end(), begin, end);
+		}
+
+		void elementWiseCopyAssign(const LinkedList& other) {
+			if (size() < other.size()) 
+				assignFrom(other.begin(), other.end());
+			else {
+				auto pos = collections::copy(other, begin());
+				remove(pos, end());
+			}
+		}
+
+		void elementwiseMoveAssign(LinkedList&& other) {
+			if (size() < other.size()) 
+				assignFrom(std::move_iterator(other.begin()), other.end());
+			else {
+				auto pos = collections::move(other, begin());
+				remove(pos, end());
+			}
+		}
+
 		template <class... Args>
 		void insertAt(node* location, Args&&... args) {
 			node* newNode = createNode(std::forward<Args>(args)...);
@@ -1150,11 +1189,11 @@ namespace collections {
 			_size--;
 		}
 
-		void removeAll(size_type begin, size_type end) {
-			node* n = getNodeAt(begin);
+		void removeAll(size_type begin_index, size_type end_index) {
+			node* n = getNodeAt(begin_index);
 			node* next = nullptr;
 
-			while (begin++ < end) {
+			while (begin_index++ < end_index) {
 				next = n->_next;
 				removeNode(n);
 				n = next;
@@ -1178,6 +1217,20 @@ namespace collections {
 			err << INVALID_INDEX << std::endl << "Index: " << index
 				<< " Size: " << size() << std::endl;
 			throw std::out_of_range(err.str().c_str());
+		}
+
+		friend void swapData(LinkedList& a, LinkedList& b) noexcept {
+			using std::swap;
+			swap(a._head, b._head);
+			swap(a._tail, b._tail);
+			swap(a._size, b._size);
+		}
+
+		friend void swapAll(LinkedList& a, LinkedList& b) noexcept {
+			using std::swap;
+			swap(a._allocator, b._allocator);
+			swap(a._node_allocator, b._node_allocator);
+			swapData(a, b);
 		}
 
 		// --------------------------------------------------------------------

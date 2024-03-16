@@ -85,7 +85,7 @@ namespace collections {
 		/// The type of the range to be searched.
 		/// </typeparam>
 		/// 
-		/// <param name="r">
+		/// <param name="rg">
 		/// The range to be searched.
 		/// </param>
 		/// <param name="value">
@@ -97,8 +97,8 @@ namespace collections {
 		/// otherwise.
 		/// </returns> --------------------------------------------------------
 		template <class T, std::ranges::input_range range>
-		constexpr bool operator()(const range& r, const T& value) const {
-			return (*this)(std::ranges::begin(r), std::ranges::end(r), value);
+		constexpr bool operator()(const range& rg, const T& value) const {
+			return (*this)(std::ranges::begin(rg), std::ranges::end(rg), value);
 		}
 
 		// --------------------------------------------------------------------
@@ -141,16 +141,13 @@ namespace collections {
 		/// the given output iterator.
 		/// </summary>
 		/// 
-		/// <typeparam name="T">
-		/// The element type of the range being written to.
-		/// </typeparam>
-		/// <typeparam name="in_iterator">
+		/// <typeparam name="iterator">
 		/// The type of the input iterator being copied from.
 		/// </typeparam>
-		/// <typeparam name="sentinel_for">
+		/// <typeparam name="sentinel">
 		/// The sentinel or end iterator of the range being copied from.
 		/// </typeparam>
-		/// <typeparam name="out_iterator">
+		/// <typeparam name="output">
 		/// The type of the output iterator being copied to.
 		/// </typeparam>
 		/// 
@@ -161,20 +158,26 @@ namespace collections {
 		/// The end of the iterator range to copy from.
 		/// </param>
 		/// <param name="destination">
-		/// The output iterator to start copying to.
-		/// </param> ----------------------------------------------------------
+		/// The destination to copy to.
+		/// </param> 
+		/// 
+		/// <returns>
+		/// Returns the destination iterator pointing past the last element
+		/// copied, or the original destination if the range is empty.
+		/// </returns> --------------------------------------------------------
 		template <
-			std::input_iterator in_iterator,
-			std::sentinel_for<in_iterator> sentinel,
+			std::input_iterator iterator,
+			std::sentinel_for<iterator> sentinel,
 			std::weakly_incrementable output
 		>
-		constexpr void operator()(
-			in_iterator begin,
+		constexpr output operator()(
+			iterator begin,
 			sentinel end, 
 			output destination
 		) const {
 			while (begin != end) 
 				*destination++ = *begin++;
+			return destination;
 		}
 
 		// --------------------------------------------------------------------
@@ -183,32 +186,124 @@ namespace collections {
 		/// iterator.
 		/// </summary>
 		/// 
-		/// <typeparam name="T">
-		/// The element type of the range being written to.
-		/// </typeparam>
 		/// <typeparam name="range">
 		/// The type of the input range being copied from.
 		/// </typeparam>
-		/// <typeparam name="out_iterator">
+		/// <typeparam name="output">
 		/// The type of the output iterator being copied to.
 		/// </typeparam>
 		/// 
-		/// <param name="r">
+		/// <param name="rg">
 		/// The range being copied from.
 		/// </param>
 		/// <param name="destination">
 		/// The output iterator to start copying to.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// <returns>
+		/// 
+		/// <returns>
+		/// Returns the destination iterator pointing past the last element
+		/// copied, or the original destination if the range is empty.
+		/// </returns> --------------------------------------------------------
 		template <
 			std::ranges::input_range range,
 			std::weakly_incrementable output
 		>
-		constexpr void operator()(const range& r, output destination) const {
-			(*this)(std::ranges::begin(r), std::ranges::end(r), destination);
+		constexpr output operator()(
+			const range& rg, 
+			output destination
+		) const {
+			return (*this)
+				(std::ranges::begin(rg), std::ranges::end(rg), destination);
 		}
 	};
 
 	inline constexpr copy_ copy;
+
+	struct copy_n_ {
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Copies the specified number of values from the iterator range to
+		/// the given destination.
+		/// </summary>
+		/// 
+		/// <typeparam name="iterator">
+		/// The type of the input iterator being copied from.
+		/// </typeparam>
+		/// <typeparam name="output">
+		/// The type of the output iterator being copied to.
+		/// </typeparam>
+		/// 
+		/// <param name="begin">
+		/// The beginning of the iterator range to copy from.
+		/// </param>
+		/// <param name="count">
+		/// The number of elements to copy.
+		/// </param>
+		/// <param name="destination">
+		/// The destination to copy to.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the destination iterator pointing past the last element
+		/// copied, or the original destination if count equals zero.
+		/// </returns> --------------------------------------------------------
+		template <
+			std::input_iterator iterator,
+			std::weakly_incrementable output
+		>
+		constexpr output operator()(
+			iterator begin,
+			size_t count, 
+			output destination
+		) const {
+			for (size_t i = 0; i < count; ++i) 
+				*destination++ = *begin++;
+			return destination;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Copies the specified number of values from the range to the 
+		/// destination.
+		/// </summary>
+		/// 
+		/// <typeparam name="range">
+		/// The type of the input range being copied from.
+		/// </typeparam>
+		/// <typeparam name="output">
+		/// The type of the output iterator being copied to.
+		/// </typeparam>
+		/// 
+		/// <param name="rg">
+		/// The range being copied from.
+		/// </param>
+		/// <param name="count">
+		/// The number of elements to copy.
+		/// </param>
+		/// <param name="destination">
+		/// The output iterator to start copying to.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the destination iterator pointing past the last element
+		/// copied, or the original destination if count equals zero.
+		/// </returns> --------------------------------------------------------
+		template <
+			std::ranges::input_range range,
+			std::weakly_incrementable output
+		>
+		constexpr output operator()(
+			const range& rg, 
+			size_t count, 
+			output destination
+		) const {
+			return (*this)(std::ranges::begin(rg), count, destination);
+		}
+	};
+
+	inline constexpr copy_n_ copy_n;
 
 	struct fill_ {
 
@@ -267,7 +362,7 @@ namespace collections {
 		/// The type of the range being filled.
 		/// </typeparam>
 		/// 
-		/// <param name="r">
+		/// <param name="rg">
 		/// The range to be filled.
 		/// </param>
 		/// <param name="value">
@@ -280,14 +375,95 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <class T, std::ranges::output_range<const T&> range>
 		constexpr std::ranges::borrowed_iterator_t<range> operator()(
-			range&& r, 
+			range&& rg, 
 			const T& value
 		) const {
-			return (*this)(std::ranges::begin(r), std::ranges::end(r), value);
+			return (*this)
+				(std::ranges::begin(rg), std::ranges::end(rg), value);
 		}
 	};
 
 	inline constexpr fill_ fill;
+
+	struct fill_n_ {
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Fills count number of values starting at the given iterator.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being inserted.
+		/// </typeparam>
+		/// <typeparam name="iterator">
+		/// The type of the output iterator being iterated over.
+		/// </typeparam>
+		/// 
+		/// <param name="destination">
+		/// The beginning iterator to start filling at.
+		/// </param>
+		/// <param name="end">
+		/// The sentinel or end iterator to stop filling at.
+		/// </param>
+		/// <param name="value">
+		/// The value to fill the range with.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the start iterator after it has be iterated to the end.
+		/// </returns> --------------------------------------------------------
+		template <
+			class T,
+			std::output_iterator<const T&> iterator
+		>
+		constexpr iterator operator()(
+			iterator destination, 
+			size_t count,
+			const T& value
+		) const {
+			for (size_t i = 0; i < count; ++i)
+				*destination++ = value;
+			return destination;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Fills the given range with the specified value.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being inserted.
+		/// </typeparam>
+		/// <typeparam name="range">
+		/// The type of the range being filled.
+		/// </typeparam>
+		/// 
+		/// <param name="rg">
+		/// The range to be filled.
+		/// </param>
+		/// <param name="count">
+		/// The number of elements to fill.
+		/// </param>
+		/// <param name="value">
+		/// The value to fill the range with.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the starting iterator of the range after it has been 
+		/// iterated to the end.
+		/// </returns> --------------------------------------------------------
+		template <class T, std::ranges::output_range<const T&> range>
+		constexpr std::ranges::borrowed_iterator_t<range> operator()(
+			range&& rg,
+			size_t count,
+			const T& value
+		) const {
+			return (*this)
+				(std::ranges::begin(rg), count, value);
+		}
+	};
+
+	inline constexpr fill_n_ fill_n;
 
 	struct index_of_ {
 
@@ -350,7 +526,7 @@ namespace collections {
 		/// The type of the range being searched.
 		/// </typeparam>
 		/// 
-		/// <param name="r">
+		/// <param name="rg">
 		/// The range to be searched.
 		/// </param>
 		/// <param name="value">
@@ -361,8 +537,9 @@ namespace collections {
 		/// Returns the index of the element if found, returns -1 otherwise.
 		/// </returns>
 		template <class T, std::ranges::input_range range>
-		constexpr auto operator()(const range& r, const T& value) const {
-			return (*this)(std::ranges::begin(r), std::ranges::end(r), value);
+		constexpr auto operator()(const range& rg, const T& value) const {
+			return (*this)
+				(std::ranges::begin(rg), std::ranges::end(rg), value);
 		}
 	};
 
@@ -461,16 +638,13 @@ namespace collections {
 		/// the given output iterator.
 		/// </summary>
 		/// 
-		/// <typeparam name="T">
-		/// The element type of the range being moved to.
-		/// </typeparam>
-		/// <typeparam name="in_iterator">
+		/// <typeparam name="iterator">
 		/// The type of the input iterator being moved from.
 		/// </typeparam>
-		/// <typeparam name="sentinel_for">
+		/// <typeparam name="sentinel">
 		/// The sentinel or end iterator of the range being moved from.
 		/// </typeparam>
-		/// <typeparam name="out_iterator">
+		/// <typeparam name="output">
 		/// The type of the output iterator being moved to.
 		/// </typeparam>
 		/// 
@@ -482,19 +656,25 @@ namespace collections {
 		/// </param>
 		/// <param name="destination">
 		/// The output iterator to start copying to.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the destination iterator pointing past the last element
+		/// moved, or the original destination if the range is empty.
+		/// </returns> --------------------------------------------------------
 		template <
-			std::input_iterator in_iterator,
-			std::sentinel_for<in_iterator> sentinel,
+			std::input_iterator iterator,
+			std::sentinel_for<iterator> sentinel,
 			std::weakly_incrementable output
 		>
-		constexpr void operator()(
-			in_iterator begin,
+		constexpr output operator()(
+			iterator begin,
 			sentinel end,
 			output destination
 		) const {
 			while (begin != end)
 				*destination++ = std::ranges::iter_move(begin++);
+			return destination;
 		}
 
 		// --------------------------------------------------------------------
@@ -503,41 +683,134 @@ namespace collections {
 		/// iterator.
 		/// </summary>
 		/// 
-		/// <typeparam name="T">
-		/// The element type of the range being written to.
-		/// </typeparam>
 		/// <typeparam name="range">
 		/// The type of the input range being copied from.
 		/// </typeparam>
-		/// <typeparam name="out_iterator">
+		/// <typeparam name="output">
 		/// The type of the output iterator being copied to.
 		/// </typeparam>
 		/// 
-		/// <param name="r">
+		/// <param name="rg">
 		/// The range being copied from.
 		/// </param>
 		/// <param name="destination">
 		/// The output iterator to start copying to.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the destination iterator pointing past the last element
+		/// moved, or the original destination if the range is empty.
+		/// </returns> --------------------------------------------------------
 		template <
 			std::ranges::input_range range,
 			std::weakly_incrementable output
 		>
-		constexpr void operator()(const range& r, output destination) const {
-			(*this)(std::ranges::begin(r), std::ranges::end(r), destination);
+		constexpr output operator()(
+			const range& rg, 
+			output destination
+		) const {
+			return (*this)
+				(std::ranges::begin(rg), std::ranges::end(rg), destination);
 		}
 	};
 
 	inline constexpr move_ move;
 
+	struct move_n_ {
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Moves count number of elements from the given iterator to the 
+		/// destination.
+		/// </summary>
+		/// 
+		/// <typeparam name="iterator">
+		/// The type of the input iterator being moved from.
+		/// </typeparam>
+		/// <typeparam name="output">
+		/// The type of the output iterator being moved to.
+		/// </typeparam>
+		/// 
+		/// <param name="begin">
+		/// The beginning of the iterator range to move from.
+		/// </param>
+		/// <param name="count">
+		/// The number of elements to move.
+		/// </param>
+		/// <param name="destination">
+		/// The output iterator to start moving to.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the destination iterator pointing past the last element
+		/// moved, or the original destination if the range is empty.
+		/// </returns> --------------------------------------------------------
+		template <
+			std::input_iterator iterator,
+			std::weakly_incrementable output
+		>
+		constexpr output operator()(
+			iterator begin,
+			size_t count,
+			output destination
+		) const {
+			for (size_t i = 0; i < count; ++i)
+				*destination++ = std::ranges::iter_move(begin++);
+			return destination;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Copies the given range to the destination starting at the output 
+		/// iterator.
+		/// </summary>
+		/// 
+		/// <typeparam name="range">
+		/// The type of the input range being copied from.
+		/// </typeparam>
+		/// <typeparam name="output">
+		/// The type of the output iterator being copied to.
+		/// </typeparam>
+		/// 
+		/// <param name="rg">
+		/// The range being copied from.
+		/// </param>
+		/// <param name="count">
+		/// The number of elements to move.
+		/// </param>
+		/// <param name="destination">
+		/// The output iterator to start copying to.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the destination iterator pointing past the last element
+		/// moved, or the original destination if the range is empty.
+		/// </returns> --------------------------------------------------------
+		template <
+			std::ranges::input_range range,
+			std::weakly_incrementable output
+		>
+		constexpr output operator()(
+			const range& rg,
+			size_t count,
+			output destination
+		) const {
+			return (*this)
+				(std::ranges::begin(rg), count, destination);
+		}
+	};
+
+	inline constexpr move_n_ move_n;
+
 	struct shift_ {
 	private:
 		
-		constexpr void doShift(auto begin, auto end, int64_t amount) const {
+		constexpr auto doShift(auto begin, auto end, int64_t amount) const {
 			while (begin != end) {
 				*std::next(begin, amount) = *begin;
 				begin++;
 			}
+			return begin;
 		}
 
 	public:

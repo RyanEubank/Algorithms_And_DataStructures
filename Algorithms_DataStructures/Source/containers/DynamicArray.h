@@ -108,8 +108,8 @@ namespace collections {
 		/// The DynamicArray to be copied.
 		/// </param> ----------------------------------------------------------
 		DynamicArray(const DynamicArray& copy) : DynamicArray(
-			collections::from_range,
-			copy,
+			copy.begin(),
+			copy.end(),
 			alloc_traits::select_on_container_copy_construction(copy._allocator)
 		) {
 
@@ -1274,27 +1274,27 @@ namespace collections {
 
 		void elementWiseCopyAssign(const DynamicArray& other) {
 			if (size() < other.size()) {
-				collections::copy(other._array, other._array + size(), _array);
+				collections::copy_n(other._array, size(), _array);
 				insert(_end, other._array + size(), other._end);
 			}
 			else {
-				collections::copy(other, _array);
-				remove(_array + other.size(), _end);
+				auto pos = collections::copy(other, _array);
+				remove(pos, _end);
 			}
 		}
 
 		void elementwiseMoveAssign(DynamicArray&& other) {
 			if (size() < other.size()) {
-				collections::move(other._array, other._array + size(), _array);
+				collections::move_n(other._array, size(), _array);
 				insert(
-					_end,
-					std::move_iterator(other._array + size()),
-					std::move_iterator(other._end)
+					_end, 
+					std::move_iterator(other._array + size()), 
+					other._end
 				);
 			}
 			else {
-				collections::move(other, _array);
-				remove(_array + other.size(), _end);
+				auto pos = collections::move(other, _array);
+				remove(pos, _end);
 			}
 		}
 
@@ -1337,27 +1337,31 @@ namespace collections {
 			std::sentinel_for<fwd_iterator> sentinel
 		>
 		void insertAt(iterator position, fwd_iterator begin, sentinel end) {
-			// TODO: Refactor for readability
-			size_type offset = position - _array;
 			size_type range_size = std::distance(begin, end);
 			size_type total = size() + range_size;
 
-			if (_capacity < total)
+			if (_capacity < total) {
+				size_type offset = position - _array;
 				reserve(total);
+				position = _array + offset;
+			}
 
-			position = _array + offset;
-			if (position == _end) {
-				while (begin != end)
-					constructElement(_end++, *begin++);
-			}
-			else{
-				auto next = _end;
-				for (size_type i = 0; i < range_size; ++i)
-					constructElement(next++, *(_end - range_size + i));
+			if (position == _end) 
+				constructAtEnd(begin, end);
+			else {
+				constructAtEnd(_end - range_size, _end);
 				collections::shift(position, _end - range_size, range_size);
-				while (begin != end)
-					*position++ = *begin++;
+				collections::copy(begin, end, position);
 			}
+		}
+
+		template <
+			std::forward_iterator fwd_iterator,
+			std::sentinel_for<fwd_iterator> sentinel
+		>
+		void constructAtEnd(fwd_iterator begin, sentinel end) {
+			while (begin != end)
+				constructElement(_end++, *begin++);
 		}
 
 		void ensureCapacity() {
