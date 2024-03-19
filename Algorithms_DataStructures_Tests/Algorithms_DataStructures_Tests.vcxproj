@@ -33,16 +33,16 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\Ryan\Desktop\Dev. Projects\Visual Studios Projects\MuffinCorp. Solutions\packages\gmock.1.11.0\lib\native\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\packages\gmock.1.11.0\lib\native\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Users\Ryan\Desktop\Dev. Projects\Visual Studios Projects\MuffinCorp. Solutions\packages\gmock.1.11.0\lib\native\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\packages\gmock.1.11.0\lib\native\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\Ryan\Desktop\Dev. Projects\Visual Studios Projects\MuffinCorp. Solutions\packages\gmock.1.11.0\lib\native\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\packages\gmock.1.11.0\lib\native\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\Ryan\Desktop\Dev. Projects\Visual Studios Projects\MuffinCorp. Solutions\packages\gmock.1.11.0\lib\native\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\packages\gmock.1.11.0\lib\native\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
