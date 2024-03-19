@@ -2,77 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="..\packages\gmock.1.11.0\lib\native\src\gtest\src\gtest_main.cc" />
-    <ClCompile Include="test.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="dynamic_array_allocation_tests.cpp">
-      <Filter>data_structure_tests\dynamic_array_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="dynamic_array_collection_interface_tests.cpp">
-      <Filter>data_structure_tests\dynamic_array_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="dynamic_array_access_tests.cpp">
-      <Filter>data_structure_tests\dynamic_array_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="linked_list_collection_interface_tests.cpp">
-      <Filter>data_structure_tests\linked_list_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="linked_list_access_tests.cpp">
-      <Filter>data_structure_tests\linked_list_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="collection_tests.h">
-      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
-    </ClCompile>
-    <ClCompile Include="dynamic_array_insertion_tests.cpp">
-      <Filter>data_structure_tests\dynamic_array_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="dynamic_array_emplace_tests.cpp">
-      <Filter>data_structure_tests\dynamic_array_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="dynamic_array_removal_tests.cpp">
-      <Filter>data_structure_tests\dynamic_array_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="linked_list_insertion_tests.cpp">
-      <Filter>data_structure_tests\linked_list_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="linked_list_removal_tests.cpp">
-      <Filter>data_structure_tests\linked_list_tests</Filter>
-    </ClCompile>
-    <ClCompile Include="linked_list_emplace_tests.cpp">
-      <Filter>data_structure_tests\linked_list_tests</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="mock_allocator.h">
-      <Filter>data_structure_tests\mocks</Filter>
-    </ClInclude>
-    <ClInclude Include="test_inputs.h">
-      <Filter>data_structure_tests\element_types</Filter>
-    </ClInclude>
-    <ClInclude Include="test_types.h">
-      <Filter>data_structure_tests\element_types</Filter>
-    </ClInclude>
-    <ClInclude Include="dynamic_array_test_fixture.h">
-      <Filter>data_structure_tests\dynamic_array_tests</Filter>
-    </ClInclude>
-    <ClInclude Include="linked_list_test_fixture.h">
-      <Filter>data_structure_tests\linked_list_tests</Filter>
-    </ClInclude>
-    <ClInclude Include="sequential_collection_tests.h">
-      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
-    </ClInclude>
-    <ClInclude Include="sequential_collection_insert_tests.h">
-      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
-    </ClInclude>
-    <ClInclude Include="sequential_collection_emplace_tests.h">
-      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
-    </ClInclude>
-    <ClInclude Include="sequential_collection_remove_tests.h">
-      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
-    </ClInclude>
-    <ClInclude Include="sequential_collection_access_tests.h">
-      <Filter>data_structure_tests\interface_test_suite_templates</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data_structure_tests">
