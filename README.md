@@ -5,4 +5,4 @@ This is a personal project to design and implement common data structures and al
 Reccomended to use Visual Studio IDE to run tests, however the current MSVC test adapter for GoogleTest does not include GMock. Please follow [this tutorial](https://stackoverflow.com/questions/60486110/how-to-use-googlemock-in-visual-studio) to setup the GoogleTest/GMock library as an external project (list as Option #2) to link with the Unit Test project.
 
 ## Run Tests
-Compile and run gtest_main.cc, ensure C++20 features are enabled. 
+Compile and run gtest_main.cc, ensure C++20 features are enabled. Alternately run tests with Visual Studio Test Explorer.
