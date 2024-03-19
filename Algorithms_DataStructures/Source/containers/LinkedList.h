@@ -805,7 +805,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplaceFront(Args&&... args) {
-			throw std::exception("Not yet implemented.");
+			insertAt(_head, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -819,7 +819,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplaceBack(Args&&... args) {
-			throw std::exception("Not yet implemented.");
+			insertAt(nullptr, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -836,7 +836,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplace(Index index, Args&&... args) {
-			throw std::exception("Not yet implemented.");
+			insertAt(index, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -853,7 +853,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplace(const_iterator position, Args&&... args) {
-			throw std::exception("Not yet implemented.");
+			insertAt(position._node, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
