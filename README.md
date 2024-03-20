@@ -13,9 +13,10 @@ Use your preferred method to install cmake on your machine, such as: <br>
 ## Build Unit Tests
 Opening the project in Visual Studio IDE with [CMake extensions](https://learn.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-170) installed will automatically build the tests; No user interactions neccessary. Test executables will be available under the startup dropdown.<br>
 
-Otherwise if you are building tests manually run the following command from the project's root directory:
+Otherwise if you are building tests manually run the following commands from the project's root directory:
 ```
 cmake -S . -B out/build
+cmake --build out/build
 ```
 
 and cmake will build all visible unit tests.
