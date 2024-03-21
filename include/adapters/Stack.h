@@ -17,16 +17,15 @@
 
 #pragma once
 
-#include "../interfaces/IStack.h"
+#include "../concepts/sequential.h"
 #include "../containers/DynamicArray.h"
 
 namespace collections {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Stack is a container adapter that implements the IStack interface
-	/// from any container that supports list operations from the ListConcept
-	/// interface.
+	/// Stack is a container adapter that implements a stack interfance
+	/// from any sequential container.
 	/// </summary>
 	/// 
 	/// <typeparam name="element_t">
@@ -35,25 +34,72 @@ namespace collections {
 	/// <typeparam name="container">
 	/// The type of the underlying container used by the stack.
 	/// </typeparam> ----------------------------------------------------------
-	template <class element_t, class container = DynamicArray<element_t>>
-		requires ListConcept<container, element_t>
-	class Stack : public IStack<Stack<element_t, container>, element_t> {
-	private:
-
-		using E = element_t;
-
-		container m_container;
-
+	template <class element_t, sequential container_t = DynamicArray<element_t>>
+	class Stack {
 	public:
+
+		using container = container_t;
+		using allocator_type = typename container::allocator_type;
+		using value_type = typename container::value_type;
+		using size_type = typename container::size_type;
+		using reference = typename container::reference;
+		using const_reference = typename container::const_reference;
+		using pointer = typename container::pointer;
+		using const_pointer = typename container::const_pointer;
 
 		// --------------------------------------------------------------------
 		/// <summary>
 		/// ~~~ Default Constructor ~~~
 		/// 
 		///	<para>
-		/// Constructs an empty stack with zero size.
+		/// Constructs an empty stack, and default constructs its internal
+		/// container.
 		/// </para></summary> -------------------------------------------------
-		Stack() : m_container() {}
+		constexpr Stack() : _container() {}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Container Constructor ~~~
+		/// 
+		///	<para>
+		/// Constructs a stack from a copy of the provided container.
+		/// </para></summary> 
+		/// 
+		/// <param name="c">
+		/// The container to copy.
+		/// </param> ----------------------------------------------------------
+		explicit Stack(const container& c) : _container(c) {}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Container Constructor ~~~
+		/// 
+		///	<para>
+		/// Constructs a stackby moving the provided container.
+		/// </para></summary> 
+		/// 
+		/// <param name="c">
+		/// The container to move.
+		/// </param> ----------------------------------------------------------
+		explicit Stack(container&& c) : _container(std::move(c)) {}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Allocator Constructor ~~~
+		/// 
+		///	<para>
+		/// Constructs an empty stack passing the given allocator to the 
+		/// stack's internal container.
+		/// </para></summary> 
+		/// 
+		/// <param name="alloc">
+		/// The allocator instance used by the internal container.
+		/// </param> ----------------------------------------------------------
+		explicit Stack(const allocator_type& alloc) noexcept :
+			_container(alloc)
+		{
+
+		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -64,32 +110,107 @@ namespace collections {
 		/// <param name="init">
 		/// The initialization list to copy elements from.
 		/// </param> ----------------------------------------------------------
-		Stack(std::initializer_list<E> init) :
-			Stack(init.begin(), init.size()) {}
+		Stack(std::initializer_list<value_type> init) :
+			Stack(init.begin(), init.end()) {}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Constructs a stack with the a copy of the elements in the specified
-		/// array.
-		/// </summary>
-		/// 
-		/// <param name="array">
-		/// The generic array to copy elements from.
-		/// </param>
-		/// 
-		/// <param name="size">
-		/// The size of the array being copied.
-		/// </param> ----------------------------------------------------------
-		Stack(const E* array, size_t size) : m_container(array, size) {}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// ~~~ Destructor ~~~
+		/// ~~~ Iterator Constructor ~~~
 		/// 
 		/// <para>
-		/// Virtual destructor allowing for deleting derived types from base.
-		/// </para></summary> -------------------------------------------------
-		~Stack() = default;
+		/// Constructs s stack with the a copy of the elements from the
+		/// given iterator/sentinel pair.
+		/// </para></summary>
+		/// 
+		/// <typeparam name="iterator">
+		/// The type of the beginning iterator to copy from.
+		/// </typeparam>
+		/// <typeparam name="sentinel">
+		/// The type of the end iterator or sentinel.
+		/// </typeparam>
+		/// 
+		/// <param name="begin">
+		/// The beginning of the range to copy from.
+		/// </param>
+		/// <param name="end">
+		/// The end of the range to copy from.
+		/// </param>
+		/// <param name="alloc">
+		/// The allocator instance used by the internal container. Default 
+		/// constructs the allocator if unspecified.
+		/// </param> ----------------------------------------------------------
+		template <
+			std::input_iterator iterator, 
+			std::sentinel_for<iterator> sentinel
+		>
+		Stack(
+			iterator begin,
+			sentinel end,
+			const allocator_type& alloc = allocator_type{}
+		) : _container(begin, end, alloc) {
+
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Range Constructor ~~~
+		/// 
+		/// <para>
+		/// Constructs a stack with a copy of the elements from the given 
+		/// range.
+		/// 
+		/// <typeparam name="range">
+		/// The type of the range being constructed from.
+		/// </typeparam>
+		/// 
+		/// <param name="tag">
+		/// Range construction tag to disabiguate this constructor from
+		/// construction with an initializer list.
+		/// </param>
+		/// <param name="rg">
+		/// The range to construct the stack with.
+		/// </param>
+		/// <param name="alloc">
+		/// The allocator instance for the internal container. Default 
+		/// constructs the allocator if unspecified.
+		/// </param> ----------------------------------------------------------
+		template <std::ranges::input_range range>
+		Stack(
+			from_range_t tag,
+			range&& rg,
+			const allocator_type& alloc = allocator_type{}
+		) : Stack(std::ranges::begin(rg), std::ranges::end(rg), alloc) {
+
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Fill Constructor ~~~
+		/// 
+		/// <para>
+		/// Constructs a stack with the specified size, constucting 
+		/// elements with the given value for each (or default) and uses the 
+		/// given allocator for the internal container (or default allocator).
+		/// </para></summary>
+		/// 
+		/// <param name="size">
+		/// The initial size of the stack.
+		/// </param>
+		/// <param name="value">
+		/// The value to initialize every element to. Uses default value for
+		/// the type if unspecified.
+		/// </param>
+		/// <param name="alloc">
+		/// The allocator instance used by the internal container. Default 
+		/// constructs the allocator if unspecified.
+		/// </param> ----------------------------------------------------------
+		Stack(
+			Size size,
+			const_reference value = value_type{},
+			const allocator_type& alloc = allocator_type{}
+		) : _container(size, value, alloc) {
+
+		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -97,10 +218,10 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns the number of elements contained by the stack as a size_t.
+		/// Returns the number of elements contained by the stack.
 		/// </returns>
-		size_t size() const {
-			return m_container.size();
+		[[nodiscard]] size_type size() const {
+			return _container.size();
 		}
 
 		// --------------------------------------------------------------------
@@ -108,38 +229,19 @@ namespace collections {
 		/// Empties and clears the stack of all elements.
 		/// </summary> --------------------------------------------------------
 		void clear() {
-			m_container.clear();
+			_container.clear();
 		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Returns whether the stack is empty: contains no elements.
+		/// Returns whether the stack is empty and contains no elements.
 		/// </summary>
 		/// 
 		/// <returns>
 		/// Returns true is the stack has zero elements, false otherwise.
 		/// </returns> --------------------------------------------------------
-		bool isEmpty() const {
-			return size() == 0;
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns whether the given element is contained by the given stack.
-		/// </summary>
-		/// 
-		/// <param name="collection">
-		/// The queue to be searched.
-		/// </param>
-		/// <param name="element">
-		/// The element to search for.
-		/// </param>
-		/// 
-		/// <returns>
-		/// Returns true if the stack contains the element, false otherwise.
-		/// </returns> --------------------------------------------------------
-		bool contains(const element_t& element) const {
-			return m_container.contains(element);
+		[[nodiscard]] bool isEmpty() const {
+			return _container.isEmpty();
 		}
 
 		// --------------------------------------------------------------------
@@ -150,16 +252,16 @@ namespace collections {
 		/// <param name="element">
 		/// The element to be inserted.
 		/// </param> ----------------------------------------------------------
-		void push(const E& element) {
-			m_container.insertLast(element);
+		void push(const_reference element) {
+			_container.insertLast(element);
 		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Removes the element at the front of the stack.
+		/// Removes the element at the top of the stack.
 		/// </summary> --------------------------------------------------------
 		void pop() {
-			m_container.removeLast();
+			_container.removeLast();
 		}
 
 		// --------------------------------------------------------------------
@@ -170,9 +272,9 @@ namespace collections {
 		/// <returns>
 		/// Returns a reference to the element at the top of the stack.
 		/// </returns> --------------------------------------------------------
-		E& peek() {
-			const E& element = std::as_const(*this).peek();
-			return const_cast<E&>(element);
+		[[nodiscard]] reference peek() {
+			const_reference element = std::as_const(*this).peek();
+			return const_cast<reference>(element);
 		}
 
 		// --------------------------------------------------------------------
@@ -184,24 +286,45 @@ namespace collections {
 		/// Returns a constant reference to the element at the top of the 
 		/// stack.
 		/// </returns> --------------------------------------------------------
-		const E& peek() const {
-			return m_container.last();
+		[[nodiscard]] const_reference peek() const {
+			return _container.last();
 		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Transfers the contents of the calling stack to the specified stack
-		/// in bottom to top (FIFO) order. The calling stack will be empty
-		/// after this method completes.
+		/// Returns whether the stack contains the specified element.
 		/// </summary>
 		/// 
-		/// <param name="other">
-		/// The other stack to transfer this stack's contents to.
-		/// </param> ----------------------------------------------------------
-		void placeOnTopOf(Stack<E>& other) {
-			for (auto& e : m_container)
-				other.push(e);
-			clear();
+		/// <param name="element">
+		/// The element to search for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns true if the element is found within the stack, false
+		/// otherwise.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] bool contains(const_reference element) const {
+			return collections::contains(_container, element);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns whether the stack contains an element that satisfies the
+		/// given predicate.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// The condition to match elements against.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns true if the element is found within the stack, false
+		/// otherwise.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] bool containsMatch(
+			std::function<bool(value_type)> predicate
+		) const {
+			throw std::exception("Not yet implemented");
 		}
 
 		// --------------------------------------------------------------------
@@ -220,13 +343,28 @@ namespace collections {
 		/// Returns true if the given Stack's underlying containers are equal,
 		/// false otherwise.
 		/// </returns> --------------------------------------------------------
-		friend bool operator==(
-			const Stack<E, container>& lhs,
-			const Stack<E, container>& rhs
-		) {
-			return collections::isLexicographicallyEqual(
-				lhs.m_container, rhs.m_container
-			);
+		friend bool operator==(const Stack& lhs, const Stack& rhs) {
+			return lhs._container == rhs._container;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Equality Operator ~~~
+		/// </summary>
+		/// 
+		/// <param name="lhs">
+		/// The stack appearing on the left side of the operator.
+		/// </param>
+		/// <param name="rhs">
+		/// The stack appearing on the right side of the operator.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns true if the given arrays share exact ordering based
+		/// on contents. Always returns false for arrays of different size.
+		/// </returns> --------------------------------------------------------
+		friend auto operator<=>(const Stack& lhs, const Stack& rhs) {
+			return lhs._container <=> rhs._container;
 		}
 
 		// --------------------------------------------------------------------
@@ -242,23 +380,55 @@ namespace collections {
 		/// The stream being written to.
 		/// </param>
 		/// <param name="arr">
-		/// The Queue being written out.
+		/// The stack being written out.
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns the output stream written with the given Stack.
+		/// Returns the input stream after writing.
 		/// </returns> --------------------------------------------------------
 		template <typename charT>
 		friend std::basic_ostream<charT>& operator<<(
 			std::basic_ostream<charT>& os,
-			const Stack<E, container>& stack
+			const Stack& stack
 		) {
-			os << "Stack<" << typeid(E).name() << ", "
-				<< typeid(container).name() << ">"
-				<< " (size = " << stack.size() << ")" << std::endl;
-
-			stack.m_container.writeToStream(os);
+			os << stack._container;
 			return os;
 		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Input Stream Operator ~~~
+		/// </summary>
+		/// 
+		/// <typeparam name="charT">
+		/// The type of the character stream returned by the operator.
+		/// </typeparam>
+		/// 
+		/// <param name="os">
+		/// The stream being read from.
+		/// </param>
+		/// <param name="arr">
+		/// The stack being read into.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the input stream after reading.
+		/// </returns> --------------------------------------------------------
+		template <typename charT>
+		friend std::basic_istream<charT>& operator>>(
+			std::basic_istream<charT>& is,
+			Stack& stack
+		) {
+			is >> stack._container;
+			return is;
+		}
+
+		private:
+			container _container;
 	};
+
+	static_assert(
+		collection<Stack<int>>,
+		"Stack does not implement the collection interface."
+	);
 }
