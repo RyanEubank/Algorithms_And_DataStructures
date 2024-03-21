@@ -299,7 +299,7 @@ namespace collections {
 		/// </para></summary>
 		/// 
 		/// <param name="other">
-		/// The LinkedList to copy from.
+		/// The LinkedList to move from.
 		/// </param>
 		/// 
 		/// <returns>
@@ -605,9 +605,8 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Inserts the element into the list at the given index,
-		/// and maintains stable order of the existing elements. Throws an 
-		/// exception if the index in invalid.
+		/// Inserts the element into the list at the given index. Throws an 
+		/// exception if the index is invalid.
 		/// </summary>
 		/// 
 		/// <param name="index">
@@ -622,9 +621,8 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Inserts the element into the list at the given index,
-		/// and maintains stable order of the existing elements. Throws an 
-		/// exception if the index in invalid.
+		/// Inserts the element into the list at the given index. Throws an 
+		/// exception if the index is invalid.
 		/// </summary>
 		/// 
 		/// <param name="index">
@@ -901,7 +899,7 @@ namespace collections {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns true if the given LinkedList share deep equality based
+		/// Returns true if the given lists share deep equality based
 		/// on contents and size.
 		/// </returns> --------------------------------------------------------
 		friend bool operator==(
@@ -920,15 +918,15 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <param name="lhs">
-		/// The BaseArray appearing on the left side of the operator.
+		/// The LinkedList appearing on the left side of the operator.
 		/// </param>
 		/// <param name="rhs">
-		/// The BaseArray appearing on the right side of the operator.
+		/// The LinkedList appearing on the right side of the operator.
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns true if the given BaseArrays share ordering based
-		/// on contents and size.
+		/// Returns true if the given linked lists share exact ordering.
+		/// Always returns false for lists of different size.
 		/// </returns> --------------------------------------------------------
 		friend auto operator<=>(
 			const LinkedList& lhs,
@@ -954,11 +952,11 @@ namespace collections {
 		/// The stream being written to.
 		/// </param>
 		/// <param name="arr">
-		/// The array being read from.
+		/// The linked list being read from.
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns the output stream written with the given array.
+		/// Returns the output stream after writing.
 		/// </returns> --------------------------------------------------------
 		template <typename char_t>
 		friend std::basic_ostream<char_t>& operator<<(
@@ -982,7 +980,7 @@ namespace collections {
 		/// The stream being read from.
 		/// </param>
 		/// <param name="arr">
-		/// The BaseArray being written to.
+		/// The linked list being written to.
 		/// </param>
 		/// 
 		/// <returns>

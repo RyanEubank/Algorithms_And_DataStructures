@@ -28,7 +28,7 @@ namespace collections {
 	// ------------------------------------------------------------------------
 	/// <summary>
 	/// DynamicArray is a collection class that maintains a dynamically sized
-	/// array for fast random access to its elements.
+	/// contiguous array for fast random access to its elements.
 	/// </summary>
 	/// 
 	/// <typeparam name="element_t">
@@ -100,8 +100,7 @@ namespace collections {
 		/// ~~~ Copy Constructor ~~~
 		/// 
 		/// <para>
-		/// Constructs a deep copy of the specified DynamicArray, including
-		/// maintaining the same capacity and copying allocators.
+		/// Constructs a deep copy of the specified DynamicArray.
 		/// </para></summary>
 		/// 
 		/// <param name="copy">
@@ -147,7 +146,7 @@ namespace collections {
 		/// </param>
 		/// <param name="alloc">
 		/// The allocator instance used by the array. Default constructs the 
-		/// allocator_type if unspecified.
+		/// allocator if unspecified.
 		/// </param> ----------------------------------------------------------
 		DynamicArray(
 			Reserve capacity,
@@ -166,8 +165,8 @@ namespace collections {
 		/// given allocator (or default allocator).
 		/// </para></summary>
 		/// 
-		/// <param name="capacity">
-		/// The initial capacity for the array.
+		/// <param name="size">
+		/// The size of the array.
 		/// </param>
 		/// <param name="value">
 		/// The value to initialize every element to. Uses default value for
@@ -199,7 +198,7 @@ namespace collections {
 		/// </param>
 		/// <param name="alloc">
 		/// The allocator instance used by the array. Default constructs the 
-		/// allocator_type if unspecified.
+		/// allocator if unspecified.
 		/// </param> ----------------------------------------------------------
 		DynamicArray(
 			std::initializer_list<value_type> init,
@@ -214,7 +213,7 @@ namespace collections {
 		/// 
 		/// <para>
 		/// Constructs a DynamicArray with the a copy of the elements from the
-		/// given iterator pair.
+		/// given iterator/sentinel pair.
 		/// </para></summary>
 		/// 
 		/// <typeparam name="iterator">
@@ -225,14 +224,14 @@ namespace collections {
 		/// </typeparam>
 		/// 
 		/// <param name="begin">
-		/// The beginning of the iterator pair to copy from.
+		/// The beginning of the range to copy from.
 		/// </param>
 		/// <param name="end">
-		/// The end of the iterator pair to copy from.
+		/// The end of the range to copy from.
 		/// </param>
 		/// <param name="alloc">
 		/// The allocator instance used by the array. Default constructs the 
-		/// allocator_type if unspecified.
+		/// allocator if unspecified.
 		/// </param> ----------------------------------------------------------
 		template <
 			std::input_iterator iterator, 
@@ -251,7 +250,7 @@ namespace collections {
 		/// ~~~ Range Constructor ~~~
 		/// 
 		/// <para>
-		/// Constructs a Dynamic array with a copy of the elements from the
+		/// Constructs a DynamicArray with a copy of the elements from the
 		/// given range.
 		/// </para></summary>
 		/// 
@@ -259,11 +258,16 @@ namespace collections {
 		/// The type of the range being constructed from.
 		/// </typeparam>
 		/// 
-		/// <param name="r">
+		/// <param name="tag">
+		/// Range construction tag to disabiguate this constructor from
+		/// construction with an initializer list.
+		/// </param>
+		/// <param name="rg">
 		/// The range to construct the array with.
 		/// </param>
 		/// <param name="alloc">
-		/// The allocator instance for the array.
+		/// The allocator instance for the array. Default constructs the 
+		/// allocator if unspecified.
 		/// </param> ----------------------------------------------------------
 		template <std::ranges::input_range range>
 		DynamicArray(
@@ -326,15 +330,15 @@ namespace collections {
 		/// ~~~ Move Assignment Operator ~~~
 		/// 
 		/// <para>
-		/// Copies the data from the given argument to this array.
+		/// Moves the data from the given argument to this array.
 		/// </para></summary>
 		/// 
 		/// <param name="other">
-		/// The array to copy from.
+		/// The array to move from.
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns the caller with the copied data.
+		/// Returns the caller with the moved data.
 		/// </returns> --------------------------------------------------------
 		DynamicArray& operator=(DynamicArray&& other) noexcept(
 			alloc_traits::propagate_on_container_move_assignment::value || 
@@ -437,7 +441,7 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns the internal array as a pointer.
+		/// Returns a pointer to the internal array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] pointer asRawArray() noexcept {
 			return _array;
@@ -449,7 +453,7 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns the internal array as a constant pointer.
+		/// Returns a const pointer to the internal array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_pointer asRawArray() const noexcept {
 			return _array;
@@ -461,7 +465,8 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns the value of the array's internal capacity.
+		/// Returns the capacity of the internal array, or total reserved 
+		/// space in number of elements it can hold.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] size_t capacity() const noexcept {
 			return _capacity;
@@ -498,7 +503,7 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns true is the array has zero elements, false otherwise.
+		/// Returns true is the array contains zero elements, false otherwise.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] bool isEmpty() const noexcept {
 			return _end == _array;
@@ -516,7 +521,9 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Shrinks the array to fit its current contents.
+		/// Shrinks the array to fit its current contents exactly. No 
+		/// additional unconstructed memory will be reserved proceeding the 
+		/// call.
 		/// </summary> --------------------------------------------------------
 		void trim() noexcept {
 			reserve(size());
@@ -546,8 +553,9 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Sets the size of the array to the specified number of
-		/// elements. Throws an exception if memory cannot be reserved.
+		/// Allocates and constructs the size of the array for the specified 
+		/// number of elements. Throws an exception if memory cannot be 
+		/// reserved.
 		/// </summary>
 		/// 
 		/// <param name="size">
@@ -714,7 +722,7 @@ namespace collections {
 		/// <summary>
 		/// Inserts the element into the array at the given index,
 		/// and maintains stable order of the existing elements. Throws an 
-		/// exception if the index in invalid.
+		/// exception if the index is invalid.
 		/// </summary>
 		/// 
 		/// <param name="index">
@@ -731,7 +739,7 @@ namespace collections {
 		/// <summary>
 		/// Inserts the element into the array at the given index,
 		/// and maintains stable order of the existing elements. Throws an 
-		/// exception if the index in invalid.
+		/// exception if the index is invalid.
 		/// </summary>
 		/// 
 		/// <param name="index">
@@ -829,7 +837,7 @@ namespace collections {
 		/// Inserts the given element into the array at the given index by
 		/// growing the array by one and swapping out the new last element. 
 		/// Does not preserve the ordering of the original elements. Throws an 
-		/// exception if the index in invalid.
+		/// exception if the index is invalid.
 		/// </summary>
 		/// 
 		/// <param name="index">
@@ -1108,8 +1116,8 @@ namespace collections {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns true if the given arrays share ordering based
-		/// on contents and size.
+		/// Returns true if the given arrays share exact ordering based
+		/// on contents. Always returns false for arrays of different size.
 		/// </returns> --------------------------------------------------------
 		friend auto operator<=>(
 			const DynamicArray& lhs,
@@ -1139,7 +1147,7 @@ namespace collections {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns the output stream written with the given array.
+		/// Returns the output stream after writing.
 		/// </returns> --------------------------------------------------------
 		template <typename char_t>
 		friend std::basic_ostream<char_t>& operator<<(
@@ -1163,7 +1171,7 @@ namespace collections {
 		/// The stream being read from.
 		/// </param>
 		/// <param name="arr">
-		/// The BaseArray being written to.
+		/// The array being written to.
 		/// </param>
 		/// 
 		/// <returns>
@@ -1428,6 +1436,6 @@ namespace collections {
 
 	static_assert(
 		sequential<DynamicArray<int>>,
-		"DynamicArray does not implement the list interface."
+		"DynamicArray does not implement the sequential collection interface."
 	);
 }
