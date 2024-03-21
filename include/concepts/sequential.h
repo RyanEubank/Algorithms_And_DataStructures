@@ -62,7 +62,7 @@ namespace collections {
 		collection<T> &&
 		std::ranges::forward_range<T> &&
 		indexable<T, typename T::value_type, typename T::size_type> &&
-		std::input_iterator<begin_it> &&
+		std::forward_iterator<begin_it> &&
 		std::sentinel_for<end_it, begin_it> &&
 		requires(
 			T& c1,
