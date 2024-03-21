@@ -21,7 +21,10 @@
 #include <iterator>
 #include <ranges>
 
+#include "../archetypes/iterator_archetypes.h"
+#include "../archetypes/range_archetypes.h"
 #include "../concepts/manages_memory.h"
+#include "../concepts/searchable.h"
 #include "../concepts/streamable.h"
 #include "../util/NamedType.h"
 
@@ -114,9 +117,9 @@ namespace collections {
 	/// </summary> ------------------------------------------------------------
 	template <
 		class collection,
-		class iterator = typename collection::iterator,
+		class iterator = input_iterator_archetype<typename collection::value_type>,
 		class sentinel = iterator,
-		class range = collection,
+		class range = input_range_archetype<typename collection::value_type>,
 		class range_tag = from_range_t
 	>
 	concept collection_constructible =
@@ -173,6 +176,7 @@ namespace collections {
 		conditionally_three_way_comparable<T, typename T::value_type> &&
 		manages_memory<T>&&
 		streamable<T, uint8_t>&&
+		searchable<T> &&
 		collection_type_traits<T>&&
 		basic_collection_interface<T>;
 }

@@ -33,13 +33,7 @@ namespace collections {
 	///			contains(element) -> returns a boolean or equivalent.
 	///		</term></item></para>
 	///		<para><item><term>
-	///			containsAll(collection) -> returns a boolean or equivalent.
-	///		</term></item></para>
-	///		<para><item><term>
 	///			containsMatch(predicate) -> returns a boolean or equivalent.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			allMatch(predicate) -> returns a boolean or equivalent.
 	///		</term></item></para>
 	/// </list>
 	/// 
@@ -51,9 +45,7 @@ namespace collections {
 		std::function<bool(typename collection_t::value_type)> predicate
 	) {
 			{ c.contains(e) } -> std::convertible_to<bool>;
-			{ c.containsAll(c) } -> std::convertible_to<bool>;
 			{ c.containsMatch(predicate) } -> std::convertible_to<bool>;
-			{ c.allMatch(predicate) } -> std::convertible_to<bool>;
 	};
 
 	// ------------------------------------------------------------------------
