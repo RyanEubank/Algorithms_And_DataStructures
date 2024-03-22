@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <iostream>
+#include <sstream>
+
 #include "../algorithms/collection_algorithms.h"
 #include "../concepts/sequential.h"
 #include "../util/NamedType.h"
@@ -1208,7 +1211,7 @@ namespace collections {
 				throwInvalidIndex(index);
 		}
 
-		[[noreturn]] void throwInvalidIndex(size_t index) const {
+		[[noreturn]] void throwInvalidIndex(size_type index) const {
 			constexpr auto INVALID_INDEX = "Invalid Index: out of range.";
 			std::stringstream err{};
 

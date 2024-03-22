@@ -20,7 +20,6 @@
 #include <assert.h>
 #include <iterator>
 #include <ranges>
-#include <vector>
 
 #include "../concepts/sequential.h"
 #include "../containers/DynamicArray.h"

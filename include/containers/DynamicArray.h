@@ -18,6 +18,8 @@
 #pragma once
 
 #include <assert.h>
+#include <iostream>
+#include <sstream>
 
 #include "../adapters/back_inserter.h"
 #include "../algorithms/collection_algorithms.h"
@@ -1411,7 +1413,7 @@ namespace collections {
 			throw std::length_error("Allocation failed: " + msg);
 		}
 
-		[[noreturn]] void invalidIndex(size_t index) const {
+		[[noreturn]] void invalidIndex(size_type index) const {
 			constexpr auto INVALID_INDEX = "Invalid Index: out of range.";
 			std::stringstream err{};
 
