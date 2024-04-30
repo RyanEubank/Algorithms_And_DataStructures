@@ -253,7 +253,7 @@ namespace collections {
 		/// The element to be inserted.
 		/// </param> ----------------------------------------------------------
 		void push(const_reference element) {
-			_container.insertLast(element);
+			_container.insertBack(element);
 		}
 
 		// --------------------------------------------------------------------
@@ -261,7 +261,7 @@ namespace collections {
 		/// Removes the element at the top of the stack.
 		/// </summary> --------------------------------------------------------
 		void pop() {
-			_container.removeLast();
+			_container.removeBack();
 		}
 
 		// --------------------------------------------------------------------
@@ -287,7 +287,7 @@ namespace collections {
 		/// stack.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reference peek() const {
-			return _container.last();
+			return _container.back();
 		}
 
 		// --------------------------------------------------------------------
@@ -305,26 +305,6 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] bool contains(const_reference element) const {
 			return collections::contains(_container, element);
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns whether the stack contains an element that satisfies the
-		/// given predicate.
-		/// </summary>
-		/// 
-		/// <param name="element">
-		/// The condition to match elements against.
-		/// </param>
-		/// 
-		/// <returns>
-		/// Returns true if the element is found within the stack, false
-		/// otherwise.
-		/// </returns> --------------------------------------------------------
-		[[nodiscard]] bool containsMatch(
-			std::function<bool(value_type)> predicate
-		) const {
-			throw std::exception("Not yet implemented");
 		}
 
 		// --------------------------------------------------------------------

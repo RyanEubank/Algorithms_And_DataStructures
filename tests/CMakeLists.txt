@@ -43,3 +43,4 @@ package_add_test(linked_list_insertion_tests linked_list_tests/linked_list_inser
 package_add_test(linked_list_removal_tests linked_list_tests/linked_list_removal_tests.cpp)
 
 package_add_test(stack_collection_interface_tests stack_tests/stack_collection_interface_tests.cpp)
+package_add_test(stack_interface_tests stack_tests/stack_interface_tests.cpp)

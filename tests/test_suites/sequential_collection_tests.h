@@ -269,5 +269,22 @@ namespace collection_tests {
 			EXPECT_EQ(obj[0], input[0]);
 			EXPECT_EQ(obj[1], input[1]);
 		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Tests that the given method throws an exception when called on an
+		/// empty object.
+		/// </summary>
+		/// 
+		/// <param name="func">
+		/// The method under test.
+		/// </param> ----------------------------------------------------------
+		void testMethodThrowsExceptionOnEmptyObject(
+			std::function<void(collection&)> func
+		) {
+			collection obj{};
+			ASSERT_TRUE(obj.isEmpty());
+			EXPECT_THROW(func(obj), std::exception());
+		}
 	};
 }
