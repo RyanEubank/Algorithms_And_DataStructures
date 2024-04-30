@@ -97,7 +97,7 @@ namespace collection_tests {
 		auto removed_element = obj[index.get()];
 		obj.remove(index);
 
-		EXPECT_FALSE(collections::contains(obj, removed_element));
+		EXPECT_EQ(collections::find(obj, removed_element), obj.end());
 		EXPECT_EQ(obj[0], input[0]);
 		EXPECT_EQ(obj[1], input[2]);
 	}
@@ -148,7 +148,7 @@ namespace collection_tests {
 		auto removedElement = *iterator;
 
 		obj.remove(iterator);
-		EXPECT_FALSE(collections::contains(obj, removedElement));
+		EXPECT_EQ(collections::find(obj, removedElement), obj.end());
 		EXPECT_EQ(obj.size(), input.size() - 1);
 
 		EXPECT_EQ(obj[0], input[0]);

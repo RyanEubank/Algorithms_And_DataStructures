@@ -46,6 +46,8 @@ namespace collections {
 		using const_reference = typename container::const_reference;
 		using pointer = typename container::pointer;
 		using const_pointer = typename container::const_pointer;
+		using iterator = typename container::iterator;
+		using const_iterator = typename container::const_iterator;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -292,19 +294,54 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Returns whether the stack contains the specified element.
+		/// Returns an iterator pointing to the beginning of the stack.
 		/// </summary>
 		/// 
-		/// <param name="element">
-		/// The element to search for.
-		/// </param>
+		/// <returns>
+		/// Returns a random access iterator to the first element in the 
+		/// stack.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] iterator begin() noexcept {
+			return _container.begin();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator pointing to the end of the stack.
+		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns true if the element is found within the stack, false
-		/// otherwise.
+		/// Returns a random access iterator to the location after the last 
+		/// element in the stack.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] bool contains(const_reference element) const {
-			return collections::contains(_container, element);
+		[[nodiscard]] iterator end() noexcept {
+			return _container.end();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a constant iterator pointing to the beginning of the stack.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant random access iterator to the first element in 
+		/// the stack.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator begin() const noexcept {
+			return _container.begin();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a constant iterator pointing to the end of the stack.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant random access iterator to the location after the 
+		/// last element in the stack.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator end() const noexcept {
+			return _container.end();
 		}
 
 		// --------------------------------------------------------------------

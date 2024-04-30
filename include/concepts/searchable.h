@@ -30,34 +30,26 @@ namespace collections {
 	/// 
 	/// <list type="bullet">
 	///		<para><item><term>
-	///			contains(element) -> returns a boolean or equivalent.
+	///			find(element) -> returns an iterator or sentinel.
 	///		</term></item></para>
 	///		<para><item><term>
-	///			containsMatch(predicate) -> returns a boolean or equivalent.
+	///			find_if(predicate) -> returns an iterator or sentinel.
 	///		</term></item></para>
 	/// </list>
 	/// 
 	/// </summary> ------------------------------------------------------------
-	template <class collection_t>
-	concept searchable_interface = requires(
-		const collection_t& c,
-		typename collection_t::const_reference e,
-		std::function<bool(typename collection_t::value_type)> predicate
-	) {
-			{ c.contains(e) } -> std::convertible_to<bool>;
-			{ c.containsMatch(predicate) } -> std::convertible_to<bool>;
-	};
-
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// The searchable concept defines a requirement that collections with
-	/// equality comparable elements may be searched via the collections
-	/// search algorithms either by implementing searchable_interface or by
-	/// being a compatible input range.
-	/// </summary> ------------------------------------------------------------
-	template <class collection_t>
+	template <class collection_t, class predicate_t>
 	concept searchable = 
-		(std::equality_comparable<typename collection_t::value_type> && 
-			(searchable_interface<collection_t> || std::ranges::input_range<collection_t>)) 
-		|| !std::equality_comparable<typename collection_t::value_type>;
+		std::ranges::input_range<collection_t> && 
+		std::predicate<predicate_t, typename collection_t::value_type> &&
+		requires (
+			const collection_t& c,
+			typename collection_t::const_reference e,
+			predicate_t predicate
+		) {
+			{ c.find(e) }
+				-> std::convertible_to<typename collection_t::iterator>;
+			{ c.find_if(predicate) }
+				-> std::convertible_to<typename collection_t::iterator>;
+		};
 }

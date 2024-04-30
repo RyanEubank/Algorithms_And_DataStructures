@@ -172,11 +172,11 @@ namespace collections {
 	template<class T>
 	concept collection =
 		collection_constructible<T> &&
-		std::equality_comparable<T>&&
+		std::equality_comparable<T> &&
 		conditionally_three_way_comparable<T, typename T::value_type> &&
-		manages_memory<T>&&
-		streamable<T, uint8_t>&&
-		searchable<T> &&
-		collection_type_traits<T>&&
+		manages_memory<T> &&
+		streamable<T, uint8_t> &&
+		std::ranges::input_range<T> &&
+		collection_type_traits<T> &&
 		basic_collection_interface<T>;
 }

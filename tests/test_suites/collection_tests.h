@@ -59,9 +59,9 @@ namespace collection_tests {
 		const collection obj{ data[0], data[1], data[2] };
 
 		EXPECT_EQ(obj.size(), 3);
-		EXPECT_TRUE(collections::contains(obj, input[0]));
-		EXPECT_TRUE(collections::contains(obj, input[1]));
-		EXPECT_TRUE(collections::contains(obj, input[2]));
+		EXPECT_NE(collections::find(obj, input[0]), obj.end());
+		EXPECT_NE(collections::find(obj, input[1]), obj.end());
+		EXPECT_NE(collections::find(obj, input[2]), obj.end());
 	}
 
 	// ------------------------------------------------------------------------
@@ -76,9 +76,9 @@ namespace collection_tests {
 		const collection obj(input.begin(), input.end());
 
 		EXPECT_EQ(obj.size(), 3);
-		EXPECT_TRUE(collections::contains(obj, input[0]));
-		EXPECT_TRUE(collections::contains(obj, input[1]));
-		EXPECT_TRUE(collections::contains(obj, input[2]));
+		EXPECT_NE(collections::find(obj, input[0]), obj.end());
+		EXPECT_NE(collections::find(obj, input[1]), obj.end());
+		EXPECT_NE(collections::find(obj, input[2]), obj.end());
 	}
 
 	// ------------------------------------------------------------------------
@@ -92,9 +92,9 @@ namespace collection_tests {
 		const collection obj(collections::from_range, input);
 		
 		EXPECT_EQ(obj.size(), 3);
-		EXPECT_TRUE(collections::contains(obj, input[0]));
-		EXPECT_TRUE(collections::contains(obj, input[1]));
-		EXPECT_TRUE(collections::contains(obj, input[2]));
+		EXPECT_NE(collections::find(obj, input[0]), obj.end());
+		EXPECT_NE(collections::find(obj, input[1]), obj.end());
+		EXPECT_NE(collections::find(obj, input[2]), obj.end());
 	}
 
 	// ------------------------------------------------------------------------

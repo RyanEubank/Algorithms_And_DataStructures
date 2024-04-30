@@ -154,7 +154,7 @@ namespace collection_tests {
 
 			collection obj(collections::from_range, existing_elements);
 			for (auto i = 0; i < new_elements.size(); ++i)
-				ASSERT_FALSE(collections::contains(obj, new_elements[i]));
+				ASSERT_EQ(collections::find(obj, new_elements[i]), obj.end());
 
 			func(obj, new_elements.begin(), new_elements.end());
 
@@ -183,7 +183,7 @@ namespace collection_tests {
 
 			collection obj(collections::from_range, existing_elements);
 			for (auto i = 0; i < new_elements.size(); ++i)
-				ASSERT_FALSE(collections::contains(obj, new_elements[i]));
+				ASSERT_EQ(collections::find(obj, new_elements[i]), obj.end());
 
 			func(obj, new_elements.begin(), new_elements.end());
 
@@ -212,7 +212,7 @@ namespace collection_tests {
 
 			collection obj(collections::from_range, existing_elements);
 			for (auto i = 0; i < new_elements.size(); ++i)
-				ASSERT_FALSE(collections::contains(obj, new_elements[i]));
+				ASSERT_EQ(collections::find(obj, new_elements[i]), obj.end());
 
 			func(obj, new_elements.begin(), new_elements.end());
 
@@ -241,7 +241,7 @@ namespace collection_tests {
 
 			func(obj);
 
-			EXPECT_FALSE(collections::contains(obj, first_element));
+			EXPECT_EQ(collections::find(obj, first_element), obj.end());
 			EXPECT_EQ(obj.size(), input.size() - 1);
 			EXPECT_EQ(obj[0], input[1]);
 			EXPECT_EQ(obj[1], input[2]);
@@ -264,7 +264,7 @@ namespace collection_tests {
 
 			obj.removeBack();
 
-			EXPECT_FALSE(collections::contains(obj, last_element));
+			EXPECT_EQ(collections::find(obj, last_element), obj.end());
 			EXPECT_EQ(obj.size(), input.size() - 1);
 			EXPECT_EQ(obj[0], input[0]);
 			EXPECT_EQ(obj[1], input[1]);

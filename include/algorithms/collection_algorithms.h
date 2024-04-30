@@ -17,121 +17,13 @@
 
 #pragma once
 
+#include <concepts>
 #include <iterator>
 #include <ranges>
 
 #include "../concepts/searchable.h"
 
 namespace collections {
-
-	struct contains_ {
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns whether the given value is found within the given iterator
-		/// range.
-		/// </summary>
-		/// 
-		/// <typeparam name="T">
-		/// The type of the value being searched.
-		/// </typeparam>
-		/// <typeparam name="iterator">
-		/// The type of the input iterator being iterated over.
-		/// </typeparam>
-		/// <typeparam name="sentinel">
-		/// The type of the sentinel or end iterator.
-		/// </typeparam>
-		/// 
-		/// <param name="begin">
-		/// The beginning iterator of the range.
-		/// </param>
-		/// <param name="end">
-		/// The sentinel or end iterator of the range.
-		/// </param>
-		/// <param name="value">
-		/// The value to search for.
-		/// </param>
-		/// 
-		/// <returns>
-		/// Returns true if the given value is found within the range, false 
-		/// otherwise.
-		/// </returns> --------------------------------------------------------
-		template <
-			class T,
-			std::input_iterator iterator,
-			std::sentinel_for<iterator> sentinel
-		>
-		constexpr bool operator()(
-			iterator begin,
-			sentinel end,
-			const T& value
-		) const {
-			while (begin != end) {
-				if (*begin++ == value)
-					return true;
-			}
-			return false;
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns whether the given value is found within the given range.
-		/// </summary>
-		/// 
-		/// <typeparam name="T">
-		/// The type of the value being searched for.
-		/// </typeparam>
-		/// <typeparam name="range">
-		/// The type of the range to be searched.
-		/// </typeparam>
-		/// 
-		/// <param name="rg">
-		/// The range to be searched.
-		/// </param>
-		/// <param name="value">
-		/// The value to search for.
-		/// </param>
-		/// 
-		/// <returns>
-		/// Returns true if the value is contained by the range, false 
-		/// otherwise.
-		/// </returns> --------------------------------------------------------
-		template <class T, std::ranges::input_range range>
-		constexpr bool operator()(const range& rg, const T& value) const {
-			return (*this)(std::ranges::begin(rg), std::ranges::end(rg), value);
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns whether the given value is found within the given 
-		/// searchable collection.
-		/// </summary>
-		/// 
-		/// <typeparam name="T">
-		/// The type of the value being searched for.
-		/// </typeparam>
-		/// <typeparam name="collection">
-		/// The type of the collection to be searched.
-		/// </typeparam>
-		/// 
-		/// <param name="c">
-		/// The collection to be searched.
-		/// </param>
-		/// <param name="value">
-		/// The value to search for.
-		/// </param>
-		/// 
-		/// <returns>
-		/// Returns true if the value is contained by the collection, false 
-		/// otherwise.
-		/// </returns> --------------------------------------------------------
-		template <class T, collections::searchable_interface collection>
-		constexpr bool operator()(const collection& c, const T& value) const {
-			return c.contains(value);
-		}
-	};
-
-	inline constexpr contains_ contains;
 
 	struct copy_ {
 
@@ -464,6 +356,238 @@ namespace collections {
 	};
 
 	inline constexpr fill_n_ fill_n;
+
+	struct find_ {
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator to the given value if found in the specified
+		/// iterator pair.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being searched.
+		/// </typeparam>
+		/// <typeparam name="iterator">
+		/// The type of the input iterator being iterated over.
+		/// </typeparam>
+		/// <typeparam name="sentinel">
+		/// The type of the sentinel or end iterator.
+		/// </typeparam>
+		/// 
+		/// <param name="begin">
+		/// The beginning iterator of the range.
+		/// </param>
+		/// <param name="end">
+		/// The sentinel or end iterator of the range.
+		/// </param>
+		/// <param name="value">
+		/// The value to search for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns a valid iterator to the searched element or the end 
+		/// iterator if the value is not found.
+		/// </returns> --------------------------------------------------------
+		template <
+			class T,
+			std::input_iterator iterator,
+			std::sentinel_for<iterator> sentinel
+		>
+		constexpr auto operator()(
+			iterator begin,
+			sentinel end,
+			const T& value
+		) const {
+			while (begin != end) {
+				if (*begin == value)
+					break;
+				begin++;
+			}
+			return begin;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator to the given value if found in the specified
+		/// range.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being searched for.
+		/// </typeparam>
+		/// <typeparam name="range">
+		/// The type of the range to be searched.
+		/// </typeparam>
+		/// 
+		/// <param name="rg">
+		/// The range to be searched.
+		/// </param>
+		/// <param name="value">
+		/// The value to search for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns a valid iterator to the searched element or the end 
+		/// iterator if the value is not found.
+		/// </returns> --------------------------------------------------------
+		template <class T, std::ranges::input_range range>
+		constexpr auto operator()(const range& rg, const T& value) const {
+			return (*this)(std::ranges::begin(rg), std::ranges::end(rg), value);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator to the given value if found within the 
+		/// searchable collection.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being searched for.
+		/// </typeparam>
+		/// <typeparam name="collection">
+		/// The type of the collection to be searched.
+		/// </typeparam>
+		/// 
+		/// <param name="c">
+		/// The collection to be searched.
+		/// </param>
+		/// <param name="value">
+		/// The value to search for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns a valid iterator to the searched element or the end 
+		/// iterator if the value is not found.
+		/// </returns> --------------------------------------------------------
+		template <class T, searchable collection>
+		constexpr auto operator()(const collection& c, const T& value) const {
+			return c.find(value);
+		}
+	};
+
+	inline constexpr find_ find;
+
+	struct find_if_ {
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns whether the given value is found within the given iterator
+		/// range.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being searched.
+		/// </typeparam>
+		/// <typeparam name="iterator">
+		/// The type of the input iterator being iterated over.
+		/// </typeparam>
+		/// <typeparam name="sentinel">
+		/// The type of the sentinel or end iterator.
+		/// </typeparam>
+		/// 
+		/// <param name="begin">
+		/// The beginning iterator of the range.
+		/// </param>
+		/// <param name="end">
+		/// The sentinel or end iterator of the range.
+		/// </param>
+		/// <param name="value">
+		/// The value to search for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns true if the given value is found within the range, false 
+		/// otherwise.
+		/// </returns> --------------------------------------------------------
+		template <
+			class T,
+			std::input_iterator iterator,
+			std::sentinel_for<iterator> sentinel,
+			std::predicate <T, std::iter_value_t<iterator>> Predicate
+		>
+		constexpr auto operator()(
+			iterator begin,
+			sentinel end,
+			Predicate p
+		) const {
+			while (begin != end) {
+				if (p(*begin++))
+					break;
+			}
+			return begin;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns whether the given value is found within the given range.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being searched for.
+		/// </typeparam>
+		/// <typeparam name="range">
+		/// The type of the range to be searched.
+		/// </typeparam>
+		/// 
+		/// <param name="rg">
+		/// The range to be searched.
+		/// </param>
+		/// <param name="value">
+		/// The value to search for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns true if the value is contained by the range, false 
+		/// otherwise.
+		/// </returns> --------------------------------------------------------
+		template <
+			class T, 
+			std::ranges::input_range range, 
+			std::predicate <T, std::ranges::range_value_t<range>> Predicate
+		>
+		constexpr auto operator()(const range& rg, Predicate p) const {
+			return (*this)(std::ranges::begin(rg), std::ranges::end(rg), p);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns whether the given value is found within the given 
+		/// searchable collection.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being searched for.
+		/// </typeparam>
+		/// <typeparam name="collection">
+		/// The type of the collection to be searched.
+		/// </typeparam>
+		/// 
+		/// <param name="c">
+		/// The collection to be searched.
+		/// </param>
+		/// <param name="value">
+		/// The value to search for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns true if the value is contained by the collection, false 
+		/// otherwise.
+		/// </returns> --------------------------------------------------------
+		template <
+			class T,
+			searchable collection, 
+			std::predicate<T, typename collection::value_type> Predicate
+		>
+		constexpr auto operator()(
+			const collection& c, 
+			Predicate p
+		) const {
+			return c.find_if(p);
+		}
+	};
+
+	inline constexpr find_if_ find_if;
 
 	struct index_of_ {
 
