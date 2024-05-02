@@ -30,6 +30,17 @@ namespace collection_tests {
 	class CollectionTests : public testing::Test {
 	protected:
 		struct test_case_data<typename params::element_t> testInput {};
+
+		void testContentsMatchInput(auto input, auto obj) {
+			EXPECT_EQ(obj.size(), input.size());
+			if constexpr (
+				std::ranges::input_range<typename params::collection_t>
+			) {
+				EXPECT_NE(collections::find(obj, input[0]), obj.end());
+				EXPECT_NE(collections::find(obj, input[1]), obj.end());
+				EXPECT_NE(collections::find(obj, input[2]), obj.end());
+			}
+		}
 	};
 
 	TYPED_TEST_SUITE_P(CollectionTests);
@@ -57,11 +68,7 @@ namespace collection_tests {
 		auto data = input.data();
 
 		const collection obj{ data[0], data[1], data[2] };
-
-		EXPECT_EQ(obj.size(), 3);
-		EXPECT_NE(collections::find(obj, input[0]), obj.end());
-		EXPECT_NE(collections::find(obj, input[1]), obj.end());
-		EXPECT_NE(collections::find(obj, input[2]), obj.end());
+		this->testContentsMatchInput(input, obj);
 	}
 
 	// ------------------------------------------------------------------------
@@ -74,11 +81,7 @@ namespace collection_tests {
 		auto input = this->testInput.control();
 
 		const collection obj(input.begin(), input.end());
-
-		EXPECT_EQ(obj.size(), 3);
-		EXPECT_NE(collections::find(obj, input[0]), obj.end());
-		EXPECT_NE(collections::find(obj, input[1]), obj.end());
-		EXPECT_NE(collections::find(obj, input[2]), obj.end());
+		this->testContentsMatchInput(input, obj);
 	}
 
 	// ------------------------------------------------------------------------
@@ -90,11 +93,7 @@ namespace collection_tests {
 		auto input = this->testInput.control();
 
 		const collection obj(collections::from_range, input);
-		
-		EXPECT_EQ(obj.size(), 3);
-		EXPECT_NE(collections::find(obj, input[0]), obj.end());
-		EXPECT_NE(collections::find(obj, input[1]), obj.end());
-		EXPECT_NE(collections::find(obj, input[2]), obj.end());
+		this->testContentsMatchInput(input, obj);
 	}
 
 	// ------------------------------------------------------------------------

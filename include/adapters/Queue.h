@@ -1,32 +1,31 @@
 /* ============================================================================
- * Copyright (C) 2023 Ryan Eubank
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- * ========================================================================= */
+* Copyright (C) 2023 Ryan Eubank
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <https://www.gnu.org/licenses/>.
+* ========================================================================= */
 
 #pragma once
 
-#include "../interfaces/IQueue.h"
+#include "../concepts/sequential.h"
 #include "../containers/LinkedList.h"
 
 namespace collections {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Queue is a container adapter that implements the IQueue interface
-	/// from any container that supports list operations from the ListConcept
-	/// interface.
+	/// Queue is a container adapter that implements a queue interfance
+	/// from any sequential container.
 	/// </summary>
 	/// 
 	/// <typeparam name="element_t">
@@ -35,61 +34,185 @@ namespace collections {
 	/// <typeparam name="container">
 	/// The type of the underlying container used by the queue.
 	/// </typeparam> ----------------------------------------------------------
-	template <class element_t, class container = LinkedList<element_t>>
-		requires ListConcept<container, element_t>
-	class Queue : IQueue<Queue<element_t, container>, element_t> {
-	private:
-
-		using E = element_t;
-
-		container m_container;
-
+	template <class element_t, sequential container_t = LinkedList<element_t>>
+	class Queue {
 	public:
+
+		using container = container_t;
+		using allocator_type = typename container::allocator_type;
+		using value_type = typename container::value_type;
+		using size_type = typename container::size_type;
+		using reference = typename container::reference;
+		using const_reference = typename container::const_reference;
+		using pointer = typename container::pointer;
+		using const_pointer = typename container::const_pointer;
+		using iterator = typename container::iterator;
+		using const_iterator = typename container::const_iterator;
 
 		// --------------------------------------------------------------------
 		/// <summary>
 		/// ~~~ Default Constructor ~~~
 		/// 
 		///	<para>
-		/// Constructs an empty queue with zero size.
+		/// Constructs an empty queue, and default constructs its internal
+		/// container.
 		/// </para></summary> -------------------------------------------------
-		Queue() : m_container() {}
+		constexpr Queue() : _container() {}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Constructs a Queue with the a copy of the elements in the specified
+		/// ~~~ Container Constructor ~~~
+		/// 
+		///	<para>
+		/// Constructs a queue from a copy of the provided container.
+		/// </para></summary> 
+		/// 
+		/// <param name="c">
+		/// The container to copy.
+		/// </param> ----------------------------------------------------------
+		explicit Queue(const container& c) : _container(c) {}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Container Constructor ~~~
+		/// 
+		///	<para>
+		/// Constructs a queue by moving the provided container.
+		/// </para></summary> 
+		/// 
+		/// <param name="c">
+		/// The container to move.
+		/// </param> ----------------------------------------------------------
+		explicit Queue(container&& c) : _container(std::move(c)) {}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Allocator Constructor ~~~
+		/// 
+		///	<para>
+		/// Constructs an empty queue passing the given allocator to the 
+		/// queue's internal container.
+		/// </para></summary> 
+		/// 
+		/// <param name="alloc">
+		/// The allocator instance used by the internal container.
+		/// </param> ----------------------------------------------------------
+		explicit Queue(const allocator_type& alloc) noexcept :
+			_container(alloc)
+		{
+
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Constructs a queue with the a copy of the elements in the specified
 		/// initialization list.
 		/// </summary>
 		/// 
 		/// <param name="init">
 		/// The initialization list to copy elements from.
 		/// </param> ----------------------------------------------------------
-		Queue(std::initializer_list<E> init) 
-			: Queue(init.begin(), init.size()) {}
+		Queue(std::initializer_list<value_type> init) :
+			Queue(init.begin(), init.end()) {}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Constructs a Queue with the a copy of the elements in the specified
-		/// array.
-		/// </summary>
-		/// 
-		/// <param name="array">
-		/// The generic array to copy elements from.
-		/// </param>
-		/// 
-		/// <param name="size">
-		/// The size of the array being copied.
-		/// </param> ----------------------------------------------------------
-		Queue(const E* array, size_t size) : m_container(array, size) {}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// ~~~ Destructor ~~~
+		/// ~~~ Iterator Constructor ~~~
 		/// 
 		/// <para>
-		/// Virtual destructor allowing for deleting derived types from base.
-		/// </para></summary> -------------------------------------------------
-		~Queue() = default;
+		/// Constructs a queue with the a copy of the elements from the
+		/// given iterator/sentinel pair.
+		/// </para></summary>
+		/// 
+		/// <typeparam name="iterator">
+		/// The type of the beginning iterator to copy from.
+		/// </typeparam>
+		/// <typeparam name="sentinel">
+		/// The type of the end iterator or sentinel.
+		/// </typeparam>
+		/// 
+		/// <param name="begin">
+		/// The beginning of the range to copy from.
+		/// </param>
+		/// <param name="end">
+		/// The end of the range to copy from.
+		/// </param>
+		/// <param name="alloc">
+		/// The allocator instance used by the internal container. Default 
+		/// constructs the allocator if unspecified.
+		/// </param> ----------------------------------------------------------
+		template <
+			std::input_iterator iterator, 
+			std::sentinel_for<iterator> sentinel
+		>
+		Queue(
+			iterator begin,
+			sentinel end,
+			const allocator_type& alloc = allocator_type{}
+		) : _container(begin, end, alloc) {
+
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Range Constructor ~~~
+		/// 
+		/// <para>
+		/// Constructs a queue with a copy of the elements from the given 
+		/// range.
+		/// 
+		/// <typeparam name="range">
+		/// The type of the range being constructed from.
+		/// </typeparam>
+		/// 
+		/// <param name="tag">
+		/// Range construction tag to disabiguate this constructor from
+		/// construction with an initializer list.
+		/// </param>
+		/// <param name="rg">
+		/// The range to construct the stack with.
+		/// </param>
+		/// <param name="alloc">
+		/// The allocator instance for the internal container. Default 
+		/// constructs the allocator if unspecified.
+		/// </param> ----------------------------------------------------------
+		template <std::ranges::input_range range>
+		Queue(
+			from_range_t tag,
+			range&& rg,
+			const allocator_type& alloc = allocator_type{}
+		) : Queue(std::ranges::begin(rg), std::ranges::end(rg), alloc) {
+
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Fill Constructor ~~~
+		/// 
+		/// <para>
+		/// Constructs a queue with the specified size, constucting 
+		/// elements with the given value for each (or default) and uses the 
+		/// given allocator for the internal container (or default allocator).
+		/// </para></summary>
+		/// 
+		/// <param name="size">
+		/// The initial size of the queue.
+		/// </param>
+		/// <param name="value">
+		/// The value to initialize every element to. Uses default value for
+		/// the type if unspecified.
+		/// </param>
+		/// <param name="alloc">
+		/// The allocator instance used by the internal container. Default 
+		/// constructs the allocator if unspecified.
+		/// </param> ----------------------------------------------------------
+		Queue(
+			Size size,
+			const_reference value = value_type{},
+			const allocator_type& alloc = allocator_type{}
+		) : _container(size, value, alloc) {
+
+		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -97,10 +220,10 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns the number of elements contained by the queue as a size_t.
+		/// Returns the number of elements contained by the queue.
 		/// </returns>
-		size_t size() const {
-			return m_container.size();
+		[[nodiscard]] size_type size() const {
+			return _container.size();
 		}
 
 		// --------------------------------------------------------------------
@@ -108,38 +231,19 @@ namespace collections {
 		/// Empties and clears the queue of all elements.
 		/// </summary> --------------------------------------------------------
 		void clear() {
-			m_container.clear();
+			_container.clear();
 		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Returns whether the queue is empty: contains no elements.
+		/// Returns whether the queue is empty and contains no elements.
 		/// </summary>
 		/// 
 		/// <returns>
 		/// Returns true is the queue has zero elements, false otherwise.
 		/// </returns> --------------------------------------------------------
-		bool isEmpty() const {
-			return size() == 0;
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns whether the given element is contained by the given queue.
-		/// </summary>
-		/// 
-		/// <param name="collection">
-		/// The queue to be searched.
-		/// </param>
-		/// <param name="element">
-		/// The element to search for.
-		/// </param>
-		/// 
-		/// <returns>
-		/// Returns true if the queue contains the element, false otherwise.
-		/// </returns> --------------------------------------------------------
-		bool contains(const element_t & element) const {
-			return m_container.contains(element);
+		[[nodiscard]] bool isEmpty() const {
+			return _container.isEmpty();
 		}
 
 		// --------------------------------------------------------------------
@@ -150,16 +254,16 @@ namespace collections {
 		/// <param name="element">
 		/// The element to be inserted.
 		/// </param> ----------------------------------------------------------
-		void enqueue(const E& element) {
-			m_container.insertLast(element);
+		void enqueue_front(const_reference element) {
+			_container.insertFront(element);
 		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
 		/// Removes the element at the front of the queue.
 		/// </summary> --------------------------------------------------------
-		void dequeue() {
-			m_container.removeFirst();
+		void dequeue_front() {
+			_container.removeFront();
 		}
 
 		// --------------------------------------------------------------------
@@ -170,9 +274,9 @@ namespace collections {
 		/// <returns>
 		/// Returns a reference to the element at the front of the queue.
 		/// </returns> --------------------------------------------------------
-		E& peek() {
-			const E& element = std::as_const(*this).peek();
-			return const_cast<E&>(element);
+		[[nodiscard]] reference front() {
+			const_reference element = std::as_const(*this).front();
+			return const_cast<reference>(element);
 		}
 
 		// --------------------------------------------------------------------
@@ -184,8 +288,54 @@ namespace collections {
 		/// Returns a constant reference to the element at the front of the 
 		/// queue.
 		/// </returns> --------------------------------------------------------
-		const E& peek() const {
-			return m_container.first();
+		[[nodiscard]] const_reference front() const {
+			return _container.front();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts the specified element at the back of the queue.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// The element to be inserted.
+		/// </param> ----------------------------------------------------------
+		void enqueue_back(const_reference element) {
+			_container.insertBack(element);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Removes the element at the back of the queue.
+		/// </summary> --------------------------------------------------------
+		void dequeue_back() {
+			_container.removeBack();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns the element at the back of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a reference to the element at the back of the queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] reference back() {
+			const_reference element = std::as_const(*this).back();
+			return const_cast<reference>(element);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns the element at the back of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant reference to the element at the back of the 
+		/// queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reference back() const {
+			return _container.back();
 		}
 
 		// --------------------------------------------------------------------
@@ -194,23 +344,38 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <param name="lhs">
-		/// The Queue appearing on the left side of the operator.
+		/// The queue appearing on the left side of the operator.
 		/// </param>
 		/// <param name="rhs">
-		/// The Queue appearing on the right side of the operator.
+		/// The queue appearing on the right side of the operator.
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns true if the given Queue's underlying containers are equal,
+		/// Returns true if the given queue's underlying containers are equal,
 		/// false otherwise.
 		/// </returns> --------------------------------------------------------
-		friend bool operator==(
-			const Queue<E, container>& lhs, 
-			const Queue<E, container>& rhs
-		) {
-			return collections::isLexicographicallyEqual(
-				lhs.m_container, rhs.m_container
-			);
+		friend bool operator==(const Queue& lhs, const Queue& rhs) {
+			return lhs._container == rhs._container;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Equality Operator ~~~
+		/// </summary>
+		/// 
+		/// <param name="lhs">
+		/// The queue appearing on the left side of the operator.
+		/// </param>
+		/// <param name="rhs">
+		/// The queue appearing on the right side of the operator.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns true if the given queues share exact ordering based
+		/// on contents. Always returns false for arrays of different size.
+		/// </returns> --------------------------------------------------------
+		friend auto operator<=>(const Queue& lhs, const Queue& rhs) {
+			return lhs._container <=> rhs._container;
 		}
 
 		// --------------------------------------------------------------------
@@ -226,23 +391,55 @@ namespace collections {
 		/// The stream being written to.
 		/// </param>
 		/// <param name="arr">
-		/// The Queue being written out.
+		/// The queue being written out.
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns the output stream written with the given Queue.
+		/// Returns the input stream after writing.
 		/// </returns> --------------------------------------------------------
 		template <typename charT>
 		friend std::basic_ostream<charT>& operator<<(
 			std::basic_ostream<charT>& os,
-			const Queue<E, container>& queue
+			const Queue& queue
 		) {
-			os << "Queue<" << typeid(E).name() << ", " 
-				<< typeid(container).name() << ">"
-				<< " (size = " << queue.size() << ")" << std::endl;
-
-			queue.m_container.writeToStream(os);
+			os << queue._container;
 			return os;
 		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// ~~~ Input Stream Operator ~~~
+		/// </summary>
+		/// 
+		/// <typeparam name="charT">
+		/// The type of the character stream returned by the operator.
+		/// </typeparam>
+		/// 
+		/// <param name="os">
+		/// The stream being read from.
+		/// </param>
+		/// <param name="arr">
+		/// The queue being read into.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the input stream after reading.
+		/// </returns> --------------------------------------------------------
+		template <typename charT>
+		friend std::basic_istream<charT>& operator>>(
+			std::basic_istream<charT>& is,
+			Queue& queue
+		) {
+			is >> queue._container;
+			return is;
+		}
+
+	private:
+		container _container;
 	};
+
+	static_assert(
+		collection<Queue<int>>,
+		"Queue does not implement the collection interface."
+	);
 }

@@ -23,7 +23,6 @@
 
 #include "../archetypes/iterator_archetypes.h"
 #include "../archetypes/range_archetypes.h"
-#include "../concepts/manages_memory.h"
 #include "../concepts/searchable.h"
 #include "../concepts/streamable.h"
 #include "../util/NamedType.h"
@@ -142,7 +141,7 @@ namespace collections {
 
 	// ------------------------------------------------------------------------
 	/// <summary> 
-	/// The concept 'collection' defines the behaviour and interface for 
+	/// The concept 'container' defines the behaviour and interface for 
 	/// enforcing a collection-like interface on the given type. Collections 
 	/// must meet the following requirements:
 	/// 
@@ -154,8 +153,11 @@ namespace collections {
 	///			- The element type is equality comparable.
 	///		</term></item></para>
 	///		<para><item><term>
-	///			- The type performs its own memory management and is 
-	///           swappable.
+	///			- The type conforms to copy and move semantics.
+	///		</term></item></para>
+	///		<para><item><term>
+	///			- The type implements three way comparison if and only if its 
+	///			  elements can be compared.
 	///		</term></item></para>
 	///		<para><item><term>
 	///			- The type implements stream operators.
@@ -169,14 +171,13 @@ namespace collections {
 	/// </list>
 	/// 
 	/// </summary> ------------------------------------------------------------
-	template<class T>
+	template <class T>
 	concept collection =
 		collection_constructible<T> &&
 		std::equality_comparable<T> &&
+		std::copyable<T> &&
 		conditionally_three_way_comparable<T, typename T::value_type> &&
-		manages_memory<T> &&
 		streamable<T, uint8_t> &&
-		std::ranges::input_range<T> &&
 		collection_type_traits<T> &&
 		basic_collection_interface<T>;
 }

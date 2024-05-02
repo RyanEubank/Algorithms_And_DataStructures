@@ -63,7 +63,7 @@ namespace collection_tests {
 
 		obj.push(value);
 		EXPECT_FALSE(obj.isEmpty());
-		EXPECT_NE(collections::find(obj, value), obj.end());
+		EXPECT_EQ(obj.peek(), value);
 	}
 
 	// ------------------------------------------------------------------------
@@ -80,11 +80,10 @@ namespace collection_tests {
 
 		stack obj(collections::from_range, input);
 		ASSERT_FALSE(obj.isEmpty());
-		ASSERT_EQ(collections::find(obj, value), obj.end());
 
 		obj.push(value);
 		EXPECT_EQ(obj.size(), input.size() + 1);
-		EXPECT_NE(collections::find(obj, value), obj.end());
+		EXPECT_EQ(obj.peek(), value);
 	}
 
 	// ------------------------------------------------------------------------
@@ -101,11 +100,10 @@ namespace collection_tests {
 
 		stack obj(collections::from_range, input);
 		ASSERT_FALSE(obj.isEmpty());
-		ASSERT_NE(collections::find(obj, value), obj.end());
 
 		obj.pop();
 		EXPECT_EQ(obj.size(), input.size() - 1);
-		EXPECT_EQ(collections::find(obj, value), obj.end());
+		EXPECT_NE(obj.peek(), value);
 	}
 
 	// ------------------------------------------------------------------------

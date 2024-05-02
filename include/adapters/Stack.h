@@ -46,8 +46,6 @@ namespace collections {
 		using const_reference = typename container::const_reference;
 		using pointer = typename container::pointer;
 		using const_pointer = typename container::const_pointer;
-		using iterator = typename container::iterator;
-		using const_iterator = typename container::const_iterator;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -77,7 +75,7 @@ namespace collections {
 		/// ~~~ Container Constructor ~~~
 		/// 
 		///	<para>
-		/// Constructs a stackby moving the provided container.
+		/// Constructs a stack by moving the provided container.
 		/// </para></summary> 
 		/// 
 		/// <param name="c">
@@ -120,7 +118,7 @@ namespace collections {
 		/// ~~~ Iterator Constructor ~~~
 		/// 
 		/// <para>
-		/// Constructs s stack with the a copy of the elements from the
+		/// Constructs a stack with the a copy of the elements from the
 		/// given iterator/sentinel pair.
 		/// </para></summary>
 		/// 
@@ -294,58 +292,6 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Returns an iterator pointing to the beginning of the stack.
-		/// </summary>
-		/// 
-		/// <returns>
-		/// Returns a random access iterator to the first element in the 
-		/// stack.
-		/// </returns> --------------------------------------------------------
-		[[nodiscard]] iterator begin() noexcept {
-			return _container.begin();
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns an iterator pointing to the end of the stack.
-		/// </summary>
-		/// 
-		/// <returns>
-		/// Returns a random access iterator to the location after the last 
-		/// element in the stack.
-		/// </returns> --------------------------------------------------------
-		[[nodiscard]] iterator end() noexcept {
-			return _container.end();
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns a constant iterator pointing to the beginning of the stack.
-		/// </summary>
-		/// 
-		/// <returns>
-		/// Returns a constant random access iterator to the first element in 
-		/// the stack.
-		/// </returns> --------------------------------------------------------
-		[[nodiscard]] const_iterator begin() const noexcept {
-			return _container.begin();
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns a constant iterator pointing to the end of the stack.
-		/// </summary>
-		/// 
-		/// <returns>
-		/// Returns a constant random access iterator to the location after the 
-		/// last element in the stack.
-		/// </returns> --------------------------------------------------------
-		[[nodiscard]] const_iterator end() const noexcept {
-			return _container.end();
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
 		/// ~~~ Equality Operator ~~~
 		/// </summary>
 		/// 
@@ -357,7 +303,7 @@ namespace collections {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns true if the given Stack's underlying containers are equal,
+		/// Returns true if the given stack's underlying containers are equal,
 		/// false otherwise.
 		/// </returns> --------------------------------------------------------
 		friend bool operator==(const Stack& lhs, const Stack& rhs) {
@@ -377,7 +323,7 @@ namespace collections {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns true if the given arrays share exact ordering based
+		/// Returns true if the given stacks share exact ordering based
 		/// on contents. Always returns false for arrays of different size.
 		/// </returns> --------------------------------------------------------
 		friend auto operator<=>(const Stack& lhs, const Stack& rhs) {
@@ -440,12 +386,12 @@ namespace collections {
 			return is;
 		}
 
-		private:
-			container _container;
+	private:
+		container _container;
 	};
 
 	static_assert(
 		collection<Stack<int>>,
-		"Stack does not implement the collection interface."
+		"Stack does not implement the adapter interface."
 	);
 }
