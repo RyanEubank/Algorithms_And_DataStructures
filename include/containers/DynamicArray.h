@@ -17,15 +17,17 @@
 
 #pragma once
 
-#include <assert.h>
-#include <iostream>
 #include <sstream>
 
-#include "../adapters/back_inserter.h"
 #include "../algorithms/collection_algorithms.h"
 #include "../concepts/sequential.h"
 
 namespace collections {
+
+	/// <summary>
+	/// Strongly typed integral to indicate an amount of memory being reserved.
+	/// </summary>
+	using Reserve = NamedType<size_t, struct ReserveType>;
 
 	// ------------------------------------------------------------------------
 	/// <summary>

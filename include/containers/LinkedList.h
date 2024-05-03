@@ -17,12 +17,10 @@
 
 #pragma once
 
-#include <iostream>
 #include <sstream>
 
 #include "../algorithms/collection_algorithms.h"
 #include "../concepts/sequential.h"
-#include "../util/NamedType.h"
 
 namespace collections {
 

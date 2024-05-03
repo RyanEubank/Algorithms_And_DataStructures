@@ -29,9 +29,7 @@
 
 namespace collections {
 
-	using Reserve = NamedType<size_t, struct ReserveType>;
 	using Size = NamedType<size_t, struct SizeType>;
-
 
 	struct from_range_t { explicit from_range_t() = default; };
 	inline constexpr from_range_t from_range{};
