@@ -48,7 +48,7 @@ namespace collection_tests {
 			return std::array<T, 3>{ v4, v5, v6 };
 		}
 
-		auto different_order() {
+		auto reverse_order() {
 			return std::array<T, 3>{ v3, v2, v1 };
 		}
 
@@ -72,7 +72,7 @@ namespace collection_tests {
 			return std::array<T, 3>{ v4, v5, v6 };
 		}
 
-		auto different_order() {
+		auto reverse_order() {
 			return std::array<T, 3>{ v3, v2, v1 };
 		}
 
@@ -96,7 +96,7 @@ namespace collection_tests {
 			return std::array<T, 3>{ v4, v5, v6 };
 		}
 
-		auto different_order() {
+		auto reverse_order() {
 			return std::array<T, 3>{ v3, v2, v1 };
 		}
 
@@ -121,7 +121,7 @@ namespace collection_tests {
 			return std::array<void*, 3>{ v4, v5, v6 };
 		}
 
-		auto different_order() {
+		auto reverse_order() {
 			return std::array<void*, 3>{ v3, v2, v1 };
 		}
 
@@ -145,7 +145,7 @@ namespace collection_tests {
 			return std::array<std::string, 3>{ v4, v5, v6 };
 		}
 
-		auto different_order() {
+		auto reverse_order() {
 			return std::array<std::string, 3>{ v3, v2, v1 };
 		}
 

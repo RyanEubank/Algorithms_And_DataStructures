@@ -34,108 +34,146 @@ namespace collections {
 	struct from_range_t { explicit from_range_t() = default; };
 	inline constexpr from_range_t from_range{};
 
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// The concept collection_type_traits defines the minimal type aliases
-	/// required of collection types.
-	/// 
-	/// <list type="bullet">
-	///		<para><item><term>
-	///			- The collection has aliases for value_type, size_type,
-	///           reference, const_reference, pointer, and const_pointer.
-	///		</term></item></para>
-	/// </list>
-	/// 
-	/// </summary> ------------------------------------------------------------
-	template <class T>
-	concept collection_type_traits = requires {
-		typename T::value_type;
-		typename T::size_type;
-		typename T::reference;
-		typename T::const_reference;
-		typename T::pointer;
-		typename T::const_pointer;
-	};
+	namespace internal {
 
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// The concept basic_collection_interface defines the most basic methods 
-	/// required for collection types.
-	/// 
-	/// <list type="bullet">
-	///		<para><item><term>
-	///			- The collection has methods for clear(), size() and isEmpty().
-	///		</term></item></para>
-	/// </list>
-	/// 
-	/// </summary> ------------------------------------------------------------
-	template <class T>
-	concept basic_collection_interface = requires(T & c1, const T & c2) {
-		{ c1.clear() };
-		{ c2.size() } -> std::convertible_to<size_t>;
-		{ c2.isEmpty() } -> std::convertible_to<bool>;
-	};
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// The concept has_collection_type_traits defines the minimal type 
+		/// aliases required of collection types.
+		/// 
+		/// <list type="bullet">
+		///		<para><item><term>
+		///			- The collection has aliases for value_type, size_type,
+		///           reference, const_reference, pointer, and const_pointer.
+		///		</term></item></para>
+		/// </list>
+		/// 
+		/// </summary> --------------------------------------------------------
+		template <class T>
+		concept has_collection_type_traits = requires {
+			typename T::value_type;
+			typename T::size_type;
+			typename T::reference;
+			typename T::const_reference;
+			typename T::pointer;
+			typename T::const_pointer;
+		};
 
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// The concept conditionally_three_way_comparable defines a requirement
-	/// for collection types that they must implement the comparison (spaceship)
-	/// operator if the elements they contain are also three way comparable.
-	/// </summary> ------------------------------------------------------------
-	template <class collection_t, class element_t>
-	concept conditionally_three_way_comparable =
-		std::three_way_comparable<
-			collection_t, 
-			decltype(element_t{} <=> element_t{}) 
-		> ||
-		!std::three_way_comparable<element_t>;
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// The concept has_basic_collection_interface defines the most basic 
+		/// methods required for collection types.
+		/// 
+		/// <list type="bullet">
+		///		<para><item><term>
+		///			- The collection has methods for clear(), size() and 
+		///           isEmpty().
+		///		</term></item></para>
+		/// </list>
+		/// 
+		/// </summary> --------------------------------------------------------
+		template <class T>
+		concept has_basic_collection_interface = 
+		requires(T & c1, const T & c2) {
+			{ c1.clear() };
+			{ c2.size() } -> std::convertible_to<size_t>;
+			{ c2.isEmpty() } -> std::convertible_to<bool>;
+		};
 
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// The concept collection_constructible defines a requirement for the
-	/// constructors of collection types. The required constructors are as 
-	/// follows:
-	/// 
-	/// <list type="bullet">
-	///		<para><item><term>
-	///			- The type is default constructible.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type is constructible from an initializer list.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type is constructible from an iterator pair.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type is constructible from a range.
-	///		</term></item></para>
-	/// </list>
-	/// 
-	/// </summary> ------------------------------------------------------------
-	template <
-		class collection,
-		class iterator = input_iterator_archetype<typename collection::value_type>,
-		class sentinel = iterator,
-		class range = input_range_archetype<typename collection::value_type>,
-		class range_tag = from_range_t
-	>
-	concept collection_constructible =
-		std::input_iterator<iterator> &&
-		std::sentinel_for<sentinel, iterator> &&
-		std::ranges::input_range<range> &&
-		std::is_same_v<range_tag, from_range_t>&&
-		std::is_default_constructible_v<collection> &&
-		std::is_constructible_v<
-			collection,
-			std::initializer_list<typename collection::value_type>
-		> &&
-		std::is_constructible_v<collection, iterator, sentinel> &&
-		std::is_constructible_v<collection, range_tag, range&&> &&
-		std::is_constructible_v<
-			collection, 
-			Size, 
-			typename collection::value_type
-		>;
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// The concept conditionally_three_way_comparable defines a 
+		/// requirement for collection types that they must implement the 
+		/// comparison (spaceship) operator if the elements they contain are 
+		/// themselves three way comparable.
+		/// </summary> --------------------------------------------------------
+		template <
+			class collection_t,
+			class element_t,
+			class comparison_type = decltype(element_t{} <=> element_t{})
+		>
+		concept conditionally_three_way_comparable =
+			std::three_way_comparable<collection_t, comparison_type> ||
+			!std::three_way_comparable<element_t>;
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// The concept has_collection_constructors defines a requirement for 
+		/// the constructors of collection types. The required constructors are 
+		/// as follows:
+		/// 
+		/// <list type="bullet">
+		///		<para><item><term>
+		///			- The type is default constructible.
+		///		</term></item></para>
+		///		<para><item><term>
+		///			- The type is constructible from an initializer list.
+		///		</term></item></para>
+		///		<para><item><term>
+		///			- The type is constructible from an iterator pair.
+		///		</term></item></para>
+		///		<para><item><term>
+		///			- The type is constructible from a range.
+		///		</term></item></para>
+		/// </list>
+		/// 
+		/// </summary> ---------------------------------------------------------
+		template <
+			class collection,
+			class value_type = typename collection::value_type,
+			class iterator = input_iterator_archetype<value_type>,
+			class sentinel = iterator,
+			class range = input_range_archetype<value_type>,
+			class range_tag = from_range_t
+		>
+		concept has_collection_constructors =
+			std::input_iterator<iterator> &&
+			std::sentinel_for<sentinel, iterator> &&
+			std::ranges::input_range<range> &&
+			std::is_same_v<range_tag, from_range_t> &&
+			std::is_default_constructible_v<collection> &&
+			std::is_constructible_v<collection, std::initializer_list<value_type>> &&
+			std::is_constructible_v<collection, iterator, sentinel> &&
+			std::is_constructible_v<collection, range_tag, range&&> &&
+			std::is_constructible_v<collection, Size, value_type>;
+
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// The concept 'has_collection_range_interface' defines a requirement
+		/// that the type has all begin/cbegin/rbegin and the corresponding 
+		/// end methods.
+		/// </summary> --------------------------------------------------------
+		template <
+			class collection_t, 
+			class const_iterator = typename collection_t::const_iterator,
+			class reverse_iterator = typename collection_t::reverse_iterator,
+			class const_reverse_iterator = typename collection_t::const_reverse_iterator
+		>
+		concept has_collection_range_interface =
+			std::ranges::input_range<collection_t> &&
+			requires(collection_t & c1, const collection_t & c2) {
+				{ c2.cbegin() } -> std::same_as<const_iterator>;
+				{ c2.cend() } -> std::same_as<const_iterator>;
+				{ c1.rbegin() } -> std::same_as<reverse_iterator>;
+				{ c1.rend() } -> std::same_as<reverse_iterator>;
+				{ c2.rbegin() } -> std::same_as<const_reverse_iterator>;
+				{ c2.rend() } -> std::same_as<const_reverse_iterator>;
+				{ c2.crbegin() } -> std::same_as<const_reverse_iterator>;
+				{ c2.crend() } -> std::same_as<const_reverse_iterator>;
+			};
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// The concept 'conditional_ranged_collection' defines a requirement
+		/// that if the type is a range, it must exposes all
+		/// begin/cbegin/rbegin and the corresponding end methods.
+		/// </summary> --------------------------------------------------------
+		template <class collection_t>
+		concept conditional_ranged_collection =
+			!std::ranges::input_range<collection_t> ||
+			has_collection_range_interface<collection_t>;
+	}
 
 	// ------------------------------------------------------------------------
 	/// <summary> 
@@ -145,7 +183,8 @@ namespace collections {
 	/// 
 	/// <list type="bullet">
 	///		<para><item><term>
-	///			- The type has constructors defined in collection_constructible.
+	///			- The type has constructors defined in 
+	///           has_collection_constructors.
 	///		</term></item></para>
 	///		<para><item><term>
 	///			- The element type is equality comparable.
@@ -171,11 +210,12 @@ namespace collections {
 	/// </summary> ------------------------------------------------------------
 	template <class T>
 	concept collection =
-		collection_constructible<T> &&
-		std::equality_comparable<T> &&
+		internal::has_collection_constructors<T> &&
+		internal::has_collection_type_traits<T> &&
+		internal::has_basic_collection_interface<T> &&
+		internal::conditionally_three_way_comparable<T, typename T::value_type> &&
+		internal::conditional_ranged_collection<T> &&
 		std::copyable<T> &&
-		conditionally_three_way_comparable<T, typename T::value_type> &&
-		streamable<T, uint8_t> &&
-		collection_type_traits<T> &&
-		basic_collection_interface<T>;
+		std::equality_comparable<T> &&
+		streamable<T, uint8_t>;
 }

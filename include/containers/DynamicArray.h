@@ -57,6 +57,8 @@ namespace collections {
 		using const_pointer = alloc_traits::const_pointer;
 		using iterator = pointer;
 		using const_iterator = const_pointer;
+		using reverse_iterator = std::reverse_iterator<iterator>;
+		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 		static constexpr auto DEFAULT_CAPACITY = 0;
 		static constexpr auto MAX_CAPACITY = std::numeric_limits<size_type>::max();
@@ -624,6 +626,116 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator end() const noexcept {
 			return _end;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const_iterator pointing to the beginning of the array.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant random access iterator to the first element in 
+		/// the array.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator cbegin() const noexcept {
+			return _array;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const_iterator pointing to the end of the array.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant random access iterator to the location after the 
+		/// last element in the array.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator cend() const noexcept {
+			return _end;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a reverse iterator pointing to the first element in the 
+		/// reverse sequence.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a reverse iterator to the element after the end of the
+		/// array.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] reverse_iterator rbegin() noexcept {
+			return std::make_reverse_iterator(end());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a reverse iterator pointing to the element after the end of 
+		/// the reverse sequence.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a reverse iterator to the element before the beginning of
+		/// the array
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] reverse_iterator rend() noexcept {
+			return std::make_reverse_iterator(begin());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const reverse iterator pointing to the first element in 
+		/// the reverse sequence.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const reverse iterator to the element after the end of 
+		/// the array.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reverse_iterator rbegin() const noexcept {
+			return std::make_reverse_iterator(end());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const reverse iterator pointing to the element after the 
+		/// end of the reverse sequence.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const reverse iterator to the element before the 
+		/// beginning of the array.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reverse_iterator rend() const noexcept {
+			return std::make_reverse_iterator(begin());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const reverse iterator pointing to the first element in 
+		/// the reverse sequence.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const reverse iterator to the element after the end of 
+		/// the array.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reverse_iterator crbegin() const noexcept {
+			return std::make_reverse_iterator(end());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const reverse iterator pointing to the element after the 
+		/// end of the reverse sequence.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const reverse iterator to the element before the 
+		/// beginning of the array.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reverse_iterator crend() const noexcept {
+			return std::make_reverse_iterator(begin());
 		}
 
 		// --------------------------------------------------------------------
