@@ -182,9 +182,13 @@ namespace collection_tests {
 	) {
 		using queue = TypeParam::collection_t;
 		auto input = this->testInput.control();
-		auto value = input[0];
+		auto value = input[2];
 
-		queue obj(collections::from_range, input);
+		queue obj{};
+		obj.enqueue_front(input[0]);
+		obj.enqueue_front(input[1]);
+		obj.enqueue_front(input[2]);
+
 		auto expected = obj.front();
 		EXPECT_EQ(expected, value);
 	}
@@ -200,9 +204,13 @@ namespace collection_tests {
 	) {
 		using queue = TypeParam::collection_t;
 		auto input = this->testInput.control();
-		auto value = input[input.size() - 1];
+		auto value = input[0];
 
-		queue obj(collections::from_range, input);
+		queue obj{};
+		obj.enqueue_front(input[0]);
+		obj.enqueue_front(input[1]);
+		obj.enqueue_front(input[2]);
+
 		auto expected = obj.back();
 		EXPECT_EQ(expected, value);
 	}

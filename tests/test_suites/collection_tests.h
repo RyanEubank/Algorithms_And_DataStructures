@@ -118,43 +118,82 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Tests that a collection's copy constructor makes a deep copy of the
-	/// elements allowing the original to be destroyed without effecting the
-	/// copy.
+	/// Tests that a collection's copy constructor makes a deep copy of 
+	/// empty objects allowing the original to be destroyed without 
+	/// effecting the copy.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTests, CopyConstructorDeepCopiesObject) {
+	TYPED_TEST_P(CollectionTests, CopyConstructorCopiesEmptyObjects) {
 		using collection = typename TypeParam::collection_t;
 		auto input = this->testInput.control();
 
-		collection original(collections::from_range, input);
-		collection copy(original);
-		EXPECT_EQ(original, copy);
+		collection target{};
+		collection src(target);
+		EXPECT_EQ(src, target);
 
-		copy.clear();
-		EXPECT_NE(original, copy);
-		EXPECT_NO_THROW({ original.clear(); });
+		src.clear();
+		EXPECT_EQ(target, src);
+		EXPECT_NO_THROW({ target.clear(); });
 	}
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Tests that a collection's move constructor correctly transfers 
-	/// ownership of the elements allowing the original to be destroyed without 
-	/// effecting the new owner.
+	/// Tests that a collection's copy constructor makes a deep copy of 
+	/// non-empty objects allowing the original to be destroyed without 
+	/// effecting the copy.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTests, MoveConstructorTransfersObject) {
+	TYPED_TEST_P(CollectionTests, CopyConstructorDeepCopiesNonEmptyObjects) {
 		using collection = typename TypeParam::collection_t;
 		auto input = this->testInput.control();
 
-		collection obj1(collections::from_range, input);
-		const collection obj2(collections::from_range, input);
+		collection target(collections::from_range, input);
+		collection src(target);
+		EXPECT_EQ(src, target);
 
-		ASSERT_EQ(obj1, obj2);
-		ASSERT_FALSE(obj1.isEmpty());
+		src.clear();
+		EXPECT_NE(target, src);
+		EXPECT_NO_THROW({ target.clear(); });
+	}
 
-		collection obj3(std::move(obj1));
-		EXPECT_NE(obj1, obj2);
-		EXPECT_EQ(obj2, obj3);
-		EXPECT_TRUE(obj1.isEmpty());
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that a collection's move constructor correctly moves empty 
+	/// objects.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(CollectionTests, MoveConstructorTransfersEmptyObjects) {
+		using collection = typename TypeParam::collection_t;
+		auto input = this->testInput.control();
+
+		collection target{};
+		const collection expected{};
+
+		ASSERT_EQ(target, expected);
+		ASSERT_TRUE(target.isEmpty());
+
+		collection src(std::move(target));
+		EXPECT_EQ(target, expected);
+		EXPECT_EQ(src, expected);
+		EXPECT_TRUE(src.isEmpty());
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that a collection's move constructor correctly moves non-empty 
+	/// objects.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(CollectionTests, MoveConstructorTransfersNonEmptyObjects) {
+		using collection = typename TypeParam::collection_t;
+		auto input = this->testInput.control();
+
+		collection target(collections::from_range, input);
+		const collection expected(collections::from_range, input);
+
+		ASSERT_EQ(target, expected);
+		ASSERT_FALSE(target.isEmpty());
+
+		collection src(std::move(target));
+		EXPECT_NE(target, expected);
+		EXPECT_EQ(src, expected);
+		EXPECT_TRUE(target.isEmpty());
 	}
 
 	// ------------------------------------------------------------------------
@@ -194,50 +233,143 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Tests that the collection correctly manages memory when moved with
-	/// move assignment.
+	/// Tests that the collection correctly manages memory on empty objects
+	/// when moved via assignment.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTests, MoveAssignmentTransfersObject) {
+	TYPED_TEST_P(CollectionTests, MoveAssignmentTransfersEmptyObjects) {
 		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
 
-		collection obj1(collections::from_range, input);
-		const collection obj2(collections::from_range, input);
-		collection obj3{};
+		collection src{};
+		collection target{};
+		const collection expected{};
 
-		ASSERT_EQ(obj1, obj2);
-		ASSERT_NE(obj1, obj3);
-
-		obj3 = std::move(obj1);
-
-		EXPECT_EQ(obj3, obj2);
-		EXPECT_NE(obj1, obj2);
-		EXPECT_TRUE(obj1.isEmpty());
+		ASSERT_EQ(src, expected);
+		ASSERT_EQ(target, expected);
+		src = std::move(target);
+		EXPECT_EQ(src, expected);
 	}
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Tests that swapping collections correctly swaps elements such that
-	/// a collection equal to another will also report equality in a transfer
-	/// collection after a swap.
+	/// Tests that the collection correctly manages memory on non-empty objects
+	/// when moved via assignment.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(CollectionTests, SwapChangesElementsCorrectly) {
+	TYPED_TEST_P(CollectionTests, MoveAssignmentTransfersNonEmptyObjects) {
 		using collection = typename TypeParam::collection_t;
 		auto control_input = this->testInput.control();
-		auto diff_elements_input = this->testInput.different_elements();
+		auto diff_input = this->testInput.different_elements();
 
-		collection obj1(collections::from_range, control_input);
-		collection obj2(collections::from_range, control_input);
-		collection obj3(collections::from_range, diff_elements_input);
+		collection src(collections::from_range, control_input);
+		collection target(collections::from_range, diff_input);
+		const collection expected(collections::from_range, diff_input);
 
-		ASSERT_EQ(obj1, obj2);
-		ASSERT_NE(obj1, obj3);
-
-		swap(obj1, obj3);
-
-		EXPECT_EQ(obj2, obj3);
-		EXPECT_NE(obj1, obj2);
+		ASSERT_NE(src, expected);
+		src = std::move(target);
+		EXPECT_EQ(src, expected);
 	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that the collection correctly manages memory when moved
+	/// between empty and non empty objects via move assignment.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		CollectionTests, 
+		MoveAssignmentTransfersBetweenEmptyAndNonEmptyObjects
+	) {
+		using collection = typename TypeParam::collection_t;
+		auto control_input = this->testInput.control();
+		auto diff_input = this->testInput.different_elements();
+
+		const collection not_expected(collections::from_range, diff_input);
+		collection src1(collections::from_range, control_input);
+		collection target1{};
+		const collection expected1{};
+
+		ASSERT_NE(src1, expected1);
+		src1 = std::move(target1);
+		EXPECT_EQ(src1, expected1);
+		EXPECT_NE(src1, not_expected);
+
+		collection src2{};
+		collection target2(collections::from_range, control_input);
+		const collection expected2(collections::from_range, control_input);
+
+		ASSERT_NE(src2, expected2);
+		src2 = std::move(target2);
+		EXPECT_EQ(src2, expected2);
+		EXPECT_NE(src2, not_expected);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that swapping collections correctly swaps elements on empty 
+	/// objects.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(CollectionTests, SwapSwitchesEmptyObjects) {
+		using collection = typename TypeParam::collection_t;
+
+		collection src{};
+		collection target{};
+		const collection expected{};
+
+		ASSERT_EQ(src, expected);
+		ASSERT_EQ(target, expected);
+		swap(src, target);
+		EXPECT_EQ(src, expected);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that swapping collections correctly swaps elements on non-empty 
+	/// objects.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(CollectionTests, SwapSwitchesNonEmptyObjects) {
+		using collection = typename TypeParam::collection_t;
+		auto control_input = this->testInput.control();
+		auto diff_input = this->testInput.different_elements();
+
+		collection src(collections::from_range, control_input);
+		collection target(collections::from_range, diff_input);
+		const collection expected(collections::from_range, diff_input);
+
+		ASSERT_NE(src, expected);
+		ASSERT_EQ(target, expected);
+		swap(src, target);
+		EXPECT_EQ(src, expected);
+		EXPECT_NE(target, expected);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that swapping collections correctly swaps elements between empty
+	/// and non-empty objects.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(CollectionTests, SwapSwitchesBetweenEmptyAndNonObjects) {
+		using collection = typename TypeParam::collection_t;
+		auto control_input = this->testInput.control();
+		
+		collection src1(collections::from_range, control_input);
+		collection target1{};
+		const collection expected1{};
+
+		ASSERT_NE(src1, expected1);
+		ASSERT_EQ(target1, expected1);
+		swap(src1, target1);
+		EXPECT_EQ(src1, expected1);
+		EXPECT_NE(target1, expected1);
+
+		collection src2{};
+		collection target2(collections::from_range, control_input);
+		const collection expected2(collections::from_range, control_input);
+
+		ASSERT_NE(src2, expected2);
+		ASSERT_EQ(target2, expected2);
+		swap(src2, target2);
+		EXPECT_EQ(src2, expected2);
+		EXPECT_NE(target2, expected2);
+	}
+
 
 	// ------------------------------------------------------------------------
 	/// <summary>
@@ -301,11 +433,17 @@ namespace collection_tests {
 		IteratorRangeConstructorSetsContents,
 		RangeConstructorSetsContents,
 		CollectionEqualityDependsOnSizeAndElements,
-		CopyConstructorDeepCopiesObject,
-		MoveConstructorTransfersObject,
+		CopyConstructorCopiesEmptyObjects,
+		CopyConstructorDeepCopiesNonEmptyObjects,
+		MoveConstructorTransfersEmptyObjects,
+		MoveConstructorTransfersNonEmptyObjects,
 		CopyAssignmentCorrectlyAssignsContents,
-		MoveAssignmentTransfersObject,
-		SwapChangesElementsCorrectly,
+		MoveAssignmentTransfersEmptyObjects,
+		MoveAssignmentTransfersNonEmptyObjects,
+		MoveAssignmentTransfersBetweenEmptyAndNonEmptyObjects,
+		SwapSwitchesEmptyObjects,
+		SwapSwitchesNonEmptyObjects,
+		SwapSwitchesBetweenEmptyAndNonObjects,
 		EmptyObjectCanBeClearedWithoutError,
 		ClearEmptiesObject,
 		IOStreamOperatorsMaintainObject
