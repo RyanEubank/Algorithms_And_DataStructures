@@ -400,15 +400,7 @@ namespace collections {
 		/// contents.
 		/// </summary> --------------------------------------------------------
 		void clear() noexcept {
-			_node_base* n = _sentinel._next;
-
-			while (n != &_sentinel) {
-				_node_base* next = n->_next;
-				removeNode(n);
-				n = next;
-			}
-
-			_size = 0;
+			remove(begin(), end());
 		}
 
 		// --------------------------------------------------------------------
@@ -473,7 +465,7 @@ namespace collections {
 		/// the last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator end() const noexcept {
-			return LinkedListIterator<true>(const_cast<_node_base*>(&_sentinel));
+			return LinkedListIterator<true>(_sentinel._next->_prev);
 		}
 
 		// --------------------------------------------------------------------
@@ -499,7 +491,7 @@ namespace collections {
 		/// last element in the array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cend() const noexcept {
-			return LinkedListIterator<true>(const_cast<_node_base*>(&_sentinel));
+			return LinkedListIterator<true>(_sentinel._next->_prev);
 		}
 
 		// --------------------------------------------------------------------
@@ -813,7 +805,7 @@ namespace collections {
 					_node_base* n = createNode(*begin++);
 					tail->_next = n;
 					n->_prev = tail;
-					tail = n;
+					tail = tail->_next;
 					size++;
 				}
 
@@ -844,7 +836,7 @@ namespace collections {
 		void insert(Index index, in_iterator begin, sentinel end) {
 			size_type i = index.get();
 			validateIndexInRange(i);
-			iterator pos = iterator(getNodeAt(i));
+			iterator pos(getNodeAt(i));
 			insert(pos, begin, end);
 		}
 
@@ -860,8 +852,8 @@ namespace collections {
 		void remove(Index index) {
 			size_type i = index.get();
 			validateIndexExists(i);
-			_node_base* n = getNodeAt(i);
-			removeNode(n);
+			auto n = getNodeAt(i);
+			remove(n);
 		}
 
 		// --------------------------------------------------------------------
@@ -873,7 +865,7 @@ namespace collections {
 		/// The iterator position of the element to be removed.
 		/// </param> ----------------------------------------------------------
 		void remove(const_iterator position) {
-			removeNode(position._node);
+			remove(position._node);
 		}
 
 		// --------------------------------------------------------------------
@@ -881,7 +873,7 @@ namespace collections {
 		/// Removes the first element in the list.
 		/// </summary> --------------------------------------------------------
 		void removeFront() {
-			removeNode(_sentinel._next);
+			remove(_sentinel._next);
 		}
 
 		// --------------------------------------------------------------------
@@ -889,7 +881,7 @@ namespace collections {
 		/// Removes the last element in the list.
 		/// </summary> --------------------------s------------------------------
 		void removeBack() {
-			removeNode(_sentinel._prev);
+			remove(_sentinel._prev);
 		}
 
 		// --------------------------------------------------------------------
@@ -915,12 +907,7 @@ namespace collections {
 		/// Removes all elements in the given iterator range [begin, end).
 		/// </summary> --------------------------------------------------------
 		void remove(const_iterator begin, const_iterator end) {
-			_node_base* n = nullptr;
-			while (begin != end) {
-				n = begin._node;
-				++begin;
-				removeNode(n);
-			}
+			remove(begin._node, end._node);
 		}
 
 		// --------------------------------------------------------------------
@@ -934,7 +921,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplaceFront(Args&&... args) {
-			insertAt(_sentinel._next, std::forward<Args>(args)...);
+			insert(_sentinel._next, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -948,7 +935,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplaceBack(Args&&... args) {
-			insertAt(&_sentinel, std::forward<Args>(args)...);
+			insert(&_sentinel, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -965,7 +952,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplace(Index index, Args&&... args) {
-			insertAt(index, std::forward<Args>(args)...);
+			insert(index, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -982,7 +969,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplace(const_iterator position, Args&&... args) {
-			insertAt(position._node, std::forward<Args>(args)...);
+			insert(position._node, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1131,7 +1118,7 @@ namespace collections {
 
 			for (size_type i = 0; i < size; ++i) {
 				is >> v;
-				list.insertAt(&list._sentinel, std::move(v));
+				list.insertBack(std::move(v));
 			}
 
 			return is;
@@ -1218,25 +1205,6 @@ namespace collections {
 			return result;
 		}
 
-		void linkBefore(_node_base* location, _node_base* newNode) {
-			location->_prev->_next = newNode;
-			newNode->_prev = location->_prev;
-			location->_prev = newNode;
-			newNode->_next = location;
-		}
-
-		void linkAfter(_node_base* location, _node_base* newNode) {
-			location->_next->_prev = newNode;
-			newNode->_next = location->_next;
-			location->_next = newNode;
-			newNode->_prev = location;
-		}
-
-		void unlink(_node_base* n) {
-			n->_prev->_next = n->_next;
-			n->_next->_prev = n->_prev;
-		}
-
 		void assignFrom(const_iterator begin, const_iterator end) {
 			iterator destination = this->begin();
 			while (destination != this->end()) 
@@ -1262,10 +1230,25 @@ namespace collections {
 			}
 		}
 
+		size_type destroy(_node_base* begin, _node_base* end) {
+			size_type s = 0;
+			_node_base* next = nullptr;
+
+			while (begin != end) {
+				next = begin->_next;
+				destroyNode(static_cast<node*>(begin));
+				deallocate(static_cast<node*>(begin));
+				begin = next;
+				s++;
+			}
+
+			return s;
+		}
+
 		template <class... Args>
 		void insertAt(const _node_base* location, Args&&... args) {
 			_node_base* newNode = createNode(std::forward<Args>(args)...);
-			linkBefore(const_cast<_node_base*>(location), newNode);
+			splice(const_cast<_node_base*>(location), newNode, newNode);
 			_size++;
 		}
 
@@ -1274,22 +1257,28 @@ namespace collections {
 			size_type i = index.get();
 			validateIndexInRange(i);
 			_node_base* location = getNodeAt(i);
-			insertAt(location, std::forward<Args>(args)...);
+			insert(location, std::forward<Args>(args)...);
 		}
 
-		void updateEndsOnRemove(_node_base* n) {
-			if (n == _sentinel._next)
-				_sentinel._next = _sentinel._next->_next;
-			if (n == _sentinel._prev)
-				_sentinel._prev = _sentinel._prev->_prev;
+		void remove(_node_base* n) {
+			remove(n, n->_next);
 		}
 
-		void removeNode(_node_base* n) {
-			updateEndsOnRemove(n);
-			unlink(n);
-			destroyNode(static_cast<node*>(n));
-			deallocate(static_cast<node*>(n));
-			_size--;
+		void remove(_node_base* head, _node_base* tail) {
+			snip(head, tail);
+			_size -= destroy(head, tail);
+		}
+
+		void splice(_node_base* position, _node_base* head, _node_base* tail) {
+			head->_prev = position->_prev;
+			position->_prev->_next = head;
+			tail->_next = position;
+			position->_prev = tail;
+		}
+
+		void snip(_node_base* head, _node_base* tail) {
+			head->_prev->_next = tail;
+			tail->_prev = head->_prev;
 		}
 
 		void removeAll(size_type begin_index, size_type end_index) {
@@ -1298,16 +1287,9 @@ namespace collections {
 
 			while (begin_index++ < end_index) {
 				next = n->_next;
-				removeNode(n);
+				remove(n, n->_next);
 				n = next;
 			}
-		}
-
-		void splice(_node_base* position, _node_base* head, _node_base* tail) {
-			head->_prev = position->_prev;
-			position->_prev->_next = head;
-			tail->_next = position;
-			position->_prev = tail;
 		}
 
 		void validateIndexExists(size_type index) const {
