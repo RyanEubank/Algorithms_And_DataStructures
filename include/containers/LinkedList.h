@@ -1257,7 +1257,7 @@ namespace collections {
 			size_type i = index.get();
 			validateIndexInRange(i);
 			_node_base* location = getNodeAt(i);
-			insert(location, std::forward<Args>(args)...);
+			insertAt(location, std::forward<Args>(args)...);
 		}
 
 		void remove(_node_base* n) {
@@ -1385,7 +1385,7 @@ namespace collections {
 			/// <param name="node">
 			/// The node the iterator will point to.
 			/// </param> ------------------------------------------------------
-			LinkedListIterator(_node_base* node) : _node(node) {}
+			explicit LinkedListIterator(_node_base* node) : _node(node) {}
 
 			friend class LinkedList;
 
