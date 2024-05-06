@@ -921,7 +921,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplaceFront(Args&&... args) {
-			insert(_sentinel._next, std::forward<Args>(args)...);
+			insertAt(_sentinel._next, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -935,7 +935,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplaceBack(Args&&... args) {
-			insert(&_sentinel, std::forward<Args>(args)...);
+			insertAt(&_sentinel, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -952,7 +952,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplace(Index index, Args&&... args) {
-			insert(index, std::forward<Args>(args)...);
+			insertAt(index, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -969,7 +969,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplace(const_iterator position, Args&&... args) {
-			insert(position._node, std::forward<Args>(args)...);
+			insertAt(position._node, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
