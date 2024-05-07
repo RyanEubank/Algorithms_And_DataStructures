@@ -38,18 +38,27 @@ namespace collections {
 	/// </list>
 	/// 
 	/// </summary> ------------------------------------------------------------
-	template <class collection_t, class predicate_t>
+	template <
+		class collection_t, 
+		class key_t = typename collection_t::value_type,
+		class predicate_t = std::function<bool(typename collection_t::value_type)>
+	>
 	concept searchable = 
 		std::ranges::input_range<collection_t> && 
 		std::predicate<predicate_t, typename collection_t::value_type> &&
 		requires (
-			const collection_t& c,
-			typename collection_t::const_reference e,
+			collection_t& c1,
+			const collection_t& c2,
+			const key_t& key,
 			predicate_t predicate
 		) {
-			{ c.find(e) }
+			{ c1.find(key) }
 				-> std::convertible_to<typename collection_t::iterator>;
-			{ c.find_if(predicate) }
+			{ c1.find_if(predicate) }
 				-> std::convertible_to<typename collection_t::iterator>;
+			{ c2.find(key) }
+				-> std::convertible_to<typename collection_t::const_iterator>;
+			{ c2.find_if(predicate) }
+				-> std::convertible_to<typename collection_t::const_iterator>;
 		};
 }

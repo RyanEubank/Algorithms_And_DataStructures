@@ -29,8 +29,6 @@
 
 namespace collections {
 
-	using Size = NamedType<size_t, struct SizeType>;
-
 	struct from_range_t { explicit from_range_t() = default; };
 	inline constexpr from_range_t from_range{};
 
@@ -128,14 +126,13 @@ namespace collections {
 		>
 		concept has_collection_constructors =
 			std::input_iterator<iterator> &&
-			std::sentinel_for<sentinel, iterator> &&
-			std::ranges::input_range<range> &&
-			std::is_same_v<range_tag, from_range_t> &&
-			std::is_default_constructible_v<collection> &&
-			std::is_constructible_v<collection, std::initializer_list<value_type>> &&
-			std::is_constructible_v<collection, iterator, sentinel> &&
-			std::is_constructible_v<collection, range_tag, range&&> &&
-			std::is_constructible_v<collection, Size, value_type>;
+			std::sentinel_for<sentinel, iterator>&&
+			std::ranges::input_range<range>&&
+			std::is_same_v<range_tag, from_range_t>&&
+			std::is_default_constructible_v<collection>&&
+			std::is_constructible_v<collection, std::initializer_list<value_type>>&&
+			std::is_constructible_v<collection, iterator, sentinel>&&
+			std::is_constructible_v<collection, range_tag, range&&>;
 
 
 		// --------------------------------------------------------------------

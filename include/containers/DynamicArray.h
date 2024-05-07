@@ -676,7 +676,7 @@ namespace collections {
 		/// 
 		/// <returns>
 		/// Returns a reverse iterator to the element before the beginning of
-		/// the array
+		/// the array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reverse_iterator rend() noexcept {
 			return std::make_reverse_iterator(begin());

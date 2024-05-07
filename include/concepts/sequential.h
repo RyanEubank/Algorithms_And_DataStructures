@@ -17,12 +17,13 @@
 
 #pragma once
 
-#include "../concepts/collection.h"
-#include "../concepts/indexable.h"
+#include "collection.h"
+#include "indexable.h"
 #include "../util/NamedType.h"
 
 namespace collections {
 
+	using Size = NamedType<size_t, struct SizeType>;
 	using Index = NamedType<size_t, struct IndexType>;
 
 	struct IndexRange {
@@ -38,32 +39,37 @@ namespace collections {
 	/// 
 	///	<list type="bullet">
 	///		<para><item><term>
-	///		- The type is a collection template type.
+	///		- The type is a ranged collection template type.
 	///		</term></item></para>
 	///		<para><item><term>
 	///		- The type is a standard forward range.
 	///		</term></item></para>
 	///		<para><item><term>
-	///		- The type is indexable.
+	///		- The type is indexable by integral indexes.
 	///		</term></item></para>
 	///		<para><item><term>
-	///		- The type is associative.
+	///		- The type is constructible by a size and value.
+	///		</term></item></para>
+	///		<para><item><term>
+	///		- The type is declares sequential access, insertion, and removal
+	///       methods.
 	///		</term></item></para>
 	/// </list>
 	/// 
 	/// </summary> ------------------------------------------------------------
 	template <
-		class T, 
-		class begin_it = typename T::iterator, 
-		class end_it = typename T::iterator,
+		class T,
+		class begin_it = input_iterator_archetype<typename T::value_type>, 
+		class end_it = input_iterator_archetype<typename T::value_type>,
 		class ...Args
 	>
 	concept sequential = 
-		ranged_collection<T> &&
 		std::ranges::forward_range<T> &&
+		ranged_collection<T> &&
 		indexable<T, typename T::value_type, typename T::size_type> &&
-		std::forward_iterator<begin_it> &&
+		std::input_iterator<begin_it> &&
 		std::sentinel_for<end_it, begin_it> &&
+		std::is_constructible_v<T, Size, typename T::value_type> &&
 		requires(
 			T& c1,
 			const T& c2,
@@ -84,21 +90,21 @@ namespace collections {
 			{ c1.insertFront(rval_element) };
 			{ c1.insertBack(lval_element) };
 			{ c1.insertBack(rval_element) };
-			{ c1.insert(index, lval_element) } -> std::same_as<begin_it>;
-			{ c1.insert(index, rval_element) } -> std::same_as<begin_it>;
-			{ c1.insert(position, lval_element) } -> std::same_as<begin_it>;
-			{ c1.insert(position, rval_element) } -> std::same_as<begin_it>;
-			{ c1.insert(position, begin, end) } -> std::same_as<begin_it>;
-			{ c1.insert(index, begin, end) } -> std::same_as<begin_it>;
+			{ c1.insert(index, lval_element) } -> std::same_as<typename T::iterator>;
+			{ c1.insert(index, rval_element) } -> std::same_as<typename T::iterator>;
+			{ c1.insert(position, lval_element) } -> std::same_as<typename T::iterator>;
+			{ c1.insert(position, rval_element) } -> std::same_as<typename T::iterator>;
+			{ c1.insert(position, begin, end) } -> std::same_as<typename T::iterator>;
+			{ c1.insert(index, begin, end) } -> std::same_as<typename T::iterator>;
 			{ c1.removeFront() };
 			{ c1.removeBack() };
-			{ c1.remove(index) } -> std::same_as<begin_it>;
-			{ c1.remove(position) } -> std::same_as<begin_it>;
-			{ c1.remove(index_range) } -> std::same_as<begin_it>;
-			{ c1.remove(position, position) } -> std::same_as<begin_it>;
+			{ c1.remove(index) } -> std::same_as<typename T::iterator>;
+			{ c1.remove(position) } -> std::same_as<typename T::iterator>;
+			{ c1.remove(index_range) } -> std::same_as<typename T::iterator>;
+			{ c1.remove(position, position) } -> std::same_as<typename T::iterator>;
 			{ c1.emplaceFront(args...) };
 			{ c1.emplaceBack(args...) };
-			{ c1.emplace(index, args...) } -> std::same_as<begin_it>;
-			{ c1.emplace(position, args...) } -> std::same_as<begin_it>;
+			{ c1.emplace(index, args...) } -> std::same_as<typename T::iterator>;
+			{ c1.emplace(position, args...) } -> std::same_as<typename T::iterator>;
 		};
 }

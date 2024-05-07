@@ -17,29 +17,65 @@
 
 #pragma once
 
-#include <concepts>
+#include "collection.h"
+#include "indexable.h"
+#include "searchable.h"
 
 namespace collections {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
 	/// The concept associative defines an interface for template container 
-	/// types that provide associative access. Associative types must implement
-	/// the following methods:
+	/// types that provide associative access. Associative types must meet the 
+	/// following requirements:
 	/// 
-	/// <list type="bullet">
+	///	<list type="bullet">
 	///		<para><item><term>
-	///			insert(element) -> no constraints on return type
+	///		- The type is a ranged collection template type.
 	///		</term></item></para>
 	///		<para><item><term>
-	///			remove(element) -> no constraints on return type
+	///		- The type is a standard forward range.
+	///		</term></item></para>
+	///		<para><item><term>
+	///		- The type overloads methods for efficient search by element type.
+	///		</term></item></para>
+	///		<para><item><term>
+	///		- The type is declares associative access, insertion, and removal
+	///       methods.
 	///		</term></item></para>
 	/// </list>
 	///  
 	/// </summary> ------------------------------------------------------------
-	template <class collection_t, class element_t>
-	concept associative = requires(collection_t& c, const element_t& e) {
-		{ c.insert(e) };
-		{ c.remove(e) };
-	};
+	template <
+		class T, 
+		class begin_it = input_iterator_archetype<typename T::value_type>, 
+		class end_it = input_iterator_archetype<typename T::value_type>,
+		class ...Args
+	>
+	concept associative = 
+		std::ranges::forward_range<T> &&
+		ranged_collection<T> &&
+		searchable<T> && 
+		std::input_iterator<begin_it> &&
+		std::sentinel_for<end_it, begin_it> &&
+		requires(
+			T& c1,
+			begin_it begin,
+			end_it end,
+			typename T::const_reference lval_element,
+			typename T::value_type&& rval_element,
+			typename T::const_iterator position,
+			Args&&... args
+		) {
+			{ c1.insert(lval_element) } -> std::same_as<typename T::iterator>;
+			{ c1.insert(rval_element) } -> std::same_as<typename T::iterator>;
+			{ c1.insert(begin, end) } -> std::same_as<typename T::iterator>;
+			{ c1.remove(position) } -> std::same_as<typename T::iterator>;
+			{ c1.remove(position, position) } -> std::same_as<typename T::iterator>;
+			{ c1.emplace(args...) } -> std::same_as<typename T::iterator>;
+			{ c1.insert(position, lval_element) } -> std::same_as<typename T::iterator>;
+			{ c1.insert(position, rval_element) } -> std::same_as<typename T::iterator>;
+			{ c1.insert(position, begin, end) } -> std::same_as<typename T::iterator>;
+			{ c1.emplace(position, args...) } -> std::same_as<typename T::iterator>;
+		};
 }

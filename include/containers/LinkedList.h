@@ -468,12 +468,12 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Returns a const_iterator pointing to the beginning of the array.
+		/// Returns a const_iterator pointing to the beginning of the list.
 		/// </summary>
 		/// 
 		/// <returns>
 		/// Returns a constant random access iterator to the first element in 
-		/// the array.
+		/// the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cbegin() const noexcept {
 			return LinkedListIterator<true>(_sentinel._next);
@@ -481,12 +481,12 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Returns a const_iterator pointing to the end of the array.
+		/// Returns a const_iterator pointing to the end of the list.
 		/// </summary>
 		/// 
 		/// <returns>
 		/// Returns a constant random access iterator to the location after the 
-		/// last element in the array.
+		/// last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cend() const noexcept {
 			return LinkedListIterator<true>(_sentinel._next->_prev);
@@ -499,8 +499,8 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns a reverse iterator to the element after the end of the
-		/// array.
+		/// Returns a reverse iterator to the element after the last element in
+		/// the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reverse_iterator rbegin() noexcept {
 			return std::make_reverse_iterator(end());
@@ -514,7 +514,7 @@ namespace collections {
 		/// 
 		/// <returns>
 		/// Returns a reverse iterator to the element before the beginning of
-		/// the array
+		/// the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reverse_iterator rend() noexcept {
 			return std::make_reverse_iterator(begin());
@@ -528,7 +528,7 @@ namespace collections {
 		/// 
 		/// <returns>
 		/// Returns a const reverse iterator to the element after the end of 
-		/// the array.
+		/// the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reverse_iterator rbegin() const noexcept {
 			return std::make_reverse_iterator(end());
@@ -542,7 +542,7 @@ namespace collections {
 		/// 
 		/// <returns>
 		/// Returns a const reverse iterator to the element before the 
-		/// beginning of the array.
+		/// beginning of the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reverse_iterator rend() const noexcept {
 			return std::make_reverse_iterator(begin());
@@ -556,7 +556,7 @@ namespace collections {
 		/// 
 		/// <returns>
 		/// Returns a const reverse iterator to the element after the end of 
-		/// the array.
+		/// the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reverse_iterator crbegin() const noexcept {
 			return std::make_reverse_iterator(end());
@@ -570,7 +570,7 @@ namespace collections {
 		/// 
 		/// <returns>
 		/// Returns a const reverse iterator to the element before the 
-		/// beginning of the array.
+		/// beginning of the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reverse_iterator crend() const noexcept {
 			return std::make_reverse_iterator(begin());

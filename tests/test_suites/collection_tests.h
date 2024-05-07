@@ -29,8 +29,24 @@ namespace collection_tests {
 	template<class params> requires collection<typename params::collection_t>
 	class CollectionTests : public testing::Test {
 	protected:
-		struct test_case_data<typename params::element_t> testInput {};
+		using element = typename params::element_t;
+		using collection = typename params::collection_t;
 
+		struct test_case_data<element> testInput {};
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Tests that the given obj's contents match that of the specified
+		/// input elements.
+		/// </summary>
+		/// 
+		/// <param name="input">
+		/// The input elements to match against.
+		/// </param>
+		/// 
+		/// <param name="obj">
+		/// The obj whose contents to examine.
+		/// </param> ----------------------------------------------------------
 		void testContentsMatchInput(auto input, auto obj) {
 			EXPECT_EQ(obj.size(), input.size());
 			if constexpr (
@@ -40,6 +56,26 @@ namespace collection_tests {
 				EXPECT_NE(collections::find(obj, input[1]), obj.end());
 				EXPECT_NE(collections::find(obj, input[2]), obj.end());
 			}
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Tests that the given method returns an iterator to the expected
+		/// element.
+		/// </summary>
+		/// 
+		/// <param name="func">
+		/// The method under test.
+		/// </param> ----------------------------------------------------------
+		template <std::ranges::input_range c = collection>
+		void testMethodReturnsIteratorToExpectedElement(
+			std::function<typename c::iterator(collection&)> func,
+			element expected
+		) {
+			auto input = this->testInput.control();
+			collection obj(collections::from_range, input);
+			auto result = func(obj);
+			EXPECT_EQ(*result, expected);
 		}
 	};
 
