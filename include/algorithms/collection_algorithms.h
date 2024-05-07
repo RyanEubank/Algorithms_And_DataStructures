@@ -929,12 +929,11 @@ namespace collections {
 	struct shift_ {
 	private:
 		
-		constexpr auto doShift(auto begin, auto end, int64_t amount) const {
+		constexpr void doShift(auto begin, auto end, int64_t amount) const {
 			while (begin != end) {
 				*std::next(begin, amount) = *begin;
 				begin++;
 			}
-			return begin;
 		}
 
 	public:
@@ -960,12 +959,16 @@ namespace collections {
 		/// </param>
 		/// <param name="shiftAmount">
 		/// The amount to shift the range by.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the first shifted element.
+		/// </returns> --------------------------------------------------------
 		template <
 			std::bidirectional_iterator iterator,
 			std::sentinel_for<iterator> sentinel
 		>
-		constexpr void operator()(
+		constexpr auto operator()(
 			iterator begin, 
 			sentinel end, 
 			int64_t shiftAmount
@@ -977,6 +980,8 @@ namespace collections {
 			}
 			else 
 				doShift(begin, end, shiftAmount);
+
+			return begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -993,10 +998,15 @@ namespace collections {
 		/// </param>
 		/// <param name="shiftAmount">
 		/// The amount or number of steps to shift the range by.
-		/// </param> --------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the first shifted element.
+		/// </returns> --------------------------------------------------------
 		template<std::ranges::bidirectional_range range>
-		constexpr void operator()(range&& rg, int64_t shiftAmount) const {
-			(*this)(std::ranges::begin(rg), std::ranges::end(rg), shiftAmount);
+		constexpr auto operator()(range&& rg, int64_t shiftAmount) const {
+			return (*this)
+				(std::ranges::begin(rg), std::ranges::end(rg), shiftAmount);
 		}
 	};
 

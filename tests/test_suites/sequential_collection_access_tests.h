@@ -29,20 +29,6 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Tests that the iterator pair in the range covers the full range.
-	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(SequentialCollectionAccessTests, IteratorsCoverFullRange) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		const collection obj(collections::from_range, input);
-
-		size_t i = 0;
-		for (const auto& e : obj)
-			EXPECT_EQ(e, input[i++]);
-	}
-
-	// ------------------------------------------------------------------------
-	/// <summary>
 	/// Tests that the index operator returns the expected element at the 
 	/// correct index.
 	/// </summary> ------------------------------------------------------------
@@ -123,7 +109,6 @@ namespace collection_tests {
 
 	REGISTER_TYPED_TEST_SUITE_P(
 		SequentialCollectionAccessTests,
-		IteratorsCoverFullRange,
 		IndexOperatorReturnsCorrectElement,
 		AtMethodReturnsCorrectElement,
 		AtMethodPerformsBoundsChecking,

@@ -283,9 +283,7 @@ namespace collections {
 
 			bool equalAllocators = this->_allocator == other._allocator;
 
-			if constexpr (alwaysEqual)
-				elementWiseCopyAssign(other);
-			else if (propagate && !equalAllocators) {
+			if (propagate && !equalAllocators) {
 				clear();
 				_allocator = other._allocator;
 				_node_allocator = other._node_allocator;
@@ -723,9 +721,13 @@ namespace collections {
 		/// </param> 
 		/// <param name="element">
 		/// Const lvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insert(Index index, const_reference element) {
-			insertAt(index, element);
+		/// </param> 
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		iterator insert(Index index, const_reference element) {
+			return insertAt(index, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -739,9 +741,13 @@ namespace collections {
 		/// </param> 
 		/// <param name="element">
 		/// Rvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insert(Index index, value_type&& element) {
-			insertAt(index, element);
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		iterator insert(Index index, value_type&& element) {
+			return insertAt(index, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -755,9 +761,13 @@ namespace collections {
 		/// </param>
 		/// <param name="element">
 		/// Const lvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insert(const_iterator position, const_reference element) {
-			insertAt(position._node, element);
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		iterator insert(const_iterator position, const_reference element) {
+			return insertAt(position._node, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -771,9 +781,13 @@ namespace collections {
 		/// </param>
 		/// <param name="element">
 		/// Rvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insert(const_iterator position, value_type&& element) {
-			insertAt(position._node, element);
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		iterator insert(const_iterator position, value_type&& element) {
+			return insertAt(position._node, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -790,12 +804,17 @@ namespace collections {
 		/// </param>
 		/// <param name="end">
 		/// The end iterator of the range to insert.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the first element inserted, or position if
+		/// begin == end.
+		/// </returns> --------------------------------------------------------
 		template <
 			std::input_iterator in_iterator,
 			std::sentinel_for<in_iterator> sentinel
 		>
-		void insert(const_iterator position, in_iterator begin, sentinel end) {
+		iterator insert(const_iterator position, in_iterator begin, sentinel end) {
 			if (begin != end) {
 				size_type size = 1;
 				_node_base* head = createNode(*begin++);
@@ -811,7 +830,9 @@ namespace collections {
 
 				splice(position._node, head, tail);
 				_size += size;
+				return iterator(head);
 			}
+			return iterator(position._node);
 		}
 
 		// --------------------------------------------------------------------
@@ -828,16 +849,21 @@ namespace collections {
 		/// </param>
 		/// <param name="end">
 		/// The end iterator of the range to insert.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the first element inserted, or the iterator
+		/// at index if begin == end.
+		/// </returns> --------------------------------------------------------
 		template <
 			std::input_iterator in_iterator,
 			std::sentinel_for<in_iterator> sentinel
 		>
-		void insert(Index index, in_iterator begin, sentinel end) {
+		iterator insert(Index index, in_iterator begin, sentinel end) {
 			size_type i = index.get();
 			validateIndexInRange(i);
 			iterator pos(getNodeAt(i));
-			insert(pos, begin, end);
+			return insert(pos, begin, end);
 		}
 
 		// --------------------------------------------------------------------
@@ -848,12 +874,16 @@ namespace collections {
 		/// 
 		/// <param name="index">
 		/// The index of the element to be removed.
-		/// </param> ----------------------------------------------------------
-		void remove(Index index) {
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the value following the removed element.
+		/// </returns> --------------------------------------------------------
+		iterator remove(Index index) {
 			size_type i = index.get();
 			validateIndexExists(i);
 			auto n = getNodeAt(i);
-			remove(n);
+			return remove(n);
 		}
 
 		// --------------------------------------------------------------------
@@ -863,9 +893,13 @@ namespace collections {
 		/// 
 		/// <param name="position">
 		/// The iterator position of the element to be removed.
-		/// </param> ----------------------------------------------------------
-		void remove(const_iterator position) {
-			remove(position._node);
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the value following the removed element.
+		/// </returns> --------------------------------------------------------
+		iterator remove(const_iterator position) {
+			return remove(position._node);
 		}
 
 		// --------------------------------------------------------------------
@@ -891,13 +925,17 @@ namespace collections {
 		/// 
 		/// <param name="range">
 		/// An index range with a start and end member.
-		/// </param> ----------------------------------------------------------
-		void remove(IndexRange range) {
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the element at index range.end
+		/// </returns> --------------------------------------------------------
+		iterator remove(IndexRange range) {
 			validateIndexExists(range.begin);
 			validateIndexInRange(range.end);
 
 			if (range.begin < range.end)
-				removeAll(range.begin, range.end);
+				return removeAll(range.begin, range.end);
 			else
 				throw std::exception("Begin index is greater than end.");
 		}
@@ -905,9 +943,13 @@ namespace collections {
 		// --------------------------------------------------------------------
 		/// <summary>
 		/// Removes all elements in the given iterator range [begin, end).
-		/// </summary> --------------------------------------------------------
-		void remove(const_iterator begin, const_iterator end) {
-			remove(begin._node, end._node);
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the elemement past end.
+		/// </returns> --------------------------------------------------------
+		iterator remove(const_iterator begin, const_iterator end) {
+			return remove(begin._node, end._node);
 		}
 
 		// --------------------------------------------------------------------
@@ -949,10 +991,14 @@ namespace collections {
 		/// </param> 
 		/// <param name="args">
 		/// The arguments to construct the new element with.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
 		template <class ...Args>
-		void emplace(Index index, Args&&... args) {
-			insertAt(index, std::forward<Args>(args)...);
+		iterator emplace(Index index, Args&&... args) {
+			return insertAt(index, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -966,10 +1012,14 @@ namespace collections {
 		/// </param>
 		/// <param name="args">
 		///The arguments to construct the new element with.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		///
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
 		template <class ...Args>
-		void emplace(const_iterator position, Args&&... args) {
-			insertAt(position._node, std::forward<Args>(args)...);
+		iterator emplace(const_iterator position, Args&&... args) {
+			return insertAt(position._node, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1246,27 +1296,29 @@ namespace collections {
 		}
 
 		template <class... Args>
-		void insertAt(const _node_base* location, Args&&... args) {
+		iterator insertAt(const _node_base* location, Args&&... args) {
 			_node_base* newNode = createNode(std::forward<Args>(args)...);
 			splice(const_cast<_node_base*>(location), newNode, newNode);
 			_size++;
+			return iterator(newNode);
 		}
 
 		template <class... Args>
-		void insertAt(Index index, Args&&... args) {
+		iterator insertAt(Index index, Args&&... args) {
 			size_type i = index.get();
 			validateIndexInRange(i);
 			_node_base* location = getNodeAt(i);
-			insertAt(location, std::forward<Args>(args)...);
+			return insertAt(location, std::forward<Args>(args)...);
 		}
 
-		void remove(_node_base* n) {
-			remove(n, n->_next);
+		iterator remove(_node_base* n) {
+			return remove(n, n->_next);
 		}
 
-		void remove(_node_base* head, _node_base* tail) {
+		iterator remove(_node_base* head, _node_base* tail) {
 			snip(head, tail);
 			_size -= destroy(head, tail);
+			return iterator(tail);
 		}
 
 		void splice(_node_base* position, _node_base* head, _node_base* tail) {
@@ -1281,7 +1333,7 @@ namespace collections {
 			tail->_prev = head->_prev;
 		}
 
-		void removeAll(size_type begin_index, size_type end_index) {
+		iterator removeAll(size_type begin_index, size_type end_index) {
 			_node_base* n = getNodeAt(begin_index);
 			_node_base* next = nullptr;
 
@@ -1290,6 +1342,8 @@ namespace collections {
 				remove(n, n->_next);
 				n = next;
 			}
+
+			return iterator(n);
 		}
 
 		void validateIndexExists(size_type index) const {

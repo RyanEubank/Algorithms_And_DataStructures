@@ -119,6 +119,22 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
+	/// Tests that the indexed remove method returns an iterator to the
+	/// element following the one that was deleted.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialCollectionRemoveTests,
+		RemoveAtIndexReturnsIteratorToNextPosition
+	) {
+		auto method = [](auto& obj) {
+			return obj.remove(Index(1));
+		};
+		auto expected = this->testInput.control()[2];
+		this->testMethodReturnsIteratorToExpectedElement(method, expected);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
 	/// Tests that the iterator remove method correctly deletes the first 
 	/// element when called with the begin iterator.
 	/// </summary> ------------------------------------------------------------
@@ -153,6 +169,26 @@ namespace collection_tests {
 
 		EXPECT_EQ(obj[0], input[0]);
 		EXPECT_EQ(obj[1], input[2]);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that the iterator remove method returns an iterator to the
+	/// element following the one that was deleted.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialCollectionRemoveTests,
+		RemoveAtIteratorReturnsIteratorToNextPosition
+	) {
+		using iterator = typename TypeParam::collection_t::iterator;
+
+		auto value = this->testInput.control()[2];
+		auto method = [](auto& obj) -> iterator {
+			auto iterator = std::next(obj.begin());
+			return obj.remove(iterator);
+		};
+		
+		this->testMethodReturnsIteratorToExpectedElement(method, value);
 	}
 
 	// ------------------------------------------------------------------------
@@ -205,6 +241,26 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
+	/// Tests that the indexed removeAll method returns an iterator to the
+	/// element following the last one that was deleted.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialCollectionRemoveTests,
+		RemoveAllBetweenIndexReturnsIteratorToNextPosition
+	) {
+		using iterator = typename TypeParam::collection_t::iterator;
+
+		auto value = this->testInput.control()[2];
+		auto method = [](auto& obj) -> iterator {
+			auto range = IndexRange{ .begin = 0, .end = 2 };
+			return obj.remove(range);
+		};
+		
+		this->testMethodReturnsIteratorToExpectedElement(method, value);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
 	/// Tests that the iterator removeAll method correctly removes elements
 	/// within the given range.
 	/// </summary> ------------------------------------------------------------
@@ -227,6 +283,25 @@ namespace collection_tests {
 		EXPECT_EQ(obj[0], input[2]);
 	}
 
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that the iterator removeAll method returns an iterator to the
+	/// element following the last one that was deleted.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialCollectionRemoveTests,
+		RemoveAllBetweenIteratorsReturnsIteratorToNextPosition
+	) {
+		using iterator = typename TypeParam::collection_t::iterator;
+		auto method = [](auto& obj) -> iterator {
+			auto begin = obj.begin();
+			auto end = std::prev(obj.end());
+			return obj.remove(begin, end);
+		};
+		auto expected = this->testInput.control()[2];
+		this->testMethodReturnsIteratorToExpectedElement(method, expected);
+	}
+
 	REGISTER_TYPED_TEST_SUITE_P(
 		SequentialCollectionRemoveTests,
 		RemoveFrontDeletesFirstElementInTheSequence,
@@ -235,10 +310,14 @@ namespace collection_tests {
 		RemoveAtLastIndexDeletesLastElementInTheSequence,
 		RemoveAtIndexDeletesElementAtCorrectPosition,
 		RemoveAtIndexChecksBounds,
+		RemoveAtIndexReturnsIteratorToNextPosition,
 		RemoveAtBeginIteratorDeletesFirstElementInTheSequence,
 		RemoveAtIteratorDeletesElementAtCorrectPosition,
+		RemoveAtIteratorReturnsIteratorToNextPosition,
 		RemoveAllBetweenIndexCorrectlyRemovesElements,
 		RemoveAllBetweenIndexChecksBounds,
-		RemoveAllBetweenIteratorsCorrectlyRemovesElements
+		RemoveAllBetweenIndexReturnsIteratorToNextPosition,
+		RemoveAllBetweenIteratorsCorrectlyRemovesElements,
+		RemoveAllBetweenIteratorsReturnsIteratorToNextPosition
 	);
 }

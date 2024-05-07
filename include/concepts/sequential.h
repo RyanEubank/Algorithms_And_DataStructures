@@ -32,9 +32,9 @@ namespace collections {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// The is_list concept defines behaviour and an interfacce for enforcing a 
-	/// list-like interface on the given type. Lists must meet the following 
-	/// requirements:
+	/// The sequential concept defines behaviour and an interfacce for 
+	/// enforcing a list-like interface on the given type. Lists must meet the 
+	/// following requirements:
 	/// 
 	///	<list type="bullet">
 	///		<para><item><term>
@@ -59,7 +59,7 @@ namespace collections {
 		class ...Args
 	>
 	concept sequential = 
-		collection<T> &&
+		ranged_collection<T> &&
 		std::ranges::forward_range<T> &&
 		indexable<T, typename T::value_type, typename T::size_type> &&
 		std::forward_iterator<begin_it> &&
@@ -84,21 +84,21 @@ namespace collections {
 			{ c1.insertFront(rval_element) };
 			{ c1.insertBack(lval_element) };
 			{ c1.insertBack(rval_element) };
-			{ c1.insert(index, lval_element) };
-			{ c1.insert(index, rval_element) };
-			{ c1.insert(position, lval_element) };
-			{ c1.insert(position, rval_element) };
-			{ c1.insert(position, begin, end) };
-			{ c1.insert(index, begin, end) };
+			{ c1.insert(index, lval_element) } -> std::same_as<begin_it>;
+			{ c1.insert(index, rval_element) } -> std::same_as<begin_it>;
+			{ c1.insert(position, lval_element) } -> std::same_as<begin_it>;
+			{ c1.insert(position, rval_element) } -> std::same_as<begin_it>;
+			{ c1.insert(position, begin, end) } -> std::same_as<begin_it>;
+			{ c1.insert(index, begin, end) } -> std::same_as<begin_it>;
 			{ c1.removeFront() };
 			{ c1.removeBack() };
-			{ c1.remove(index) };
-			{ c1.remove(position) };
-			{ c1.remove(index_range) };
-			{ c1.remove(position, position) };
+			{ c1.remove(index) } -> std::same_as<begin_it>;
+			{ c1.remove(position) } -> std::same_as<begin_it>;
+			{ c1.remove(index_range) } -> std::same_as<begin_it>;
+			{ c1.remove(position, position) } -> std::same_as<begin_it>;
 			{ c1.emplaceFront(args...) };
 			{ c1.emplaceBack(args...) };
-			{ c1.emplace(index, args...) };
-			{ c1.emplace(position, args...) };
+			{ c1.emplace(index, args...) } -> std::same_as<begin_it>;
+			{ c1.emplace(position, args...) } -> std::same_as<begin_it>;
 		};
 }

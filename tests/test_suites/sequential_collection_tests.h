@@ -30,6 +30,7 @@ namespace collection_tests {
 		using collection = typename params::collection_t;
 		using element = typename params::element_t; 
 		using iterator = typename std::array<element, 3>::iterator;
+		using collection_iterator = typename collection::iterator;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -222,6 +223,28 @@ namespace collection_tests {
 			EXPECT_EQ(obj[3], new_elements[2]);
 			EXPECT_EQ(obj[4], existing_elements[1]);
 			EXPECT_EQ(obj[5], existing_elements[2]);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Tests that the given method returns an iterator to the expected
+		/// element.
+		/// </summary>
+		/// 
+		/// <param name="func">
+		/// The method under test.
+		/// </param> ----------------------------------------------------------
+		void testMethodReturnsIteratorToExpectedElement(
+			std::function<collection_iterator(collection&)> func,
+			element expected
+		) {
+			using collection = typename params::collection_t;
+			auto input = this->testInput.control();
+
+			collection obj(collections::from_range, input);
+
+			auto result = func(obj);
+			EXPECT_EQ(*result, expected);
 		}
 
 		// --------------------------------------------------------------------

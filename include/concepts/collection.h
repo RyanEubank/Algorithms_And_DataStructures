@@ -150,8 +150,15 @@ namespace collections {
 			class reverse_iterator = typename collection_t::reverse_iterator,
 			class const_reverse_iterator = typename collection_t::const_reverse_iterator
 		>
-		concept has_collection_range_interface =
+		concept has_collection_range_interface = (
 			std::ranges::input_range<collection_t> &&
+			!std::ranges::bidirectional_range<collection_t> &&
+			requires(collection_t & c1, const collection_t & c2) {
+				{ c2.cbegin() } -> std::same_as<const_iterator>;
+				{ c2.cend() } -> std::same_as<const_iterator>;
+
+			}) || (
+			std::ranges::bidirectional_range<collection_t> &&
 			requires(collection_t & c1, const collection_t & c2) {
 				{ c2.cbegin() } -> std::same_as<const_iterator>;
 				{ c2.cend() } -> std::same_as<const_iterator>;
@@ -161,23 +168,12 @@ namespace collections {
 				{ c2.rend() } -> std::same_as<const_reverse_iterator>;
 				{ c2.crbegin() } -> std::same_as<const_reverse_iterator>;
 				{ c2.crend() } -> std::same_as<const_reverse_iterator>;
-			};
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// The concept 'conditional_ranged_collection' defines a requirement
-		/// that if the type is a range, it must exposes all
-		/// begin/cbegin/rbegin and the corresponding end methods.
-		/// </summary> --------------------------------------------------------
-		template <class collection_t>
-		concept conditional_ranged_collection =
-			!std::ranges::input_range<collection_t> ||
-			has_collection_range_interface<collection_t>;
+			});
 	}
 
 	// ------------------------------------------------------------------------
 	/// <summary> 
-	/// The concept 'container' defines the behaviour and interface for 
+	/// The concept 'collection' defines the behaviour and interface for 
 	/// enforcing a collection-like interface on the given type. Collections 
 	/// must meet the following requirements:
 	/// 
@@ -214,8 +210,18 @@ namespace collections {
 		internal::has_collection_type_traits<T> &&
 		internal::has_basic_collection_interface<T> &&
 		internal::conditionally_three_way_comparable<T, typename T::value_type> &&
-		internal::conditional_ranged_collection<T> &&
 		std::copyable<T> &&
 		std::equality_comparable<T> &&
 		streamable<T, uint8_t>;
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// The concept 'ranged_collection' defines the behaviour and interface for 
+	/// enforcing a collection-like and range interface on the given type.
+	/// </summary> ------------------------------------------------------------
+	template <class T>
+	concept ranged_collection =
+		collection<T> &&
+		std::ranges::input_range<T> &&
+		internal::has_collection_range_interface<T>;
 }

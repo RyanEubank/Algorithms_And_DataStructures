@@ -548,7 +548,7 @@ namespace collections {
 		void reserve(size_type capacity) {
 			validateCapacity(capacity);
 
-			if (_array == nullptr) {
+			if (!_array) {
 				_array = allocate(capacity);
 				_end = _array;
 				_capacity = capacity;
@@ -846,9 +846,13 @@ namespace collections {
 		/// </param> 
 		/// <param name="element">
 		/// Const lvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insert(Index index, const_reference element) {
-			insertAt(index, element);
+		/// </param> 
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		iterator insert(Index index, const_reference element) {
+			return insertAt(index, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -863,9 +867,13 @@ namespace collections {
 		/// </param> 
 		/// <param name="element">
 		/// Rvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insert(Index index, value_type&& element) {
-			insertAt(index, element);
+		/// </param> 
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		iterator insert(Index index, value_type&& element) {
+			return insertAt(index, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -879,9 +887,13 @@ namespace collections {
 		/// </param>
 		/// <param name="element">
 		/// Const lvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insert(const_iterator position, const_reference element) {
-			insertAt(const_cast<iterator>(position), element);
+		/// </param> 
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		iterator insert(const_iterator position, const_reference element) {
+			return insertAt(const_cast<iterator>(position), element);
 		}
 
 		// --------------------------------------------------------------------
@@ -896,9 +908,13 @@ namespace collections {
 		/// </param>
 		/// <param name="element">
 		/// Rvalue reference to the element to be inserted in place.
-		/// </param> ----------------------------------------------------------
-		void insert(const_iterator position, value_type&& element) {
-			insertAt(const_cast<iterator>(position), element);
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		iterator insert(const_iterator position, value_type&& element) {
+			return insertAt(const_cast<iterator>(position), element);
 		}
 
 		// --------------------------------------------------------------------
@@ -916,13 +932,22 @@ namespace collections {
 		/// </param>
 		/// <param name="end">
 		/// The end iterator of the range to insert.
-		/// </param> ----------------------------------------------------------
+		/// </param> 
+		/// 
+		/// <returns>
+		/// Returns an iterator to the first element inserted, or position if
+		/// begin == end.
+		/// </returns> --------------------------------------------------------
 		template <
 			std::input_iterator in_iterator, 
 			std::sentinel_for<in_iterator> sentinel
 		>
-		void insert(const_iterator position, in_iterator begin, sentinel end) {
-			insertAt(const_cast<iterator>(position), begin, end);
+		iterator insert(
+			const_iterator position, 
+			in_iterator begin, 
+			sentinel end
+		) {
+			return insertAt(const_cast<iterator>(position), begin, end);
 		}
 
 		// --------------------------------------------------------------------
@@ -939,13 +964,18 @@ namespace collections {
 		/// </param>
 		/// <param name="end">
 		/// The end iterator of the range to insert.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the first element inserted, or the iterator
+		/// at index if begin == end.
+		/// </returns> --------------------------------------------------------
 		template <
 			std::input_iterator in_iterator,
 			std::sentinel_for<in_iterator> sentinel
 		>
-		void insert(Index index, in_iterator begin, sentinel end) {
-			insertAt(_array + index.get(), begin, end);
+		iterator insert(Index index, in_iterator begin, sentinel end) {
+			return insertAt(_array + index.get(), begin, end);
 		}
 
 		// --------------------------------------------------------------------
@@ -960,11 +990,15 @@ namespace collections {
 		/// The index to insert the element at.
 		/// </param>
 		/// Const lvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertUnstable(Index index, const_reference element) {
+		/// </param> 
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		iterator insertUnstable(Index index, const_reference element) {
 			size_type i = index.get();
 			validateIndexInRange(i);
-			insertUnstable(_array + i, element);
+			return insertUnstable(_array + i, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -979,8 +1013,15 @@ namespace collections {
 		/// </param>
 		/// <param name="element">
 		/// Const lvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertUnstable(const_iterator position, const_reference element) {
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		iterator insertUnstable(
+			const_iterator position, 
+			const_reference element
+		) {
 			using std::swap;
 
 			size_type offset = position - _array;
@@ -989,6 +1030,7 @@ namespace collections {
 
 			constructElement(_end, element);
 			swap(*pos, *_end++);
+			return pos;
 		}
 
 		// --------------------------------------------------------------------
@@ -999,11 +1041,15 @@ namespace collections {
 		/// 
 		/// <param name="index">
 		/// The index of the element to be removed.
-		/// </param> ----------------------------------------------------------
-		void remove(Index index) {
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the value following the removed element.
+		/// </returns> --------------------------------------------------------
+		iterator remove(Index index) {
 			size_type i = index.get();
 			validateIndexExists(i);
-			remove(_array + i);
+			return remove(_array + i);
 		}
 
 		// --------------------------------------------------------------------
@@ -1014,11 +1060,17 @@ namespace collections {
 		/// 
 		/// <param name="position">
 		/// The iterator position of the element to be removed.
-		/// </param> ----------------------------------------------------------
-		void remove(const_iterator position) {
+		/// </param> 
+		/// 
+		/// <returns>
+		/// Returns an iterator to the position following the removed element.
+		/// </returns> --------------------------------------------------------
+		iterator remove(const_iterator position) {
+			auto offset = position - _array;
 			if (position++ != (_end - 1)) 
 				collections::shift(const_cast<iterator>(position), _end, -1);
 			destroyElement((_end--) - 1);
+			return _array + offset;
 		}
 
 		// --------------------------------------------------------------------
@@ -1029,11 +1081,15 @@ namespace collections {
 		/// 
 		/// <param name="index">
 		/// The index of the element to be removed.
-		/// </param> ----------------------------------------------------------
-		void removeUnstable(Index index) {
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the position following the removed element.
+		/// </returns> --------------------------------------------------------
+		iterator removeUnstable(Index index) {
 			size_type i = index.get();
 			validateIndexExists(i);
-			removeUnstable(_array + i);
+			return removeUnstable(_array + i);
 		}
 
 		// --------------------------------------------------------------------
@@ -1044,12 +1100,17 @@ namespace collections {
 		/// 
 		/// <param name="position">
 		/// The iterator position to be removed.
-		/// </param> ----------------------------------------------------------
-		void removeUnstable(const_iterator position) {
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the position following the removed element.
+		/// </returns> --------------------------------------------------------
+		iterator removeUnstable(const_iterator position) {
 			using std::swap;
 			if (position != _end - 1) 
 				swap(*const_cast<iterator>(position), *(_end - 1));
 			destroyElement((_end--) - 1);
+			return _array + (position - _array);
 		}
 
 		// --------------------------------------------------------------------
@@ -1075,13 +1136,17 @@ namespace collections {
 		/// 
 		/// <param name="range">
 		/// An index range with a start and end member.
-		/// </param> ----------------------------------------------------------
-		void remove(IndexRange range) {
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the element at index range.end
+		/// </returns> --------------------------------------------------------
+		iterator remove(IndexRange range) {
 			validateIndexExists(range.begin);
 			validateIndexInRange(range.end);
 			
 			if (range.begin < range.end)
-				remove(_array + range.begin, _array + range.end);
+				return remove(_array + range.begin, _array + range.end);
 			else
 				throw std::exception("Begin index is greater than end.");
 		}
@@ -1089,12 +1154,18 @@ namespace collections {
 		// --------------------------------------------------------------------
 		/// <summary>
 		/// Removes all elements in the given iterator range [begin, end).
-		/// </summary> --------------------------------------------------------
-		void remove(const_iterator begin, const_iterator end) {
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the elemement following end.
+		/// </returns> --------------------------------------------------------
+		iterator remove(const_iterator begin, const_iterator end) {
+			size_type offset = begin - _array;
 			int64_t range_size = end - begin;
 			collections::shift(const_cast<iterator>(end), _end, -range_size);
 			destroyElements(_end - range_size, _end);
 			_end -= range_size;
+			return _array + offset;
 		}
 
 		// --------------------------------------------------------------------
@@ -1137,10 +1208,14 @@ namespace collections {
 		/// </param> 
 		/// <param name="args">
 		/// The arguments to construct the new element with.
-		/// </param> ----------------------------------------------------------
+		/// </param> 
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
 		template <class ...Args>
-		void emplace(Index index, Args&&... args) {
-			insertAt(index, std::forward<Args>(args)...);
+		iterator emplace(Index index, Args&&... args) {
+			return insertAt(index, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1155,10 +1230,17 @@ namespace collections {
 		/// </param>
 		/// <param name="args">
 		///The arguments to construct the new element with.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
 		template <class ...Args>
-		void emplace(const_iterator position, Args&&... args) {
-			insertAt(const_cast<iterator>(position), std::forward<Args>(args)...);
+		iterator emplace(const_iterator position, Args&&... args) {
+			return insertAt(
+				const_cast<iterator>(position), 
+				std::forward<Args>(args)...
+			);
 		}
 
 		// --------------------------------------------------------------------
@@ -1423,7 +1505,7 @@ namespace collections {
 		}
 
 		template <class T> 
-		void insertAt(iterator pos, T&& element) {
+		iterator insertAt(iterator pos, T&& element) {
 			size_type offset = pos - begin();
 			ensureCapacity();
 			pos = _array + offset;
@@ -1435,32 +1517,35 @@ namespace collections {
 				collections::shift(pos, _end++ - 1, 1);
 				*pos = std::forward<T>(element);
 			}
+			return pos;
 		}
 
 		template <class T>
-		void insertAt(Index index, T&& element) {
+		iterator insertAt(Index index, T&& element) {
 			size_type i = index.get();
 			validateIndexInRange(i);
-			insertAt(_array + i, std::forward<T>(element));
+			return insertAt(_array + i, std::forward<T>(element));
 		}
 
 		template <
 			std::input_iterator in_iterator,
 			std::sentinel_for<in_iterator> sentinel
 		>
-		void insertAt(iterator position, in_iterator begin, sentinel end) {
+		iterator insertAt(iterator position, in_iterator begin, sentinel end) {
 			size_type offset = position - _array;
+
 			while (begin != end) {
-				insertAt(const_cast<iterator>(position), *begin++);
-				position = _array + (++offset);
+				position = insertAt(const_cast<iterator>(position), *begin++);
+				position++;
 			}
+			return begin() + offset;
 		}
 
 		template <
 			std::forward_iterator fwd_iterator,
 			std::sentinel_for<fwd_iterator> sentinel
 		>
-		void insertAt(iterator position, fwd_iterator begin, sentinel end) {
+		iterator insertAt(iterator position, fwd_iterator begin, sentinel end) {
 			size_type range_size = std::distance(begin, end);
 			size_type total = size() + range_size;
 
@@ -1477,6 +1562,7 @@ namespace collections {
 				collections::shift(position, _end - range_size, range_size);
 				collections::copy(begin, end, position);
 			}
+			return position;
 		}
 
 		template <
@@ -1490,7 +1576,7 @@ namespace collections {
 
 		void ensureCapacity() {
 			if (_array == nullptr)
-				reserve(5);
+				reserve(8);
 			else if (size() >= _capacity)
 				expand();
 		}

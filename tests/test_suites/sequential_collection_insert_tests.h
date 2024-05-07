@@ -122,6 +122,23 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
+	/// Tests that the indexed insert method returns an iterator to the newly
+	/// inserted element.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialCollectionInsertTests, 
+		InsertAtIndexReturnsIteratorToPosition
+	) {
+		auto value = this->testInput.different_elements()[0];
+		auto method = [=](auto& obj) {
+			return obj.insert(Index(1), value);
+		};
+
+		this->testMethodReturnsIteratorToExpectedElement(method, value);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
 	/// Tests that the iterator insert method correctly places elements in the 
 	/// first position when called with the begin iterator.
 	/// </summary> ------------------------------------------------------------
@@ -164,6 +181,26 @@ namespace collection_tests {
 			obj.insert(iterator, value);
 		};
 		this->testMethodPlacesElementInTheMiddle(method);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that the iterator insert method returns an iterator to the newly
+	/// inserted element.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialCollectionInsertTests, 
+		InsertAtIteratorReturnsIteratorToPosition
+	) {
+		using iterator = typename TypeParam::collection_t::iterator;
+
+		auto value = this->testInput.different_elements()[0];
+		auto method = [=](auto& obj) -> iterator {
+			auto pos = obj.begin();
+			return obj.insert(++pos, value);
+		};
+
+		this->testMethodReturnsIteratorToExpectedElement(method, value);
 	}
 
 	// ------------------------------------------------------------------------
@@ -212,6 +249,26 @@ namespace collection_tests {
 			obj.insert(iterator, begin, end);
 		};
 		this->testMethodPlacesRangeInTheMiddle(method);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that the iterator insert method returns an iterator to the fist
+	/// element of the given range.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialCollectionInsertTests, 
+		InsertRangeAtIteratorReturnsIteratorToFirstElementOfRange
+	) {
+		using iterator = typename TypeParam::collection_t::iterator;
+
+		auto new_elements = this->testInput.different_elements();
+		auto method = [&](auto& obj) -> iterator {
+			auto iterator = std::next(obj.begin());
+			return obj.insert(iterator, new_elements.begin(), new_elements.end());
+		};
+
+		this->testMethodReturnsIteratorToExpectedElement(method, new_elements[0]);
 	}
 
 	// ------------------------------------------------------------------------
@@ -270,12 +327,15 @@ namespace collection_tests {
 		InsertAtLastIndexPlacesElementLastInTheSequence,
 		InsertAtIndexPlacesElementAtCorrectPosition,
 		InsertAtIndexChecksBounds,
+		InsertAtIndexReturnsIteratorToPosition,
 		InsertAtBeginIteratorPlacesElementFirstInTheSequence,
 		InsertAtEndIteratorPlacesElementLastInTheSequence,
 		InsertAtIteratorPlacesElementAtCorrectPosition,
+		InsertAtIteratorReturnsIteratorToPosition,
 		InsertRangeAtBeginIteratorPlacesElementsFirstInTheSequence,
 		InsertRangeAtEndIteraorPlacesElementsLastInTheSequence,
 		InsertRangeAtIteratorPlacesElementsAtCorrectPosition,
+		InsertRangeAtIteratorReturnsIteratorToFirstElementOfRange,
 		InsertRangeAtIndexZeroPlacesElementsFirstInTheSequence,
 		InsertRangeAtLastIndexPlacesElementsLastInTheSequence,
 		InsertRangeAtIndexPlacesElementsAtCorrectPosition
