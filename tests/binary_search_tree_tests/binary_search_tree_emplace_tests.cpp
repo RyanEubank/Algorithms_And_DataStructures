@@ -22,8 +22,6 @@ namespace collection_tests {
 
 	using collection_types = instantiate_with_elements<BinarySearchTreeTestTypes>;
 
-	GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(CollectionTests);
-
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		BinarySearchTreeTest,
 		AssociativeCollectionEmplaceTests,

@@ -33,8 +33,9 @@ namespace collection_tests {
 	/// Tests that the iterator pair in the range covers the full range.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionIteratorTests, IteratorsCoverFullRange) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		const collection obj(collections::from_range, input);
 
 		size_t i = 0;
@@ -47,8 +48,9 @@ namespace collection_tests {
 	/// Tests that the const_iterator pair in the range covers the full range.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionIteratorTests, ConstIteratorsCoverFullRange) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		const collection obj(collections::from_range, input);
 
 		size_t i = 0;
@@ -62,8 +64,12 @@ namespace collection_tests {
 	/// range.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionIteratorTests, ReverseIteratorsCoverFullRange) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		if constexpr (!bidirectional_ranged_collection<collection>)
+			GTEST_SKIP();
+
+		auto input = this->_test_data.control();
 		const collection obj(collections::from_range, input);
 
 		size_t i = input.size() - 1;
@@ -77,17 +83,21 @@ namespace collection_tests {
 	/// elements.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionIteratorTests, ReverseIteratorsCoverReverseRange) {
-		using collection = typename TypeParam::collection_t;
-		using element = typename TypeParam::element_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
 
+		if constexpr (!bidirectional_ranged_collection<collection>)
+			GTEST_SKIP();
+
+		auto input = this->_test_data.control();
 		const collection obj(collections::from_range, input);
 		std::list<element> reversed_order;
+
 		for (auto e : obj)
 			reversed_order.push_front(e);
 
 		auto actual = obj.rbegin();
 		auto expected = reversed_order.begin();
+
 		while (actual != obj.rend())
 			EXPECT_EQ(*actual++, *expected++);
 	}
@@ -98,10 +108,10 @@ namespace collection_tests {
 	/// elements.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionIteratorTests, ConstIteratorsMatchNonConst) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		const collection obj(collections::from_range, input);
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
+		const collection obj(collections::from_range, input);
 		auto it = obj.begin();
 		auto c_it = obj.cbegin();
 
@@ -116,8 +126,12 @@ namespace collection_tests {
 	/// elements.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionIteratorTests, ConstReverseIteratorsMatchNonConst) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		if constexpr (!bidirectional_ranged_collection<collection>)
+			GTEST_SKIP();
+
+		auto input = this->_test_data.control();
 		const collection obj(collections::from_range, input);
 
 		auto rit = obj.rbegin();

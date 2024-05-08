@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "sequential_collection_tests.h"
+#include "sequential_collection_test_fixture.h"
 
 namespace collection_tests {
 
@@ -88,13 +88,13 @@ namespace collection_tests {
 		SequentialCollectionRemoveTests,
 		RemoveAtIndexDeletesElementAtCorrectPosition
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		auto index = Index(1);
-
 		collection obj(collections::from_range, input);
-
 		auto removed_element = obj[index.get()];
+
 		obj.remove(index);
 
 		EXPECT_EQ(collections::find(obj, removed_element), obj.end());
@@ -114,6 +114,7 @@ namespace collection_tests {
 		auto method = [](auto& obj, Index& index) { obj.remove(index); };
 		auto safeIndex = [](auto& obj) { return obj.size() - 1; };
 		auto unsafeIndex = [](auto& obj) { return obj.size(); };
+
 		this->testMethodChecksIndexBounds(method, safeIndex, unsafeIndex);
 	}
 
@@ -129,7 +130,8 @@ namespace collection_tests {
 		auto method = [](auto& obj) {
 			return obj.remove(Index(1));
 		};
-		auto expected = this->testInput.control()[2];
+		auto expected = this->_test_data.control()[2];
+
 		this->testMethodReturnsIteratorToExpectedElement(method, expected);
 	}
 
@@ -155,15 +157,15 @@ namespace collection_tests {
 		SequentialCollectionRemoveTests,
 		RemoveAtIteratorDeletesElementAtCorrectPosition
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
 		collection obj(collections::from_range, input);
-
 		auto iterator = std::next(obj.begin());
 		auto removedElement = *iterator;
 
 		obj.remove(iterator);
+
 		EXPECT_EQ(collections::find(obj, removedElement), obj.end());
 		EXPECT_EQ(obj.size(), input.size() - 1);
 
@@ -182,7 +184,7 @@ namespace collection_tests {
 	) {
 		using iterator = typename TypeParam::collection_t::iterator;
 
-		auto value = this->testInput.control()[2];
+		auto value = this->_test_data.control()[2];
 		auto method = [](auto& obj) -> iterator {
 			auto iterator = std::next(obj.begin());
 			return obj.remove(iterator);
@@ -200,13 +202,15 @@ namespace collection_tests {
 		SequentialCollectionRemoveTests,
 		RemoveAllBetweenIndexCorrectlyRemovesElements
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
 		collection obj(collections::from_range, input);
+
 		EXPECT_EQ(obj.size(), input.size());
 
 		obj.remove({ .begin = 0, .end = 2 });
+
 		EXPECT_EQ(obj.size(), input.size() - 2);
 		EXPECT_EQ(obj[0], input[2]);
 	}
@@ -220,10 +224,11 @@ namespace collection_tests {
 		SequentialCollectionRemoveTests, 
 		RemoveAllBetweenIndexChecksBounds
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
 		collection obj(collections::from_range, input);
+
 		ASSERT_GT(obj.size(), 1);
 
 		auto safeRange = IndexRange{ .begin = 0, .end = input.size() - 1 };
@@ -250,7 +255,7 @@ namespace collection_tests {
 	) {
 		using iterator = typename TypeParam::collection_t::iterator;
 
-		auto value = this->testInput.control()[2];
+		auto value = this->_test_data.control()[2];
 		auto method = [](auto& obj) -> iterator {
 			auto range = IndexRange{ .begin = 0, .end = 2 };
 			return obj.remove(range);
@@ -268,15 +273,15 @@ namespace collection_tests {
 		SequentialCollectionRemoveTests,
 		RemoveAllBetweenIteratorsCorrectlyRemovesElements
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
 		collection obj(collections::from_range, input);
+
 		EXPECT_EQ(obj.size(), input.size());
 
 		auto begin = obj.begin();
 		auto end = std::next(begin, 2);
-
 		obj.remove(begin, end);
 
 		EXPECT_EQ(obj.size(), input.size() - 2);
@@ -293,12 +298,14 @@ namespace collection_tests {
 		RemoveAllBetweenIteratorsReturnsIteratorToNextPosition
 	) {
 		using iterator = typename TypeParam::collection_t::iterator;
+
 		auto method = [](auto& obj) -> iterator {
 			auto begin = obj.begin();
 			auto end = std::prev(obj.end());
 			return obj.remove(begin, end);
 		};
-		auto expected = this->testInput.control()[2];
+		auto expected = this->_test_data.control()[2];
+
 		this->testMethodReturnsIteratorToExpectedElement(method, expected);
 	}
 

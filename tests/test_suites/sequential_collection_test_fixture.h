@@ -43,8 +43,8 @@ namespace collection_tests {
 		void testMethodPlacesElementFirst(
 			std::function<void(collection&, element&)> func
 		) {
-			auto input = this->testInput.control();
-			auto value = this->testInput.different_elements()[0];
+			auto input = this->_test_data.control();
+			auto value = this->_test_data.different_elements()[0];
 
 			collection obj(collections::from_range, input);
 
@@ -70,8 +70,8 @@ namespace collection_tests {
 		void testMethodPlacesElementLast(
 			std::function<void(collection&, element&)> func
 		) {
-			auto input = this->testInput.control();
-			auto value = this->testInput.different_elements()[0];
+			auto input = this->_test_data.control();
+			auto value = this->_test_data.different_elements()[0];
 
 			collection obj(collections::from_range, input);
 
@@ -97,8 +97,8 @@ namespace collection_tests {
 		void testMethodPlacesElementInTheMiddle(
 			std::function<void(collection&, element&)> func
 		) {
-			auto input = this->testInput.control();
-			auto value = this->testInput.different_elements()[0];
+			auto input = this->_test_data.control();
+			auto value = this->_test_data.different_elements()[0];
 
 			collection obj(collections::from_range, input);
 
@@ -125,7 +125,7 @@ namespace collection_tests {
 			std::function<size_t(collection&)> safeIndex,
 			std::function<size_t(collection&)> unsafeIndex
 		) {
-			auto input = this->testInput.control();
+			auto input = this->_test_data.control();
 
 			collection obj1(collections::from_range, input);
 			collection obj2(collections::from_range, input);
@@ -149,8 +149,8 @@ namespace collection_tests {
 		void testMethodPlacesRangeAtBeginning(
 			std::function<void(collection&, iterator, iterator)> func
 		) {
-			auto existing_elements = this->testInput.control();
-			auto new_elements = this->testInput.different_elements();
+			auto existing_elements = this->_test_data.control();
+			auto new_elements = this->_test_data.different_elements();
 
 			collection obj(collections::from_range, existing_elements);
 			for (auto i = 0; i < new_elements.size(); ++i)
@@ -178,8 +178,8 @@ namespace collection_tests {
 		void testMethodPlacesRangeAtEnd(
 			std::function<void(collection&, iterator, iterator)> func
 		) {
-			auto existing_elements = this->testInput.control();
-			auto new_elements = this->testInput.different_elements();
+			auto existing_elements = this->_test_data.control();
+			auto new_elements = this->_test_data.different_elements();
 
 			collection obj(collections::from_range, existing_elements);
 			for (auto i = 0; i < new_elements.size(); ++i)
@@ -207,10 +207,10 @@ namespace collection_tests {
 		void testMethodPlacesRangeInTheMiddle(
 			std::function<void(collection&, iterator, iterator)> func
 		) {
-			auto existing_elements = this->testInput.control();
-			auto new_elements = this->testInput.different_elements();
-
+			auto existing_elements = this->_test_data.control();
+			auto new_elements = this->_test_data.different_elements();
 			collection obj(collections::from_range, existing_elements);
+
 			for (auto i = 0; i < new_elements.size(); ++i)
 				ASSERT_EQ(collections::find(obj, new_elements[i]), obj.end());
 
@@ -235,7 +235,7 @@ namespace collection_tests {
 		void testMethodRemovesFirstElement(
 			std::function<void(collection&)> func
 		) {
-			auto input = this->testInput.control();
+			auto input = this->_test_data.control();
 			collection obj(collections::from_range, input);
 			auto first_element = obj.front();
 
@@ -258,7 +258,7 @@ namespace collection_tests {
 		void testMethodRemovesLastElement(
 			std::function<void(collection&)> func
 		) {
-			auto input = this->testInput.control();
+			auto input = this->_test_data.control();
 			collection obj(collections::from_range, input);
 			auto last_element = obj.back();
 

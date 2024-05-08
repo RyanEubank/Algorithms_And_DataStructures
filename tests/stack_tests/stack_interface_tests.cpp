@@ -43,8 +43,6 @@ namespace collection_tests {
 		TestTypes<std::string, LinkedList<std::string>>
 	>;
 
-	GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(CollectionTests);
-
 	TYPED_TEST_SUITE(StackTest, stack_test_types);
 
 	// ------------------------------------------------------------------------
@@ -55,13 +53,15 @@ namespace collection_tests {
 		StackTest,
 		PushOnEmptyStackInsertsElement
 	) {
-		using stack = TypeParam::collection_t;
-		auto value = this->testInput.control()[0];
+		FORWARD_TEST_TYPES;
 
-		stack obj{};
+		auto value = this->_test_data.control()[0];
+		collection obj{};
+
 		ASSERT_TRUE(obj.isEmpty());
 
 		obj.push(value);
+
 		EXPECT_FALSE(obj.isEmpty());
 		EXPECT_EQ(obj.peek(), value);
 	}
@@ -74,14 +74,16 @@ namespace collection_tests {
 		StackTest,
 		PushInsertsElementOnTop
 	) {
-		using stack = TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = this->testInput.different_elements()[0];
+		FORWARD_TEST_TYPES;
 
-		stack obj(collections::from_range, input);
+		auto input = this->_test_data.control();
+		auto value = this->_test_data.different_elements()[0];
+		collection obj(collections::from_range, input);
+
 		ASSERT_FALSE(obj.isEmpty());
 
 		obj.push(value);
+
 		EXPECT_EQ(obj.size(), input.size() + 1);
 		EXPECT_EQ(obj.peek(), value);
 	}
@@ -94,14 +96,16 @@ namespace collection_tests {
 		StackTest,
 		PopRemovesElementOnTop
 	) {
-		using stack = TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = input[input.size() - 1];
+		FORWARD_TEST_TYPES;
 
-		stack obj(collections::from_range, input);
+		auto input = this->_test_data.control();
+		auto value = input[input.size() - 1];
+		collection obj(collections::from_range, input);
+
 		ASSERT_FALSE(obj.isEmpty());
 
 		obj.pop();
+
 		EXPECT_EQ(obj.size(), input.size() - 1);
 		EXPECT_NE(obj.peek(), value);
 	}
@@ -114,12 +118,13 @@ namespace collection_tests {
 		StackTest,
 		PeekReturnsElementOnTop
 	) {
-		using stack = TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = input[input.size() - 1];
+		FORWARD_TEST_TYPES;
 
-		stack obj(collections::from_range, input);
+		auto input = this->_test_data.control();
+		auto value = input[input.size() - 1];
+		collection obj(collections::from_range, input);
 		auto expected = obj.peek();
+
 		EXPECT_EQ(expected, value);
 	}
 }

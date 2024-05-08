@@ -21,8 +21,6 @@ namespace collection_tests {
 
 	using collection_types = instantiate_with_elements<DynamicArrayTestTypes>;
 
-	GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(CollectionTests);
-
 	TYPED_TEST_SUITE(DynamicArrayTest, collection_types);
 
 	// ------------------------------------------------------------------------
@@ -38,7 +36,9 @@ namespace collection_tests {
 
 		ASSERT_EQ(0, mock_t::DEFAULT_CAPACITY);
 		EXPECT_CALL(this->allocator(), allocate(_)).Times(0);
+
 		const mock_t obj{};
+
 		EXPECT_EQ(obj.capacity(), mock_t::DEFAULT_CAPACITY);
 	}
 
@@ -52,10 +52,12 @@ namespace collection_tests {
 		ReserveConstructorAllocatesSpecifiedMemory
 	) {
 		using mock_t = DynamicArrayTest<TypeParam>::mock_t;
-
 		const size_t size = 30;
+
 		EXPECT_CALL(this->allocator(), allocate(30));
+
 		const mock_t obj(Reserve{ size });
+
 		EXPECT_EQ(obj.capacity(), size);
 		EXPECT_TRUE(obj.isEmpty());
 	}
@@ -69,14 +71,15 @@ namespace collection_tests {
 		DynamicArrayTest,
 		SizeConstructorCreatesObjectFilledWithSetAmount
 	) {
-		using collection = DynamicArrayTest<TypeParam>::collection_t;
-		using element = DynamicArrayTest<TypeParam>::element_t;
-		auto value = this->testInput.control()[1];
+		FORWARD_TEST_TYPES;
+
+		auto value = this->_test_data.control()[1];
 
 		ASSERT_NE(element{}, value);
-		const size_t size = 3;
 
+		const size_t size = 3;
 		const collection obj(Size{ size }, value);
+
 		EXPECT_EQ(obj.size(), size);
 
 		auto actual = obj.asRawArray();
@@ -95,7 +98,7 @@ namespace collection_tests {
 		DynamicArrayTest,
 		ConstructorFailsWhenBuiltWithNegativeCapacity
 	) {
-		using collection = DynamicArrayTest<TypeParam>::collection_t;
+		FORWARD_TEST_TYPES;
 
 		auto test = []() {
 			auto amount = Reserve(-1);
@@ -111,7 +114,7 @@ namespace collection_tests {
 	/// size of the array's actual contents.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST(DynamicArrayTest, TrimResizesArrayToMatchContents) {
-		using collection = DynamicArrayTest<TypeParam>::collection_t;
+		FORWARD_TEST_TYPES;
 
 		auto size = Size(30);
 		auto capacity = 50;
@@ -125,6 +128,7 @@ namespace collection_tests {
 		ASSERT_EQ(obj.capacity(), capacity);
 
 		obj.trim();
+
 		EXPECT_EQ(obj.capacity(), size.get());
 	}
 
@@ -157,7 +161,7 @@ namespace collection_tests {
 	TYPED_TEST(DynamicArrayTest, ReserveOnNonEmptyObjectAllocatesMoreSpace) {
 		using mock_t = DynamicArrayTest<TypeParam>::mock_t;
 		auto newSize = 10;
-		auto input = this->testInput.control();
+		auto input = this->_test_data.control();
 
 		ASSERT_NE(input.size(), newSize);
 		EXPECT_CALL(this->allocator(), allocate(input.size())).Times(1);
@@ -185,15 +189,18 @@ namespace collection_tests {
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST(DynamicArrayTest, ResizeOnEmptyAllocatesAndSetsContents) {
 		using mock_t = DynamicArrayTest<TypeParam>::mock_t;
-		auto value = this->testInput.control()[1];
+		auto value = this->_test_data.control()[1];
 		auto size = 10;
 
 		mock_t obj{};
+
 		EXPECT_TRUE(obj.isEmpty());
 		EXPECT_EQ(obj.capacity(), 0);
 
 		EXPECT_CALL(this->allocator(), allocate(size)).Times(1);
+
 		obj.resize(size, value);
+
 		EXPECT_FALSE(obj.isEmpty());
 		EXPECT_EQ(obj.capacity(), size);
 
@@ -209,17 +216,20 @@ namespace collection_tests {
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST(DynamicArrayTest, ResizeOnNonEmptyAllocatesAndSetsContents) {
 		using mock_t = DynamicArrayTest<TypeParam>::mock_t;
-		auto input = this->testInput.control();
+		auto input = this->_test_data.control();
 		auto value = input[1];
 		auto newSize = 10;
 
 		EXPECT_CALL(this->allocator(), allocate(input.size())).Times(1);
+
 		mock_t obj(collections::from_range, input);
+
 		EXPECT_FALSE(obj.isEmpty());
 		EXPECT_EQ(obj.capacity(), input.size());
 
 		EXPECT_CALL(this->allocator(), allocate(newSize)).Times(1);
 		obj.resize(newSize, value);
+
 		EXPECT_FALSE(obj.isEmpty());
 		EXPECT_EQ(obj.capacity(), newSize);
 
@@ -238,18 +248,19 @@ namespace collection_tests {
 	/// element by swapping the element at the current position to the end.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST(DynamicArrayTest, UnstableInsertCorrectlyInsertsElementAtIndex) {
-		using collection = DynamicArrayTest<TypeParam>::collection_t;
-		using element = DynamicArrayTest<TypeParam>::element_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		auto index = 1;
 		auto value = element{};
-
 		collection obj(collections::from_range, input);
+
 		ASSERT_NE(obj[index], value);
 
 		auto expectedBack = obj[index];
 		auto expectedElementAtIndex = obj.back();
 		auto expected_size = obj.size() + 1;
+
 		obj.insertUnstable(Index(index), value);
 
 		EXPECT_EQ(expectedBack, obj.back());
@@ -266,15 +277,14 @@ namespace collection_tests {
 		DynamicArrayTest,
 		UnstableInsertCorrectlyInsertsElementAtIterator
 	) {
-		using collection = DynamicArrayTest<TypeParam>::collection_t;
-		using element = DynamicArrayTest<TypeParam>::element_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		auto value = element{};
-
 		collection obj(collections::from_range, input);
-
 		auto iterator = obj.begin();
 		iterator++;
+
 		ASSERT_NE(*iterator, value);
 
 		auto expectedBack = *iterator;
@@ -296,14 +306,12 @@ namespace collection_tests {
 	/// index swapping it with the end element.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST(DynamicArrayTest, UnstableRemoveCorrectlyRemovesElementAtIndex) {
-		using collection = DynamicArrayTest<TypeParam>::collection_t;
-		using element = DynamicArrayTest<TypeParam>::element_t;
-		auto input = this->testInput.control();
-		auto index = 0;
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
+		auto index = 0;
 		collection obj(collections::from_range, input);
 
-		
 		auto expectedElementAtIndex = obj.back();
 		auto expected_size = obj.size() - 1;
 		obj.removeUnstable(Index(index));
@@ -321,10 +329,9 @@ namespace collection_tests {
 		DynamicArrayTest, 
 		UnstableRemoveCorrectlyRemovesElementAtIterator
 	) {
-		using collection = DynamicArrayTest<TypeParam>::collection_t;
-		using element = DynamicArrayTest<TypeParam>::element_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
 		collection obj(collections::from_range, input);
 
 		auto iterator = obj.begin();
@@ -332,6 +339,7 @@ namespace collection_tests {
 		auto expected_size = obj.size() - 1;
 
 		obj.removeUnstable(iterator);
+
 		iterator = obj.begin();
 
 		EXPECT_EQ(expectedElementAtIndex, *iterator);
@@ -345,7 +353,7 @@ namespace collection_tests {
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST(DynamicArrayTest, InsertAllocatesMemoryWhenEmpty) {
 		using mock_t = DynamicArrayTest<TypeParam>::mock_t;
-		auto value = this->testInput.control()[0];
+		auto value = this->_test_data.control()[0];
 
 		mock_t obj{};
 
@@ -360,7 +368,7 @@ namespace collection_tests {
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST(DynamicArrayTest, InsertDoublesCapacityWhenFull) {
 		using mock_t = DynamicArrayTest<TypeParam>::mock_t;
-		auto value = this->testInput.control()[0];
+		auto value = this->_test_data.control()[0];
 		auto num_elements = 2u;
 		auto expected_allocation = num_elements * 2;
 

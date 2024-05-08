@@ -15,16 +15,15 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#include "stack_test_fixture.h"
+#include "../test_suites/collection_tests.h"
+#include "queue_test_fixture.h"
 
 namespace collection_tests {
 
-	using collection_types = instantiate_with_elements<StackTestTypes>;
-
-	GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(CollectionTests);
+	using collection_types = instantiate_with_elements<QueueTestTypes>;
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
-		StackTest,
+		QueueTest,
 		CollectionTests,
 		collection_types
 	);

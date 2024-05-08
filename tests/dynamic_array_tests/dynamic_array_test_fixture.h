@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../test_suites/collection_tests.h"
+#include "../test_suites/collection_test_fixture.h"
 #include "../mocks/mock_allocator.h"
 #include "../test_data/test_types.h"
 

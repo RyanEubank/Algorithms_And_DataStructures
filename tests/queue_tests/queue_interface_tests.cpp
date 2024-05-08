@@ -43,8 +43,6 @@ namespace collection_tests {
 		TestTypes<std::string, LinkedList<std::string>>
 	>;
 
-	GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(CollectionTests);
-
 	TYPED_TEST_SUITE(QueueTest, queue_test_types);
 
 	// ------------------------------------------------------------------------
@@ -56,13 +54,15 @@ namespace collection_tests {
 		QueueTest,
 		EnqueueFrontOnEmptyInsertsElement
 	) {
-		using queue = TypeParam::collection_t;
-		auto value = this->testInput.control()[0];
+		FORWARD_TEST_TYPES;
 
-		queue obj{};
+		auto value = this->_test_data.control()[0];
+		collection obj{};
+
 		ASSERT_TRUE(obj.isEmpty());
 
 		obj.enqueue_front(value);
+
 		EXPECT_FALSE(obj.isEmpty());
 		EXPECT_EQ(obj.front(), value);
 	}
@@ -76,13 +76,15 @@ namespace collection_tests {
 		QueueTest,
 		EnqueueBackOnEmptyInsertsElement
 	) {
-		using queue = TypeParam::collection_t;
-		auto value = this->testInput.control()[0];
+		FORWARD_TEST_TYPES;
 
-		queue obj{};
+		auto value = this->_test_data.control()[0];
+		collection obj{};
+
 		ASSERT_TRUE(obj.isEmpty());
 
 		obj.enqueue_back(value);
+
 		EXPECT_FALSE(obj.isEmpty());
 		EXPECT_EQ(obj.back(), value);
 	}
@@ -96,14 +98,16 @@ namespace collection_tests {
 		QueueTest,
 		EnqueueFrontInsertsElementAtFront
 	) {
-		using queue = TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = this->testInput.different_elements()[0];
+		FORWARD_TEST_TYPES;
 
-		queue obj(collections::from_range, input);
+		auto input = this->_test_data.control();
+		auto value = this->_test_data.different_elements()[0];
+		collection obj(collections::from_range, input);
+
 		ASSERT_FALSE(obj.isEmpty());
 
 		obj.enqueue_front(value);
+
 		EXPECT_EQ(obj.size(), input.size() + 1);
 		EXPECT_EQ(obj.front(), value);
 	}
@@ -117,14 +121,16 @@ namespace collection_tests {
 		QueueTest,
 		EnqueueBackInsertsElementAtBack
 	) {
-		using queue = TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = this->testInput.different_elements()[0];
+		FORWARD_TEST_TYPES;
 
-		queue obj(collections::from_range, input);
+		auto input = this->_test_data.control();
+		auto value = this->_test_data.different_elements()[0];
+		collection obj(collections::from_range, input);
+
 		ASSERT_FALSE(obj.isEmpty());
 
 		obj.enqueue_back(value);
+
 		EXPECT_EQ(obj.size(), input.size() + 1);
 		EXPECT_EQ(obj.back(), value);
 	}
@@ -138,14 +144,15 @@ namespace collection_tests {
 		QueueTest,
 		DequeueFrontRemovesElementAtFront
 	) {
-		using stack = TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = input[input.size() - 1];
+		FORWARD_TEST_TYPES;
 
-		stack obj(collections::from_range, input);
+		auto input = this->_test_data.control();
+		auto value = input[input.size() - 1];
+		collection obj(collections::from_range, input);
 		ASSERT_FALSE(obj.isEmpty());
 
 		obj.dequeue_front();
+
 		EXPECT_EQ(obj.size(), input.size() - 1);
 		EXPECT_NE(obj.front(), value);
 	}
@@ -159,14 +166,16 @@ namespace collection_tests {
 		QueueTest,
 		DequeueBackRemovesElementAtFront
 	) {
-		using stack = TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = input[input.size() - 1];
+		FORWARD_TEST_TYPES;
 
-		stack obj(collections::from_range, input);
+		auto input = this->_test_data.control();
+		auto value = input[input.size() - 1];
+		collection obj(collections::from_range, input);
+
 		ASSERT_FALSE(obj.isEmpty());
 
 		obj.dequeue_back();
+
 		EXPECT_EQ(obj.size(), input.size() - 1);
 		EXPECT_NE(obj.back(), value);
 	}
@@ -180,11 +189,12 @@ namespace collection_tests {
 		QueueTest,
 		FrontReturnsElementAtFrontOfQueue
 	) {
-		using queue = TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = input[2];
+		FORWARD_TEST_TYPES;
 
-		queue obj{};
+		auto input = this->_test_data.control();
+		auto value = input[2];
+		collection obj{};
+
 		obj.enqueue_front(input[0]);
 		obj.enqueue_front(input[1]);
 		obj.enqueue_front(input[2]);
@@ -202,11 +212,12 @@ namespace collection_tests {
 		QueueTest,
 		BackReturnsElementAtBackOfQueue
 	) {
-		using queue = TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = input[0];
+		FORWARD_TEST_TYPES;
 
-		queue obj{};
+		auto input = this->_test_data.control();
+		auto value = input[0];
+		collection obj{};
+
 		obj.enqueue_front(input[0]);
 		obj.enqueue_front(input[1]);
 		obj.enqueue_front(input[2]);

@@ -1638,6 +1638,16 @@ namespace collections {
 
 	static_assert(
 		sequential<DynamicArray<int>>,
-		"DynamicArray does not implement the sequential collection interface."
+		"DynamicArray does not meet the requirements for a sequential collection."
+	);
+
+	static_assert(
+		ordered_collection<DynamicArray<int>>,
+		"DynamicArray does not meet the requirements for an ordered collection."
+	);
+
+	static_assert(
+		bidirectional_ranged_collection<DynamicArray<int>>,
+		"DynamicArray does not meet the requirements for a bidirectional ranged collection."
 	);
 }

@@ -1621,6 +1621,16 @@ namespace collections {
 
 	static_assert(
 		sequential<LinkedList<int>>,
-		"LinkedList does not implement the list interface."
+		"LinkedList does not meet the requirements for a sequential collection."
+	);
+
+	static_assert(
+		ordered_collection<LinkedList<int>>,
+		"LinkedList does not meet the requirements for an ordered collection."
+	);
+
+	static_assert(
+		bidirectional_ranged_collection<LinkedList<int>>,
+		"LinkedList does not meet the requirements for a bidirectional ranged collection."
 	);
 }

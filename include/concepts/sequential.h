@@ -39,19 +39,16 @@ namespace collections {
 	/// 
 	///	<list type="bullet">
 	///		<para><item><term>
-	///		- The type is a ranged collection template type.
+	///		- The type is a ranged collection.
 	///		</term></item></para>
 	///		<para><item><term>
-	///		- The type is a standard forward range.
+	///		- The type is indexable by integral-type indexes.
 	///		</term></item></para>
 	///		<para><item><term>
-	///		- The type is indexable by integral indexes.
+	///		- The type is constructible by a size and (optional) value.
 	///		</term></item></para>
 	///		<para><item><term>
-	///		- The type is constructible by a size and value.
-	///		</term></item></para>
-	///		<para><item><term>
-	///		- The type is declares sequential access, insertion, and removal
+	///		- The type declares sequential access, insertion, and removal
 	///       methods.
 	///		</term></item></para>
 	/// </list>
@@ -64,11 +61,10 @@ namespace collections {
 		class ...Args
 	>
 	concept sequential = 
-		std::ranges::forward_range<T> &&
-		ranged_collection<T> &&
-		indexable<T, typename T::value_type, typename T::size_type> &&
 		std::input_iterator<begin_it> &&
 		std::sentinel_for<end_it, begin_it> &&
+		bidirectional_ranged_collection<T> &&
+		indexable<T, typename T::value_type, typename T::size_type> &&
 		std::is_constructible_v<T, Size, typename T::value_type> &&
 		requires(
 			T& c1,

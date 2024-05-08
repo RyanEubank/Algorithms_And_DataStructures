@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "collection_tests.h"
+#include "collection_test_fixture.h"
 
 namespace collection_tests {
 
@@ -35,8 +35,9 @@ namespace collection_tests {
 		AssociativeCollectionAccessTests, 
 		FindReturnsCorrectIteratorForExistingElement
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		const collection obj(collections::from_range, input);
 
 		EXPECT_NE(obj.find(input[0]), obj.end());
@@ -53,9 +54,10 @@ namespace collection_tests {
 		AssociativeCollectionAccessTests, 
 		FindReturnsEndIteratorForNonExistingElement
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto nonexisting_elements = this->testInput.different_elements();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
+		auto nonexisting_elements = this->_test_data.different_elements();
 		const collection obj(collections::from_range, input);
 
 		EXPECT_EQ(obj.find(nonexisting_elements[0]), obj.end());
@@ -72,11 +74,12 @@ namespace collection_tests {
 		AssociativeCollectionAccessTests, 
 		FindIfReturnsMatch
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		const collection obj(collections::from_range, input);
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
+		const collection obj(collections::from_range, input);
 		auto predicate = [&](auto& e) { return e == input[0]; };
+
 		EXPECT_NE(obj.find_if(predicate), obj.end());
 	}
 
@@ -89,29 +92,14 @@ namespace collection_tests {
 		AssociativeCollectionAccessTests, 
 		FindIfReturnEndIteratorForNoMatch
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto nonexisting_elements = this->testInput.different_elements();
-		const collection obj(collections::from_range, input);
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
+		auto nonexisting_elements = this->_test_data.different_elements();
+		const collection obj(collections::from_range, input);
 		auto predicate = [&](auto& e) { return e == nonexisting_elements[0]; };
+
 		EXPECT_EQ(obj.find_if(predicate), obj.end());
-	}
-
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// Tests that the index operator returns the element associated with
-	/// its key.
-	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(
-		AssociativeCollectionAccessTests, 
-		IndexOperatorReturnsRequestedElement
-	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		const collection obj(collections::from_range, input);
-
-		auto key = input[1];
 	}
 
 	REGISTER_TYPED_TEST_SUITE_P(
@@ -119,7 +107,6 @@ namespace collection_tests {
 		FindReturnsCorrectIteratorForExistingElement,
 		FindReturnsEndIteratorForNonExistingElement,
 		FindIfReturnsMatch,
-		FindIfReturnEndIteratorForNoMatch,
-		IndexOperatorReturnsRequestedElement
+		FindIfReturnEndIteratorForNoMatch
 	);
 }

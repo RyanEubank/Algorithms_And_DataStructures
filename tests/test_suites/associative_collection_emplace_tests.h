@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "collection_tests.h"
+#include "collection_test_fixture.h"
 
 namespace collection_tests {
 
@@ -35,12 +35,15 @@ namespace collection_tests {
 		AssociativeCollectionEmplaceTests, 
 		EmplacePlacesElementInEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto value = this->testInput.control()[0];
+		FORWARD_TEST_TYPES;
+
+		auto value = this->_test_data.control()[0];
 		collection obj{};
 
 		ASSERT_TRUE(obj.isEmpty());
+
 		obj.emplace(value);
+
 		EXPECT_FALSE(obj.isEmpty());
 		EXPECT_TRUE(obj.size() == 1);
 		EXPECT_NE(collections::find(obj, value), obj.end());
@@ -55,12 +58,15 @@ namespace collection_tests {
 		AssociativeCollectionEmplaceTests, 
 		EmplaceWithLocationHintPlacesElementInEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto value = this->testInput.control()[0];
+		FORWARD_TEST_TYPES;
+
+		auto value = this->_test_data.control()[0];
 		collection obj{};
 
 		ASSERT_TRUE(obj.isEmpty());
+
 		obj.emplace(obj.begin(), value);
+
 		EXPECT_FALSE(obj.isEmpty());
 		EXPECT_TRUE(obj.size() == 1);
 		EXPECT_NE(collections::find(obj, value), obj.end());
@@ -75,13 +81,16 @@ namespace collection_tests {
 		AssociativeCollectionEmplaceTests, 
 		EmplacePlacesElementInNonEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = this->testInput.different_elements()[0];
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
+		auto value = this->_test_data.different_elements()[0];
 		collection obj(collections::from_range, input);
 
 		ASSERT_FALSE(obj.isEmpty());
+
 		obj.emplace(value);
+
 		EXPECT_TRUE(obj.size() == input.size() + 1);
 		EXPECT_NE(collections::find(obj, value), obj.end());
 	}
@@ -95,13 +104,16 @@ namespace collection_tests {
 		AssociativeCollectionEmplaceTests, 
 		EmplaceWithLocationHintPlacesElementInNonEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = this->testInput.different_elements()[0];
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
+		auto value = this->_test_data.different_elements()[0];
 		collection obj(collections::from_range, input);
 
 		ASSERT_FALSE(obj.isEmpty());
+
 		obj.emplace(obj.begin(), value);
+
 		EXPECT_TRUE(obj.size() == input.size() + 1);
 		EXPECT_NE(collections::find(obj, value), obj.end());
 	}

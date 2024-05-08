@@ -15,16 +15,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * ========================================================================= */
 
-#include "dynamic_array_test_fixture.h"
+#include "../test_suites/collection_tests.h"
+#include "linked_list_test_fixture.h"
 
 namespace collection_tests {
 
-	using collection_types = instantiate_with_elements<DynamicArrayTestTypes>;
-
-	GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(CollectionTests);
+	using collection_types = instantiate_with_elements<LinkedListTestTypes>;
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
-		DynamicArrayTest,
+		LinkedListTest,
 		CollectionTests,
 		collection_types
 	);

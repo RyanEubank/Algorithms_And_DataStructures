@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "collection_tests.h"
+#include "collection_test_fixture.h"
 
 namespace collection_tests {
 
@@ -35,12 +35,15 @@ namespace collection_tests {
 		AssociativeCollectionInsertTests, 
 		InsertPlacesElementInEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto value = this->testInput.control()[0];
+		FORWARD_TEST_TYPES;
+
+		auto value = this->_test_data.control()[0];
 		collection obj{};
 
 		ASSERT_TRUE(obj.isEmpty());
+
 		obj.insert(value);
+
 		EXPECT_FALSE(obj.isEmpty());
 		EXPECT_TRUE(obj.size() == 1);
 		EXPECT_NE(collections::find(obj, value), obj.end());
@@ -55,12 +58,15 @@ namespace collection_tests {
 		AssociativeCollectionInsertTests, 
 		InsertWithLocationHintPlacesElementInEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto value = this->testInput.control()[0];
+		FORWARD_TEST_TYPES;
+
+		auto value = this->_test_data.control()[0];
 		collection obj{};
 
 		ASSERT_TRUE(obj.isEmpty());
+
 		obj.insert(obj.begin(), value);
+
 		EXPECT_FALSE(obj.isEmpty());
 		EXPECT_TRUE(obj.size() == 1);
 		EXPECT_NE(collections::find(obj, value), obj.end());
@@ -75,13 +81,16 @@ namespace collection_tests {
 		AssociativeCollectionInsertTests, 
 		InsertPlacesElementInNonEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = this->testInput.different_elements()[0];
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
+		auto value = this->_test_data.different_elements()[0];
 		collection obj(collections::from_range, input);
 
 		ASSERT_FALSE(obj.isEmpty());
+
 		obj.insert(value);
+
 		EXPECT_TRUE(obj.size() == input.size() + 1);
 		EXPECT_NE(collections::find(obj, value), obj.end());
 	}
@@ -95,13 +104,16 @@ namespace collection_tests {
 		AssociativeCollectionInsertTests, 
 		InsertWithLocationHintPlacesElementInNonEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto value = this->testInput.different_elements()[0];
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
+		auto value = this->_test_data.different_elements()[0];
 		collection obj(collections::from_range, input);
 
 		ASSERT_FALSE(obj.isEmpty());
+
 		obj.insert(obj.begin(), value);
+
 		EXPECT_TRUE(obj.size() == input.size() + 1);
 		EXPECT_NE(collections::find(obj, value), obj.end());
 	}
@@ -115,12 +127,15 @@ namespace collection_tests {
 		AssociativeCollectionInsertTests, 
 		InsertPlacesRangeInEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		collection obj{};
 
 		ASSERT_TRUE(obj.isEmpty());
+
 		obj.insert(input.begin(), input.end());
+
 		EXPECT_TRUE(obj.size() == input.size());
 		EXPECT_NE(collections::find(obj, input[0]), obj.end());
 		EXPECT_NE(collections::find(obj, input[1]), obj.end());
@@ -136,12 +151,15 @@ namespace collection_tests {
 		AssociativeCollectionInsertTests, 
 		InsertWithLocationHintPlacesRangeInEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		collection obj{};
 
 		ASSERT_TRUE(obj.isEmpty());
+
 		obj.insert(obj.begin(), input.begin(), input.end());
+
 		EXPECT_TRUE(obj.size() == input.size());
 		EXPECT_NE(collections::find(obj, input[0]), obj.end());
 		EXPECT_NE(collections::find(obj, input[1]), obj.end());
@@ -157,13 +175,16 @@ namespace collection_tests {
 		AssociativeCollectionInsertTests, 
 		InsertPlacesRangeInNonEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto new_elements = this->testInput.different_elements();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
+		auto new_elements = this->_test_data.different_elements();
 		collection obj(collections::from_range, input);
 
 		ASSERT_FALSE(obj.isEmpty());
+
 		obj.insert(new_elements.begin(), new_elements.end());
+
 		EXPECT_TRUE(obj.size() == (input.size() + new_elements.size()));
 		EXPECT_NE(collections::find(obj, new_elements[0]), obj.end());
 		EXPECT_NE(collections::find(obj, new_elements[1]), obj.end());
@@ -179,13 +200,16 @@ namespace collection_tests {
 		AssociativeCollectionInsertTests, 
 		InsertWithLocationHintPlacesRangeInNonEmptyCollection
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
-		auto new_elements = this->testInput.different_elements();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
+		auto new_elements = this->_test_data.different_elements();
 		collection obj(collections::from_range, input);
 
 		ASSERT_FALSE(obj.isEmpty());
+
 		obj.insert(obj.begin(), new_elements.begin(), new_elements.end());
+
 		EXPECT_TRUE(obj.size() == (input.size() + new_elements.size()));
 		EXPECT_NE(collections::find(obj, new_elements[0]), obj.end());
 		EXPECT_NE(collections::find(obj, new_elements[1]), obj.end());

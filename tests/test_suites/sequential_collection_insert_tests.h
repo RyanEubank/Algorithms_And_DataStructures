@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "sequential_collection_tests.h"
+#include "sequential_collection_test_fixture.h"
 
 namespace collection_tests {
 
@@ -110,9 +110,9 @@ namespace collection_tests {
 		SequentialCollectionInsertTests, 
 		InsertAtIndexChecksBounds
 	) {
-		using element = typename TypeParam::element_t;
-		auto value = element{};
+		FORWARD_TEST_TYPES;
 
+		auto value = element{};
 		auto method = [&](auto& obj, Index& index) { obj.insert(index, value); };
 		auto safeIndex = [](auto& obj) { return obj.size(); };
 		auto unsafeIndex = [](auto& obj) { return obj.size() + 1; };
@@ -129,7 +129,7 @@ namespace collection_tests {
 		SequentialCollectionInsertTests, 
 		InsertAtIndexReturnsIteratorToPosition
 	) {
-		auto value = this->testInput.different_elements()[0];
+		auto value = this->_test_data.different_elements()[0];
 		auto method = [=](auto& obj) {
 			return obj.insert(Index(1), value);
 		};
@@ -194,7 +194,7 @@ namespace collection_tests {
 	) {
 		using iterator = typename TypeParam::collection_t::iterator;
 
-		auto value = this->testInput.different_elements()[0];
+		auto value = this->_test_data.different_elements()[0];
 		auto method = [=](auto& obj) -> iterator {
 			auto pos = obj.begin();
 			return obj.insert(++pos, value);
@@ -262,7 +262,7 @@ namespace collection_tests {
 	) {
 		using iterator = typename TypeParam::collection_t::iterator;
 
-		auto new_elements = this->testInput.different_elements();
+		auto new_elements = this->_test_data.different_elements();
 		auto method = [&](auto& obj) -> iterator {
 			auto iterator = std::next(obj.begin());
 			return obj.insert(iterator, new_elements.begin(), new_elements.end());

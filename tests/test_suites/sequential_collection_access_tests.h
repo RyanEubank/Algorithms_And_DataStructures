@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "sequential_collection_tests.h"
+#include "sequential_collection_test_fixture.h"
 
 namespace collection_tests {
 
@@ -36,8 +36,9 @@ namespace collection_tests {
 		SequentialCollectionAccessTests, 
 		IndexOperatorReturnsCorrectElement
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		const collection obj(collections::from_range, input);
 
 		for (size_t i = 0; i < input.size(); ++i)
@@ -53,8 +54,9 @@ namespace collection_tests {
 		SequentialCollectionAccessTests, 
 		AtMethodReturnsCorrectElement
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		const collection obj(collections::from_range, input);
 
 		for (size_t i = 0; i < input.size(); ++i)
@@ -76,6 +78,7 @@ namespace collection_tests {
 		};
 		auto safeIndex = [](auto& obj) { return obj.size() - 1; };
 		auto unsafeIndex = [](auto& obj) { return obj.size(); };
+
 		this->testMethodChecksIndexBounds(method, safeIndex, unsafeIndex);
 	}
 
@@ -87,9 +90,11 @@ namespace collection_tests {
 		SequentialCollectionAccessTests, 
 		FrontReturnsFirstInSequence
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		const collection obj(collections::from_range, input);
+
 		EXPECT_EQ(obj.front(), input[0]);
 	}
 
@@ -101,9 +106,11 @@ namespace collection_tests {
 		SequentialCollectionAccessTests, 
 		BackReturnsLastInSequence
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
+
+		auto input = this->_test_data.control();
 		const collection obj(collections::from_range, input);
+
 		EXPECT_EQ(obj.back(), input[input.size() - 1]);
 	}
 

@@ -15,13 +15,12 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
+#include "../test_suites/collection_tests.h"
 #include "binary_search_tree_test_fixture.h"
 
 namespace collection_tests {
 
 	using collection_types = instantiate_with_elements<BinarySearchTreeTestTypes>;
-
-	GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(CollectionTests);
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		BinarySearchTreeTest,

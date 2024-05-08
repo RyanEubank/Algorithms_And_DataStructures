@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "collection_tests.h"
+#include "collection_test_fixture.h"
 
 namespace collection_tests {
 
@@ -35,15 +35,15 @@ namespace collection_tests {
 		AssociativeCollectionRemoveTests, 
 		RemoveAtIteratorDeletesElementAtCorrectPosition
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
 		collection obj(collections::from_range, input);
-
 		auto iterator = std::next(obj.begin());
 		auto removedElement = *iterator;
 
 		obj.remove(iterator);
+
 		EXPECT_EQ(collections::find(obj, removedElement), obj.end());
 		EXPECT_EQ(obj.size(), input.size() - 1);
 	}
@@ -59,7 +59,7 @@ namespace collection_tests {
 	) {
 		using iterator = typename TypeParam::collection_t::iterator;
 
-		auto value = this->testInput.control()[2];
+		auto value = this->_test_data.control()[2];
 		auto method = [](auto& obj) -> iterator {
 			auto iterator = std::next(obj.begin());
 			return obj.remove(iterator);
@@ -77,15 +77,15 @@ namespace collection_tests {
 		AssociativeCollectionRemoveTests,
 		RemoveAllBetweenIteratorsCorrectlyRemovesElements
 	) {
-		using collection = typename TypeParam::collection_t;
-		auto input = this->testInput.control();
+		FORWARD_TEST_TYPES;
 
+		auto input = this->_test_data.control();
 		collection obj(collections::from_range, input);
+
 		EXPECT_EQ(obj.size(), input.size());
 
 		auto begin = obj.begin();
 		auto end = std::next(begin, 2);
-
 		obj.remove(begin, end);
 
 		EXPECT_EQ(obj.size(), input.size() - 2);
@@ -109,7 +109,8 @@ namespace collection_tests {
 			auto end = std::prev(obj.end());
 			return obj.remove(begin, end);
 		};
-		auto expected = this->testInput.control()[2];
+		auto expected = this->_test_data.control()[2];
+
 		this->testMethodReturnsIteratorToExpectedElement(method, expected);
 	}
 

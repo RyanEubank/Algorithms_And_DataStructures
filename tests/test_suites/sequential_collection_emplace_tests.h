@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "sequential_collection_tests.h"
+#include "sequential_collection_test_fixture.h"
 
 namespace collection_tests {
 
@@ -110,9 +110,9 @@ namespace collection_tests {
 		SequentialCollectionEmplaceTests, 
 		EmplaceAtIndexChecksBounds
 	) {
-		using element = typename TypeParam::element_t;
-		auto value = element{};
+		FORWARD_TEST_TYPES;
 
+		auto value = element{};
 		auto method = [&](auto& obj, Index& index) { obj.emplace(index, value); };
 		auto safeIndex = [](auto& obj) { return obj.size(); };
 		auto unsafeIndex = [](auto& obj) { return obj.size() + 1; };
