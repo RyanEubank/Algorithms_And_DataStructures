@@ -20,7 +20,7 @@
 #include <sstream>
 
 #include "../algorithms/collection_algorithms.h"
-#include "../concepts/sequential.h"
+#include "../concepts/collection.h"
 
 namespace collections {
 
@@ -975,7 +975,9 @@ namespace collections {
 			std::sentinel_for<in_iterator> sentinel
 		>
 		iterator insert(Index index, in_iterator begin, sentinel end) {
-			return insertAt(_array + index.get(), begin, end);
+			size_type i = index.get();
+			validateIndexInRange(i);
+			return insertAt(_array + i, begin, end);
 		}
 
 		// --------------------------------------------------------------------
@@ -1637,17 +1639,7 @@ namespace collections {
 	};
 
 	static_assert(
-		sequential<DynamicArray<int>>,
-		"DynamicArray does not meet the requirements for a sequential collection."
-	);
-
-	static_assert(
-		ordered_collection<DynamicArray<int>>,
-		"DynamicArray does not meet the requirements for an ordered collection."
-	);
-
-	static_assert(
-		bidirectional_ranged_collection<DynamicArray<int>>,
-		"DynamicArray does not meet the requirements for a bidirectional ranged collection."
+		list<DynamicArray<int>>,
+		"DynamicArray does not meet the requirements for a list."
 	);
 }

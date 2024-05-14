@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../concepts/sequential.h"
+#include "../concepts/collection.h"
 #include "../containers/LinkedList.h"
 
 namespace collections {
@@ -34,7 +34,10 @@ namespace collections {
 	/// <typeparam name="container">
 	/// The type of the underlying container used by the queue.
 	/// </typeparam> ----------------------------------------------------------
-	template <class element_t, sequential container_t = LinkedList<element_t>>
+	template <
+		class element_t, 
+		sequential_collection container_t = LinkedList<element_t>
+	>
 	class Queue {
 	public:
 
@@ -46,8 +49,6 @@ namespace collections {
 		using const_reference = typename container::const_reference;
 		using pointer = typename container::pointer;
 		using const_pointer = typename container::const_pointer;
-		using iterator = typename container::iterator;
-		using const_iterator = typename container::const_iterator;
 
 		// --------------------------------------------------------------------
 		/// <summary>

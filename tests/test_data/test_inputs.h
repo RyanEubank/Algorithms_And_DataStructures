@@ -30,78 +30,79 @@ namespace collection_tests {
 
 	template <collections::collection T>
 	struct test_case_data<T> {
-	private:
+		const T a = { 1 };
+		const T b = { 2 };
+		const T c = { 3 };
+		const T d = { 4 };
+		const T e = { 5 };
+		const T f = { 6 };
 
-		T v1 = { 1 };
-		T v2 = { 2 };
-		T v3 = { 3 };
-		T v4 = { 4 };
-		T v5 = { 5 };
-		T v6 = { 6 };
-
-	public:
-		auto control() {
-			return std::array<T, 3>{ v1, v2, v3 };
+		auto control() const {
+			return std::array<T, 3>{ a, b, c };
 		}
 
-		auto different_elements() {
-			return std::array<T, 3>{ v4, v5, v6 };
+		auto different_elements() const {
+			return std::array<T, 3>{ d, e, f };
 		}
 
-		auto reverse_order() {
-			return std::array<T, 3>{ v3, v2, v1 };
+		auto reverse_order() const {
+			return std::array<T, 3>{ c, b, a };
 		}
 
-		auto different_size() {
-			return std::array<T, 2>{ v1, v2 };
+		auto different_size() const {
+			return std::array<T, 2>{ a, b };
 		}
 	};
 
 	template <std::integral T>
 	struct test_case_data<T> {
-	private:
-		T v1 = 1, v2 = 2, v3 = 3, v4 = 4, v5 = 5, v6 = 6;
+		const T a = 1;
+		const T b = 2;
+		const T c = 3;
+		const T d = 4;
+		const T e = 5;
+		const T f = 6;
 
-	public:
-
-		auto control() {
-			return std::array<T, 3>{ v1, v2, v3 };
+		auto control() const {
+			return std::array<T, 3>{ a, b, c };
 		}
 
-		auto different_elements() {
-			return std::array<T, 3>{ v4, v5, v6 };
+		auto different_elements() const {
+			return std::array<T, 3>{ d, e, f };
 		}
 
-		auto reverse_order() {
-			return std::array<T, 3>{ v3, v2, v1 };
+		auto reverse_order() const {
+			return std::array<T, 3>{ c, b, a };
 		}
 
-		auto different_size() {
-			return std::array<T, 2>{ v1, v2 };
+		auto different_size() const {
+			return std::array<T, 2>{ a, b };
 		}
 	};
 
 	template <std::floating_point T>
 	struct test_case_data<T> {
-	private:
-		T v1 = 1.f, v2 = 2.f, v3 = 3.f, v4 = 4.f, v5 = 5.f, v6 = 6.f;
+		const T a = 1.0f;
+		const T b = 2.0f;
+		const T c = 3.0f;
+		const T d = 4.0f;
+		const T e = 5.0f;
+		const T f = 6.0f;
 
-	public:
-
-		auto control() {
-			return std::array<T, 3>{ v1, v2, v3 };
+		auto control() const {
+			return std::array<T, 3>{ a, b, c };
 		}
 
-		auto different_elements() {
-			return std::array<T, 3>{ v4, v5, v6 };
+		auto different_elements() const {
+			return std::array<T, 3>{ d, e, f };
 		}
 
-		auto reverse_order() {
-			return std::array<T, 3>{ v3, v2, v1 };
+		auto reverse_order() const {
+			return std::array<T, 3>{ c, b, a };
 		}
 
-		auto different_size() {
-			return std::array<T, 2>{ v1, v2 };
+		auto different_size() const {
+			return std::array<T, 2>{ a, b };
 		}
 	};
 
@@ -109,48 +110,58 @@ namespace collection_tests {
 	struct test_case_data<void*> {
 	private:
 		int i1 = 1, i2 = 2, i3 = 3, i4 = 4, i5 = 5, i6 = 6;
-		void *v1 = &i1, *v2 = &i2, *v3 = &i3, *v4 = &i4, *v5 = &i5, *v6 = &i6;
 
 	public:
+		void* a = &i1;
+		void* b = &i2;
+		void* c = &i3; 
+		void* d = &i4; 
+		void* e = &i5; 
+		void* f = &i6;
 
-		auto control() {
-			return std::array<void*, 3>{ v1, v2, v3 };
+		auto control() const {
+			return std::array<void*, 3>{ a, b, c };
 		}
 
-		auto different_elements() {
-			return std::array<void*, 3>{ v4, v5, v6 };
+		auto different_elements() const {
+			return std::array<void*, 3>{ d, e, f };
 		}
 
-		auto reverse_order() {
-			return std::array<void*, 3>{ v3, v2, v1 };
+		auto reverse_order() const {
+			return std::array<void*, 3>{ c, b, a };
 		}
 
-		auto different_size() {
-			return std::array<void*, 2>{ v1, v2 };
+		auto different_size() const {
+			return std::array<void*, 2>{ a, b };
 		}
 	};
 
 	template <>
 	struct test_case_data<std::string> {
-	private:
-		std::string v1 = "a", v2 = "b", v3 = "c", v4 = "d", v5 = "e", v6 = "f";
+		const std::string a = "a";
+		const std::string b = "b";
+		const std::string c = "c";
+		const std::string d = "d";
+		const std::string e = "e";
+		const std::string f = "f";
 
-	public:
-
-		auto control() {
-			return std::array<std::string, 3>{ v1, v2, v3 };
+		auto control() const {
+			return std::array<std::string, 3>{ a, b, c };
 		}
 
-		auto different_elements() {
-			return std::array<std::string, 3>{ v4, v5, v6 };
+		auto different_elements() const {
+			return std::array<std::string, 3>{ d, e, f };
 		}
 
-		auto reverse_order() {
-			return std::array<std::string, 3>{ v3, v2, v1 };
+		auto reverse_order() const {
+			return std::array<std::string, 3>{ c, b, a };
 		}
 
-		auto different_size() {
-			return std::array<std::string, 2>{ v1, v2 };
+		auto different_size() const {
+			return std::array<std::string, 2>{ a, b };
 		}
 	};
+
+	template <class T>
+	const test_case_data<T> test_data;
 }

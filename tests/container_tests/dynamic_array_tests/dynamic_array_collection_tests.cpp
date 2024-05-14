@@ -15,25 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * ========================================================================= */
 
-#pragma once
+#include "../../test_suites/collection_tests.h"
+#include "dynamic_array_test_fixture.h"
 
-#include <iostream>
+namespace collection_tests {
 
-namespace collections {
+	using collection_types = instantiate_with_elements<DynamicArrayTestTypes>;
 
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// The streamable concept requires that template types have a generic
-	/// overload for the basic input and output stream operators.
-	/// </summary> ------------------------------------------------------------
-	template <class T, class char_t>
-	concept streamable = requires(
-		T& c1,
-		const T& c2,
-		std::basic_ostream<char_t> &os,
-		std::basic_istream<char_t> &is
-	) {
-		{ os << c2 } -> std::convertible_to<std::basic_ostream<char_t>&>;
-		{ is >> c1 } -> std::convertible_to<std::basic_istream<char_t>&>;
-	};
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		DynamicArrayTest,
+		CollectionTests,
+		collection_types
+	);
 }

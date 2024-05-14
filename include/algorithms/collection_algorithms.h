@@ -21,7 +21,7 @@
 #include <iterator>
 #include <ranges>
 
-#include "../concepts/searchable.h"
+#include "../concepts/collection.h"
 
 namespace collections {
 
@@ -460,7 +460,7 @@ namespace collections {
 		/// Returns a valid iterator to the searched element or the end 
 		/// iterator if the value is not found.
 		/// </returns> --------------------------------------------------------
-		template <class T, searchable collection>
+		template <class T, searchable_collection collection>
 		constexpr auto operator()(const collection& c, const T& value) const {
 			return c.find(value);
 		}
@@ -576,7 +576,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <
 			class T,
-			searchable collection, 
+			searchable_collection collection, 
 			std::predicate<T, typename collection::value_type> Predicate
 		>
 		constexpr auto operator()(

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../concepts/sequential.h"
+#include "../concepts/collection.h"
 #include "../containers/DynamicArray.h"
 
 namespace collections {
@@ -34,7 +34,10 @@ namespace collections {
 	/// <typeparam name="container">
 	/// The type of the underlying container used by the stack.
 	/// </typeparam> ----------------------------------------------------------
-	template <class element_t, sequential container_t = DynamicArray<element_t>>
+	template <
+		class element_t, 
+		sequential_collection container_t = DynamicArray<element_t>
+	>
 	class Stack {
 	public:
 

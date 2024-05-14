@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../concepts/associative.h"
+#include "../concepts/collection.h"
 
 namespace collections {
 
@@ -1072,7 +1072,7 @@ namespace collections {
 	};
 
 	static_assert(
-		associative<BinarySearchTree<int>>,
+		associative_collection<BinarySearchTree<int>>,
 		"BinarySearchTree does not implement the associative collection interface."
 	);
 }

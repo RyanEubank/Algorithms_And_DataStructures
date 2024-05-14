@@ -20,7 +20,7 @@
 #include <sstream>
 
 #include "../algorithms/collection_algorithms.h"
-#include "../concepts/sequential.h"
+#include "../concepts/collection.h"
 
 namespace collections {
 
@@ -1620,17 +1620,7 @@ namespace collections {
 
 
 	static_assert(
-		sequential<LinkedList<int>>,
-		"LinkedList does not meet the requirements for a sequential collection."
-	);
-
-	static_assert(
-		ordered_collection<LinkedList<int>>,
-		"LinkedList does not meet the requirements for an ordered collection."
-	);
-
-	static_assert(
-		bidirectional_ranged_collection<LinkedList<int>>,
-		"LinkedList does not meet the requirements for a bidirectional ranged collection."
+		list<LinkedList<int>>,
+		"LinkedList does not meet the requirements for a list."
 	);
 }

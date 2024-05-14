@@ -40,13 +40,12 @@ namespace collection_tests {
 	/// The obj whose contents to examine.
 	/// </param> ----------------------------------------------------------
 	template<class T>
-	void testContentsMatchInput(const T& obj, const auto& input) {
+	void testObjectContainsAllExpectedElements(const T& obj, const auto& input) {
 		EXPECT_EQ(obj.size(), input.size());
 
 		if constexpr (std::ranges::input_range<T>) {
-			EXPECT_NE(collections::find(obj, input[0]), obj.end());
-			EXPECT_NE(collections::find(obj, input[1]), obj.end());
-			EXPECT_NE(collections::find(obj, input[2]), obj.end());
+			for (const auto& e : input)
+				EXPECT_NE(collections::find(obj, e), obj.end());
 		}
 	}
 
@@ -57,7 +56,7 @@ namespace collection_tests {
 	/// Tests that a default constructed collection is initially empty.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, DefaultConstructorCreatesEmptyObject) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
 
 		const collection obj{};
 
@@ -71,13 +70,12 @@ namespace collection_tests {
 	/// correctly sets the contents.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, InitializationConstructorSetsContents) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto input = this->_test_data.control();
-		auto data = input.data();
-		const collection obj{ data[0], data[1], data[2] };
-
-		testContentsMatchInput(obj, input);
+		const auto input = { a, b, c };
+		const collection obj{ a, b, c };
+		testObjectContainsAllExpectedElements(obj, input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -86,12 +84,12 @@ namespace collection_tests {
 	/// pair.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, IteratorConstructorSetsContents) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto input = this->_test_data.control();
+		const auto input = { a, b, c };
 		const collection obj(input.begin(), input.end());
-
-		testContentsMatchInput(obj, input);
+		testObjectContainsAllExpectedElements(obj, input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -99,12 +97,12 @@ namespace collection_tests {
 	/// Tests that the collection can be constructed correctly from a range.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, RangeConstructorSetsContents) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto input = this->_test_data.control();
+		const auto input = { a, b, c };
 		const collection obj(collections::from_range, input);
-
-		testContentsMatchInput(obj, input);
+		testObjectContainsAllExpectedElements(obj, input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -113,14 +111,14 @@ namespace collection_tests {
 	/// collection.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, SizeReturnsCorrectValue) {
-		FORWARD_TEST_TYPES;
-		auto input = this->_test_data.control();
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
 		const collection empty_obj{};
-		const collection non_empty_obj(collections::from_range, input);
+		const collection non_empty_obj { a, b, c };
 
 		EXPECT_EQ(empty_obj.size(), 0);
-		EXPECT_EQ(non_empty_obj.size(), input.size());
+		EXPECT_EQ(non_empty_obj.size(), 3);
 	}
 
 	// ------------------------------------------------------------------------
@@ -129,7 +127,7 @@ namespace collection_tests {
 	/// exception.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, EmptyObjectCanBeClearedWithoutError) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
 
 		collection obj{};
 
@@ -143,10 +141,10 @@ namespace collection_tests {
 	/// exception.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, ClearEmptiesObject) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto input = this->_test_data.control();
-		collection obj(collections::from_range, input);
+		collection obj { a, b, c };
 
 		ASSERT_FALSE(obj.isEmpty());
 		ASSERT_NE(obj.size(), 0);
@@ -164,9 +162,8 @@ namespace collection_tests {
 	/// effecting the copy.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, CopyConstructorCopiesEmptyObjects) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
 
-		auto input = this->_test_data.control();
 		collection target{};
 		collection src(target);
 
@@ -185,10 +182,10 @@ namespace collection_tests {
 	/// effecting the copy.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, CopyConstructorDeepCopiesNonEmptyObjects) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto input = this->_test_data.control();
-		collection target(collections::from_range, input);
+		collection target { a, b, c };
 		collection src(target);
 
 		EXPECT_EQ(src, target);
@@ -205,7 +202,7 @@ namespace collection_tests {
 	/// objects.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, MoveConstructorTransfersEmptyObjects) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
 
 		collection target{};
 		const collection expected{};
@@ -226,11 +223,11 @@ namespace collection_tests {
 	/// objects.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, MoveConstructorTransfersNonEmptyObjects) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto input = this->_test_data.control();
-		collection target(collections::from_range, input);
-		const collection expected(collections::from_range, input);
+		collection target{ a, b, c };
+		const collection expected{ a, b, c };
 
 		ASSERT_EQ(target, expected);
 		ASSERT_FALSE(target.isEmpty());
@@ -248,18 +245,16 @@ namespace collection_tests {
 	/// copy assignment.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, CopyAssignmentCorrectlyAssignsContents) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto control_input = this->_test_data.control();
-		auto diff_input = this->_test_data.different_elements();
-
-		const collection r1(collections::from_range, control_input);
-		const collection r2(collections::from_range, diff_input);
+		const collection r1{ a, b, c };
+		const collection r2{ d, e, f };
 		const collection r3{};
 		
-		collection l1(collections::from_range, control_input);
-		collection l2(collections::from_range, control_input);
-		collection l3(collections::from_range, control_input);
+		collection l1{ a, b, c };
+		collection l2{ a, b, c };
+		collection l3{ a, b, c };
 		collection l4{};
 
 		ASSERT_EQ(l1, r1);
@@ -284,7 +279,7 @@ namespace collection_tests {
 	/// when moved via assignment.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, MoveAssignmentTransfersEmptyObjects) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
 
 		collection src{};
 		collection target{};
@@ -304,14 +299,12 @@ namespace collection_tests {
 	/// when moved via assignment.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, MoveAssignmentTransfersNonEmptyObjects) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto control_input = this->_test_data.control();
-		auto diff_input = this->_test_data.different_elements();
-
-		collection src(collections::from_range, control_input);
-		collection target(collections::from_range, diff_input);
-		const collection expected(collections::from_range, diff_input);
+		collection src{ a, b, c };
+		collection target{ d, e, f };
+		const collection expected{ d, e, f };
 
 		ASSERT_NE(src, expected);
 
@@ -329,13 +322,11 @@ namespace collection_tests {
 		CollectionTests, 
 		MoveAssignmentTransfersBetweenEmptyAndNonEmptyObjects
 	) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto control_input = this->_test_data.control();
-		auto diff_input = this->_test_data.different_elements();
-
-		const collection not_expected(collections::from_range, diff_input);
-		collection src1(collections::from_range, control_input);
+		const collection not_expected{ d, e, f };
+		collection src1{ a, b, c };
 		collection target1{};
 		const collection expected1{};
 
@@ -347,8 +338,8 @@ namespace collection_tests {
 		EXPECT_NE(src1, not_expected);
 
 		collection src2{};
-		collection target2(collections::from_range, control_input);
-		const collection expected2(collections::from_range, control_input);
+		collection target2{ a, b, c };
+		const collection expected2{ a, b, c };
 
 		ASSERT_NE(src2, expected2);
 
@@ -364,7 +355,7 @@ namespace collection_tests {
 	/// objects.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, SwapSwitchesEmptyObjects) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
 
 		collection src{};
 		collection target{};
@@ -384,14 +375,12 @@ namespace collection_tests {
 	/// objects.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, SwapSwitchesNonEmptyObjects) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto control_input = this->_test_data.control();
-		auto diff_input = this->_test_data.different_elements();
-
-		collection src(collections::from_range, control_input);
-		collection target(collections::from_range, diff_input);
-		const collection expected(collections::from_range, diff_input);
+		collection src{ a, b, c };
+		collection target{ d, e, f };
+		const collection expected{ d, e, f };
 
 		ASSERT_NE(src, expected);
 		ASSERT_EQ(target, expected);
@@ -408,10 +397,10 @@ namespace collection_tests {
 	/// and non-empty objects.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, SwapSwitchesBetweenEmptyAndNonObjects) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto input = this->_test_data.control();
-		collection src1(collections::from_range, input);
+		collection src1{ a, b, c };
 		collection target1{};
 		const collection expected1{};
 
@@ -424,8 +413,8 @@ namespace collection_tests {
 		EXPECT_NE(target1, expected1);
 
 		collection src2{};
-		collection target2(collections::from_range, input);
-		const collection expected2(collections::from_range, input);
+		collection target2{ a, b, c };
+		const collection expected2{ a, b, c };
 
 		ASSERT_NE(src2, expected2);
 		ASSERT_EQ(target2, expected2);
@@ -441,16 +430,13 @@ namespace collection_tests {
 	/// Tests that collection equality will correctly test for collection size.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, CollectionEqualityDependsOnSizeAndElements) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto control_input = this->_test_data.control();
-		auto diff_elements_input = this->_test_data.different_elements();
-		auto diff_size_input = this->_test_data.different_size();
-
-		const collection obj1(collections::from_range, control_input);
-		const collection obj2(collections::from_range, control_input);
-		const collection obj3(collections::from_range, diff_elements_input);
-		const collection obj4(collections::from_range, diff_size_input);
+		const collection obj1{ a, b, c };
+		const collection obj2{ a, b, c };
+		const collection obj3{ d, e, f };
+		const collection obj4{ a, b };
 
 		EXPECT_EQ(obj1, obj2);
 		EXPECT_NE(obj1, obj3);
@@ -464,10 +450,10 @@ namespace collection_tests {
 	/// lose elements.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(CollectionTests, IOStreamOperatorsMaintainObject) {
-		FORWARD_TEST_TYPES;
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
-		auto input = this->_test_data.control();
-		const collection obj1(collections::from_range, input);
+		const collection obj1{ a, b, c };
 		collection obj2{};
 
 		ASSERT_NE(obj1, obj2);
