@@ -74,7 +74,7 @@ namespace collection_tests {
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(
 		AssociativeCollectionInsertTests, 
-		InsertWithLocationHintReturnsIteratorToInsertedElement
+		InsertReturnsIteratorToInsertedElement
 	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
@@ -131,7 +131,7 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Tests that the insert range method will return an iterator to the first
+	/// Tests that the insert range method will return an iterator to the last
 	/// element in the range when successful.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(
@@ -145,7 +145,7 @@ namespace collection_tests {
 		auto method = [&](auto& obj) { 
 			return obj.insert(input.begin(), input.end()); 
 		};
-		auto expected = [&](auto& obj) { return *input.begin(); };
+		auto expected = [&](auto& obj) { return c; };
 
 		this->testMethodReturnsIteratorToExpectedElement(method, expected);
 	}
@@ -154,7 +154,7 @@ namespace collection_tests {
 		AssociativeCollectionInsertTests,
 		InsertPlacesElementInEmptyCollection,
 		InsertPlacesElementInNonEmptyCollection,
-		InsertWithLocationHintReturnsIteratorToInsertedElement,
+		InsertReturnsIteratorToInsertedElement,
 		InsertPlacesRangeInEmptyCollection,
 		InsertPlacesRangeInNonEmptyCollection,
 		InsertReturnsIteratorToInsertedRange

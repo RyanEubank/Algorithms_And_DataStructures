@@ -125,7 +125,7 @@ namespace collections {
 		/// 
 		/// </summary> --------------------------------------------------------
 		template <class T>
-		concept collection_interface = requires(T& c1, const T& c2) {
+		concept basic_collection_interface = requires(T& c1, const T& c2) {
 			{ c1.clear() };
 			{ c2.size() } -> like<size_type_of<T>>;
 			{ c2.isEmpty() } -> like<bool>;
@@ -187,10 +187,12 @@ namespace collections {
 		/// 
 		/// </summary> --------------------------------------------------------
 		template <class T>
-		concept iterable_collection_interface = requires(T & c1, const T& c2) {
-			{ c2.cbegin() } -> like<const_iter_type_of<T>>;
-			{ c2.cend() } -> std::sentinel_for<const_iter_type_of<T>>;
-		};
+		concept iterable = 
+			std::ranges::input_range<T> &&
+			requires(T & c1, const T& c2) {
+				{ c2.cbegin() } -> like<const_iter_type_of<T>>;
+				{ c2.cend() } -> std::sentinel_for<const_iter_type_of<T>>;
+			};
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -227,17 +229,19 @@ namespace collections {
 		/// 
 		/// </summary> --------------------------------------------------------
 		template <class T>
-		concept bidirectionally_iterable_collection_interface = 
-		requires(T& c1, const T& c2) {
-			typename T::reverse_iterator;
-			typename T::const_reverse_iterator;
-			{ c1.rbegin() } -> like<rev_iter_type_of<T>>;
-			{ c1.rend() } -> std::sentinel_for<rev_iter_type_of<T>>;
-			{ c2.rbegin() } -> like<const_rev_iter_type_of<T>>;
-			{ c2.rend() } -> std::sentinel_for<const_rev_iter_type_of<T>>;
-			{ c2.crbegin() } -> like<const_rev_iter_type_of<T>>;
-			{ c2.crend() } -> std::sentinel_for<const_rev_iter_type_of<T>>;
-		};
+		concept bidirectionally_iterable = 
+			iterable<T> &&
+			std::ranges::bidirectional_range<T> &&
+			requires(T& c1, const T& c2) {
+				typename T::reverse_iterator;
+				typename T::const_reverse_iterator;
+				{ c1.rbegin() } -> like<rev_iter_type_of<T>>;
+				{ c1.rend() } -> std::sentinel_for<rev_iter_type_of<T>>;
+				{ c2.rbegin() } -> like<const_rev_iter_type_of<T>>;
+				{ c2.rend() } -> std::sentinel_for<const_rev_iter_type_of<T>>;
+				{ c2.crbegin() } -> like<const_rev_iter_type_of<T>>;
+				{ c2.crend() } -> std::sentinel_for<const_rev_iter_type_of<T>>;
+			};
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -246,22 +250,22 @@ namespace collections {
 		/// 
 		/// <list type="bullet">
 		///		<para><item><term>
-		///			iterator insert(const_iterator, const lvalue reference)
+		///			iterator insertAt(const_iterator, const lvalue reference)
 		///		</term></item></para>
 		///		<para><item><term>
-		///			iterator insert(const_iterator, rvalue reference)
+		///			iterator insertAt(const_iterator, rvalue reference)
 		///		</term></item></para> 
 		///		<para><item><term>
-		///			iterator insert(const_iterator, input_iterator&lt;T&gt;, sentinel&lt;T&gt;)
+		///			iterator insertAt(const_iterator, input_iterator&lt;T&gt;, sentinel&lt;T&gt;)
 		///		</term></item></para>
 		///		<para><item><term>
-		///			iterator emplace(const_iterator, Args&lt;T&gt;...)
+		///			iterator emplaceAt(const_iterator, Args&lt;T&gt;...)
 		///		</term></item></para>
 		///		<para><item><term>
-		///			iterator remove(const_iterator)
+		///			iterator removeAt(const_iterator)
 		///		</term></item></para>
 		///		<para><item><term>
-		///			iterator remove(const_iterator, const_iterator)
+		///			iterator removeAt(const_iterator, const_iterator)
 		///		</term></item></para>
 		/// </list>
 		/// 
@@ -272,22 +276,24 @@ namespace collections {
 			class end_it = input_iterator_archetype<value_type_of<T>>,
 			class ...Args
 		>
-		concept ordered_collection_interface = requires(
-			T & c1,
-			begin_it begin,
-			end_it end,
-			const_ref_type_of<T> lval_element,
-			value_type_of<T>&& rval_element,
-			const_iter_type_of<T> position,
-			Args&&... args
-		) {
-			{ c1.insert(position, lval_element) } -> like<iter_type_of<T>>;
-			{ c1.insert(position, rval_element) } -> like<iter_type_of<T>>;
-			{ c1.insert(position, begin, end) } -> like<iter_type_of<T>>;
-			{ c1.emplace(position, args...) } -> like<iter_type_of<T>>;
-			{ c1.remove(position) } -> like<iter_type_of<T>>;
-			{ c1.remove(position, position) } -> like<iter_type_of<T>>;
-		};
+		concept ordered = 
+			iterable<T> && 
+			requires(
+				T & c1,
+				begin_it begin,
+				end_it end,
+				const_ref_type_of<T> lval_element,
+				value_type_of<T>&& rval_element,
+				const_iter_type_of<T> position,
+				Args&&... args
+			) {
+				{ c1.insert(position, lval_element) } -> like<iter_type_of<T>>;
+				{ c1.insert(position, rval_element) } -> like<iter_type_of<T>>;
+				{ c1.insert(position, begin, end) } -> like<iter_type_of<T>>;
+				{ c1.emplace(position, args...) } -> like<iter_type_of<T>>;
+				{ c1.remove(position) } -> like<iter_type_of<T>>;
+				{ c1.remove(position, position) } -> like<iter_type_of<T>>;
+			};
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -308,23 +314,23 @@ namespace collections {
 		///			const_reference at(index_t) const
 		///		</term></item></para>
 		///		<para><item><term>
-		///			iterator insert(strong_index_t, const lvalue reference)
+		///			iterator insertAt(strong_index_t, const lvalue reference)
 		///		</term></item></para>
 		///		<para><item><term>
-		///			iterator insert(strong_index_t, rvalue reference)
+		///			iterator insertAt(strong_index_t, rvalue reference)
 		///		</term></item></para>
 		///		<para><item><term>
-		///			iterator insert(strong_index_t, input_iterator&lt;T&gt;, sentinel&lt;T&gt;)
+		///			iterator insertAt(strong_index_t, input_iterator&lt;T&gt;, sentinel&lt;T&gt;)
 		///		</term></item></para>
 		///		<para><item><term>
-		///			iterator remove(strong_index_t)
+		///			iterator removeAt(strong_index_t)
 		///		</term></item></para>
 		///		<para><item><term>
-		///			iterator emplace(strong_index_t, Args&lt;T&gt;...)
+		///			iterator emplaceAt(strong_index_t, Args&lt;T&gt;...)
 		///		</term></item></para>
 		/// </list>
 		///  
-		/// </summary> ------------------------------------------------------------
+		/// </summary> --------------------------------------------------------
 		template <
 			class T,
 			class index_t,
@@ -333,30 +339,38 @@ namespace collections {
 			class end_it = input_iterator_archetype<value_type_of<T>>,
 			class ...Args
 		>
-		concept indexable_collection_interface = requires(
-			T& c1,
-			const T& c2,
-			const_ref_type_of<T> lval_element,
-			value_type_of<T>&& rval_element,
-			index_t index,
-			strong_index_t str_index,
-			begin_it begin,
-			end_it end,
-			Args&&... args
-		) {
-			{ c1[index] } -> like<ref_type_of<T>>;
-			{ c2[index] } -> like<const_ref_type_of<T>>;
-			{ c1.at(index) } -> like<ref_type_of<T>>;
-			{ c2.at(index) } -> like<const_ref_type_of<T>>;
-			{ c1.insert(str_index, lval_element) } -> like<iter_type_of<T>>;
-			{ c1.insert(str_index, rval_element) } -> like<iter_type_of<T>>;
-			{ c1.insert(str_index, begin, end) } -> like<iter_type_of<T>>;
-			{ c1.remove(str_index) } -> like<iter_type_of<T>>;
-			{ c1.emplace(str_index, args...) } -> like<iter_type_of<T>>;
-		};
+		concept indexable =
+			iterable<T> && 
+			requires(
+				T& c1,
+				const T& c2,
+				const_ref_type_of<T> lval_element,
+				value_type_of<T>&& rval_element,
+				index_t index,
+				strong_index_t str_index,
+				begin_it begin,
+				end_it end,
+				Args&&... args
+			) {
+				{ c1[index] } -> like<ref_type_of<T>>;
+				{ c2[index] } -> like<const_ref_type_of<T>>;
+				{ c1.at(index) } -> like<ref_type_of<T>>;
+				{ c2.at(index) } -> like<const_ref_type_of<T>>;
+				{ c1.insert(str_index, lval_element) } -> like<iter_type_of<T>>;
+				{ c1.insert(str_index, rval_element) } -> like<iter_type_of<T>>;
+				{ c1.insert(str_index, begin, end) } -> like<iter_type_of<T>>;
+				{ c1.remove(str_index) } -> like<iter_type_of<T>>;
+				{ c1.emplace(str_index, args...) } -> like<iter_type_of<T>>;
+				{	
+					!std::convertible_to<index_t, size_t> ||
+					requires(T& c, IndexRange index_range) {
+						{ c.remove(index_range) } -> internal::like<internal::iter_type_of<T>>;
+					}
+				};
+			};
 
 
-		// ------------------------------------------------------------------------
+		// --------------------------------------------------------------------
 		/// <summary>
 		/// Requires a minimal set of methods and operators for sequential
 		/// collection types. The methods have the following signatures:
@@ -400,9 +414,10 @@ namespace collections {
 		///		</term></item></para>
 		/// </list>
 		/// 
-		/// </summary> ------------------------------------------------------------
+		/// </summary> --------------------------------------------------------
 		template <class T,class ...Args>
-		concept sequential_collection_interface = requires(
+		concept sequential_collection_interface = 
+		requires(
 			T& c1,
 			const T& c2,
 			const_ref_type_of<T> lval_element,
@@ -425,12 +440,10 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Requires a minimal set of methods for searchable collection types.
-		/// Generally collection whose seach algorithm is more efficient than
-		/// standard linear search via <see cref="collections::find/>. The
-		/// methods have the following signatures: 
+		/// Requires a minimal set of methods for associative collection types.
+		/// The methods have the following signatures:
 		/// 
-		/// <list type="bullet">
+		///	<list type="bullet">
 		///		<para><item><term>
 		///			iterator find(const lvalue reference)
 		///		</term></item></para>
@@ -445,34 +458,6 @@ namespace collections {
 		///			const_iterator find_if(predicate) const -> where predicate 
 		///			is a callable taking an element and returning a bool.
 		///		</term></item></para>
-		/// </list>
-		/// 
-		/// </summary> --------------------------------------------------------
-		template <
-			class T, 
-			class key_t = const_ref_type_of<T>,
-			class predicate_t = std::function<bool(const_ref_type_of<T>)>
-		>
-		concept searchable_collection_interface = 
-			std::predicate<predicate_t, const_ref_type_of<T>> &&
-		requires (
-			T& c1,
-			const T& c2,
-			key_t& key,
-			predicate_t predicate
-		) {
-			{ c1.find(key) } -> like<iter_type_of<T>>;
-			{ c1.find_if(predicate) } -> like<iter_type_of<T>>;
-			{ c2.find(key) } -> like<const_iter_type_of<T>>;
-			{ c2.find_if(predicate) } -> like<const_iter_type_of<T>>;
-		};
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Requires a minimal set of methods for associative collection types.
-		/// The methods have the following signatures:
-		/// 
-		///	<list type="bullet">
 		///		<para><item><term>
 		///			iterator insert(const lvalue reference)
 		///		</term></item></para>
@@ -496,26 +481,38 @@ namespace collections {
 		/// </summary> --------------------------------------------------------
 		template <
 			class T, 
-			class begin_it = input_iterator_archetype<value_type_of<T>>, 
-			class end_it = input_iterator_archetype<value_type_of<T>>,
+			class input_iter = input_iterator_archetype<value_type_of<T>>, 
+			class key_t = const_ref_type_of<T>,
+			class predicate_t = std::function<bool(const_ref_type_of<T>)>,
+			class U = value_type_of<T>,
 			class ...Args
 		>
-		concept associative_collection_interface = requires(
-			T& c1,
-			begin_it begin,
-			end_it end,
-			const_ref_type_of<T> lval_element,
-			value_type_of<T>&& rval_element,
-			const_iter_type_of<T> position,
-			Args&&... args
-		) {
-			{ c1.insert(lval_element) } -> like<iter_type_of<T>>;
-			{ c1.insert(rval_element) } -> like<iter_type_of<T>>;
-			{ c1.insert(begin, end) } -> like<iter_type_of<T>>;
-			{ c1.remove(position) } -> like<iter_type_of<T>>;
-			{ c1.remove(position, position) } -> like<iter_type_of<T>>;
-			{ c1.emplace(args...) } -> like<iter_type_of<T>>;
-		};
+		concept associative_collection_interface = 
+			std::predicate<predicate_t, const_ref_type_of<T>> && 
+			!std::convertible_to<U, const_iter_type_of<T>> &&
+			requires(
+				T& c1,
+				const T& c2,
+				input_iter iterator,
+				const_ref_type_of<T> lval_element,
+				value_type_of<T>&& rval_element,
+				const_iter_type_of<T> position,
+				key_t& key,
+				predicate_t predicate,
+				U&& arg1,
+				Args&&... args
+			) {
+				{ c1.find(key) } -> like<iter_type_of<T>>;
+				{ c1.contains(key) } -> like<bool>;
+				{ c2.find(key) } -> like<const_iter_type_of<T>>;
+				{ c2.contains(key) } -> like<bool>;
+				{ c1.insert(lval_element) } -> like<iter_type_of<T>>;
+				{ c1.insert(rval_element) } -> like<iter_type_of<T>>;
+				{ c1.insert(iterator, iterator) } -> like<iter_type_of<T>>;
+				{ c1.remove(position) } -> like<iter_type_of<T>>;
+				{ c1.remove(position, position) } -> like<iter_type_of<T>>;
+				{ c1.emplace(arg1, args...) } -> like<iter_type_of<T>>;
+			};
 	}
 
 	// ------------------------------------------------------------------------
@@ -554,14 +551,14 @@ namespace collections {
 	concept collection =
 		internal::collection_type_traits<T> &&
 		internal::collection_constructors<T> &&
-		internal::collection_interface<T> &&
+		internal::basic_collection_interface<T> &&
 		std::copyable<T> &&
 		std::equality_comparable<T> &&
 		streamable<T, uint8_t>;
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Requires common behaviour and interface for range-based collections. 
+	/// Requires common behaviour and interface for iterable collection types.
 	/// The requirements are as follows:
 	/// 
 	/// <list type="bullet">
@@ -570,27 +567,41 @@ namespace collections {
 	///           <see cref="collections::collection{T}"/>.
 	///		</term></item></para>
 	///		<para><item><term>
-	///			- The type is an input range at minimum, following the
-	///			  requirements of <see cref="std::ranges::input_range{T}"/>.
+	///			- The type meets all requirements defined in 
+	///           <see cref="collections::internal::iterable{T}"/>.
 	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type defines extra range methods for const_iterators as
-	///           specified by 
-	///			  <see cref="collections::internal::iterable_collection_interface{T}"/>.
-	///		</term></item></para>
-	/// </list> 
+	/// </list>  
 	/// 
 	/// </summary> ------------------------------------------------------------
 	template <class T>
-	concept iterable_collection =
-		collection<T> &&
-		std::ranges::input_range<T> &&
-		internal::iterable_collection_interface<T>;
+	concept iterable_collection = collection<T> && internal::iterable<T>;
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Requires common behaviour and interface for bidirectionally iterable 
-	/// collections. The requirements are as follows:
+	/// Requires common behaviour and interface for iterable collection types.
+	/// The requirements are as follows:
+	/// 
+	/// <list type="bullet">
+	///		<para><item><term>
+	///			- The type meets all requirements defined in 
+	///           <see cref="collections::internal::iterable{T}"/>.
+	///		</term></item></para>
+	///		<para><item><term>
+	///			- The type meets all requirements defined in 
+	///           <see cref="collections::internal::bidirectionally_iterable{T}"/>.
+	///		</term></item></para>
+	/// </list>  
+	/// 
+	/// </summary> ------------------------------------------------------------
+	template <class T>
+	concept bidirectional_collection = 
+		iterable_collection<T> && 
+		internal::bidirectionally_iterable<T>;
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Requires common behaviour and interface for indexable collection types.
+	/// The requirements are as follows:
 	/// 
 	/// <list type="bullet">
 	///		<para><item><term>
@@ -598,22 +609,16 @@ namespace collections {
 	///           <see cref="collections::iterable_collection{T}"/>.
 	///		</term></item></para>
 	///		<para><item><term>
-	///			- The type is a bidirectional range at minimum, following the
-	///			  requirements of <see cref="std::ranges::bidirectional_range{T}"/>.
+	///			- The type meets all requirements defined in 
+	///           <see cref="collections::internal::indexable{T, index_t}"/>.
 	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type defines extra range methods for reverse_iterators as
-	///           specified by 
-	///			  <see cref="collections::internal::bidirectionally_iterable_collection_interface{T}"/>.
-	///		</term></item></para>
-	/// </list> 
+	/// </list>  
 	/// 
 	/// </summary> ------------------------------------------------------------
-	template <class T>
-	concept bidirectionally_iterable_collection =
-		iterable_collection<T> &&
-		std::ranges::bidirectional_range<T> &&
-		internal::bidirectionally_iterable_collection_interface<T>;
+	template <class T, class index_t>
+	concept indexable_collection = 
+		iterable_collection<T> && 
+		internal::indexable<T, index_t>;
 
 	// ------------------------------------------------------------------------
 	/// <summary>
@@ -626,45 +631,16 @@ namespace collections {
 	///           <see cref="collections::iterable_collection{T}"/>.
 	///		</term></item></para>
 	///		<para><item><term>
-	///			- The type defines methods for positional access required by
-	///			  <see cref="internal::collections::ordered_collection_interface{T}/>.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type itself three way comparable if and only if its
-	///           elements are three way comparable.
-	///		</term></item></para>
-	/// </list> 
-	/// 
-	/// </summary> ------------------------------------------------------------
-	template <class T>
-	concept ordered_collection =
-		iterable_collection<T> &&
-		internal::ordered_collection_interface<T> && (
-			std::three_way_comparable<internal::value_type_of<T>> &&
-			std::three_way_comparable<T>
-		) || !std::three_way_comparable<internal::value_type_of<T>>;
-
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// Requires common behaviour and interface for indexable collection types.
-	/// The requirements are as follows:
-	/// 
-	/// <list type="bullet">
-	///		<para><item><term>
 	///			- The type meets all requirements defined in 
-	///           <see cref="collections::iterable_collection{T}"/>.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type defines methods for indexing according to
-	///			  <see cref="collections::internal::indexable_collection_interface{T, index_t}"/>.
+	///           <see cref="collections::internal::ordered{T}"/>.
 	///		</term></item></para>
 	/// </list>  
 	/// 
 	/// </summary> ------------------------------------------------------------
-	template <class T, class index_t>
-	concept indexable_collection =
-		iterable_collection<T> &&
-		internal::indexable_collection_interface<T, index_t>;
+	template <class T>
+	concept ordered_collection = 
+		iterable_collection<T> && 
+		internal::ordered<T>;
 
 	// ------------------------------------------------------------------------
 	/// <summary>
@@ -673,8 +649,19 @@ namespace collections {
 	/// 
 	/// <list type="bullet">
 	///		<para><item><term>
+	///			- The type is constructible from a Size and value.
+	///		</term></item></para>
+	///		<para><item><term>
 	///			- The type meets all requirements defined in 
-	///           <see cref="collections::iterable_collection{T}"/>.
+	///           <see cref="collections::iterable{T}"/>.
+	///		</term></item></para>
+	///		<para><item><term>
+	///			- The type meets all requirements defined in 
+	///           <see cref="collections::ordered{T}"/>.
+	///		</term></item></para>
+	///		<para><item><term>
+	///			- The type meets all requirements defined in 
+	///           <see cref="collections::indexable{T, size_t}"/>.
 	///		</term></item></para>
 	///		<para><item><term>
 	///			- The type defines methods for sequential access according to
@@ -685,31 +672,11 @@ namespace collections {
 	/// </summary> ------------------------------------------------------------
 	template <class T>
 	concept sequential_collection = 
+		std::is_constructible_v<T, Size, internal::value_type_of<T>> &&
 		iterable_collection<T> &&
+		internal::ordered<T> &&
+		internal::indexable<T, size_t> &&
 		internal::sequential_collection_interface<T>;
-	
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// Requires comon behaviour and interface for searchable collection types
-	/// that implement their own find and find_if algorithms efficiently. The
-	/// requriements are as follows:
-	/// 
-	/// <list type="bullet">
-	///		<para><item><term>
-	///			- The type meets all requirements defined in 
-	///           <see cref="collections::iterable_collection{T}"/>.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type defines methods for searching elements according to
-	///			  <see cref="collections::internal::searchable_collection_interface{T}"/>.
-	///		</term></item></para>
-	/// </list>
-	/// 
-	/// </summary> ------------------------------------------------------------
-	template <class T>
-	concept searchable_collection =
-		iterable_collection<T> &&
-		internal::searchable_collection_interface<T>;
 
 	// ------------------------------------------------------------------------
 	/// <summary>
@@ -719,7 +686,7 @@ namespace collections {
 	/// <list type="bullet">
 	///		<para><item><term>
 	///			- The type meets all requirements defined in 
-	///           <see cref="collections::iterable_collection{T}"/>.
+	///           <see cref="collections::iterable{T}"/>.
 	///		</term></item></para>
 	///		<para><item><term>
 	///			- The type defines methods for accessing elements according to
@@ -730,49 +697,6 @@ namespace collections {
 	/// </summary> ------------------------------------------------------------
 	template <class T>
 	concept associative_collection =
-		searchable_collection<T> &&
+		iterable_collection<T> &&
 		internal::associative_collection_interface<T>;
-
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// Requires common behaviour and interface for list-like collection types.
-	/// The requirements are as follows:
-	/// 
-	/// <list type="bullet">
-	///		<para><item><term>
-	///			- The type is constructible from a strongly type Size and value.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type meets all requirements defined in 
-	///           <see cref="collections::bidirectionally_iterable_collection{T}"/>.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type meets all requirements defined in 
-	///           <see cref="collections::sequential_collection{T}"/>.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type meets all requirements defined in 
-	///           <see cref="collections::ordered_collection{T}"/>.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The type meets all requirements defined in 
-	///           <see cref="collections::indexable_collection{T}"/>.
-	///		</term></item></para>
-	///		<para><item><term>
-	///			- The defines a remove methods with an index range:
-	///			  iterator remove(IndexRange)
-	///		</term></item></para>
-	/// </list>  
-	/// 
-	/// </summary> ------------------------------------------------------------
-	template <class T>
-	concept list =
-		std::is_constructible_v<T, Size, internal::value_type_of<T>> &&
-		bidirectionally_iterable_collection<T> &&
-		sequential_collection<T> &&
-		ordered_collection<T> &&
-		indexable_collection<T, internal::size_type_of<T>> &&
-		requires(T& c, IndexRange index_range) {
-			{ c.remove(index_range) } -> internal::like<internal::iter_type_of<T>>;
-		};
 }

@@ -37,7 +37,7 @@ namespace collection_tests {
 		EmplaceAtBeginIteratorPlacesElementFirstInTheSequence
 	) {
 		auto method = [](auto& obj, const auto& value) {
-			obj.insert(obj.begin(), value);
+			obj.emplace(obj.begin(), value);
 		};
 		this->testMethodPlacesElementFirst(method);
 	}
@@ -52,7 +52,7 @@ namespace collection_tests {
 		EmplaceAtEndIteratorPlacesElementLastInTheSequence
 	) {
 		auto method = [](auto& obj, const auto& value) {
-			obj.insert(obj.end(), value);
+			obj.emplace(obj.end(), value);
 		};
 		this->testMethodPlacesElementLast(method);
 	}
@@ -68,7 +68,7 @@ namespace collection_tests {
 	) {
 		auto method = [](auto& obj, auto& value) {
 			auto position = std::next(obj.begin());
-			obj.insert(position, value);
+			obj.emplace(position, value);
 		};
 		this->testMethodPlacesElementInTheMiddle(method);
 	}
@@ -86,7 +86,7 @@ namespace collection_tests {
 		DECLARE_TEST_DATA();
 
 		auto method = [&](auto& obj) {
-			return obj.insert(std::next(obj.begin()), a);
+			return obj.emplace(std::next(obj.begin()), a);
 		};
 		auto expected = [&](auto& obj) { return a; };
 

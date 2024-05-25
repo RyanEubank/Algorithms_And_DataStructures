@@ -25,7 +25,28 @@ namespace collection_tests {
 
 	template <class params>
 	class AssociativeIteratorAccessTests : 
-		public AssociativeCollectionTests<params> {};
+		public AssociativeCollectionTests<params> 
+	{
+	protected:
+
+		void testIteratorCoversRange(auto begin, auto end, auto& range) {
+			while (begin != end)
+				EXPECT_NE(collections::find(range, *begin++), range.end());
+		}
+
+		void testIteratorsCoverSameRange(
+			auto actual,
+			auto actual_end,
+			auto expected,
+			auto expected_end
+		) {
+			while (actual != actual_end && expected != expected_end)
+				EXPECT_EQ(*actual++, *expected++);
+
+			EXPECT_EQ(actual, actual_end);
+			EXPECT_EQ(expected, expected_end);
+		}
+	};
 
 	TYPED_TEST_SUITE_P(AssociativeIteratorAccessTests);
 
@@ -39,12 +60,8 @@ namespace collection_tests {
 
 		const collection obj{ a, b, c };
 		auto input = { a, b, c };
-		auto it = obj.begin();
 
-		EXPECT_NE(collections::find(input, *it++), input.end());
-		EXPECT_NE(collections::find(input, *it++), input.end());
-		EXPECT_NE(collections::find(input, *it++), input.end());
-		EXPECT_EQ(it, obj.end());
+		this->testIteratorCoversRange(obj.begin(), obj.end(), input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -57,12 +74,8 @@ namespace collection_tests {
 
 		const collection obj{ a, b, c };
 		auto input = { a, b, c };
-		auto it = obj.cbegin();
 
-		EXPECT_NE(collections::find(input, *it++), input.end());
-		EXPECT_NE(collections::find(input, *it++), input.end());
-		EXPECT_NE(collections::find(input, *it++), input.end());
-		EXPECT_EQ(it, obj.cend());
+		this->testIteratorCoversRange(obj.cbegin(), obj.cend(), input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -73,19 +86,15 @@ namespace collection_tests {
 	TYPED_TEST_P(AssociativeIteratorAccessTests, ReverseIteratorsCoverFullRange) {
 		FORWARD_TEST_TYPES();
 
-		if constexpr (!bidirectionally_iterable_collection<collection>)
+		if constexpr (!bidirectional_collection<collection>)
 			GTEST_SKIP();
 
 		DECLARE_TEST_DATA();
 
 		const collection obj{ a, b, c };
 		auto input = { a, b, c };
-		auto it = obj.rbegin();
 
-		EXPECT_NE(collections::find(input, *it++), input.end());
-		EXPECT_NE(collections::find(input, *it++), input.end());
-		EXPECT_NE(collections::find(input, *it++), input.end());
-		EXPECT_EQ(it, obj.rend());
+		this->testIteratorCoversRange(obj.rbegin(), obj.rend(), input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -99,7 +108,7 @@ namespace collection_tests {
 	) {
 		FORWARD_TEST_TYPES();
 
-		if constexpr (!bidirectionally_iterable_collection<collection>)
+		if constexpr (!bidirectional_collection<collection>)
 			GTEST_SKIP();
 
 		DECLARE_TEST_DATA();
@@ -107,14 +116,9 @@ namespace collection_tests {
 		const collection obj{ a, b, c };
 		auto list = std::list(obj.begin(), obj.end());
 
-		auto actual = obj.rbegin();
-		auto expected = list.rbegin();
-
-		EXPECT_EQ(*actual++, *expected++);
-		EXPECT_EQ(*actual++, *expected++);
-		EXPECT_EQ(*actual++, *expected++);
-		EXPECT_EQ(actual, obj.rend());
-		EXPECT_EQ(expected, list.rend());
+		this->testIteratorsCoverSameRange(
+			obj.rbegin(), obj.rend(), list.rbegin(), list.rend()
+		);
 	}
 
 	// ------------------------------------------------------------------------
@@ -127,14 +131,10 @@ namespace collection_tests {
 		DECLARE_TEST_DATA();
 
 		const collection obj{ a, b, c };
-		auto it = obj.begin();
-		auto c_it = obj.cbegin();
 
-		EXPECT_EQ(*it++, *c_it++);
-		EXPECT_EQ(*it++, *c_it++);
-		EXPECT_EQ(*it++, *c_it++);
-		EXPECT_EQ(it, obj.end());
-		EXPECT_EQ(it, obj.cend());
+		this->testIteratorsCoverSameRange(
+			obj.cbegin(), obj.cend(), obj.begin(), obj.end()
+		);
 	}
 
 	// ------------------------------------------------------------------------
@@ -148,20 +148,16 @@ namespace collection_tests {
 	) {
 		FORWARD_TEST_TYPES();
 
-		if constexpr (!bidirectionally_iterable_collection<collection>)
+		if constexpr (!bidirectional_collection<collection>)
 			GTEST_SKIP();
 
 		DECLARE_TEST_DATA();
 
 		const collection obj{ a, b, c };
-		auto it = obj.rbegin();
-		auto c_it = obj.crbegin();
 
-		EXPECT_EQ(*it++, *c_it++);
-		EXPECT_EQ(*it++, *c_it++);
-		EXPECT_EQ(*it++, *c_it++);
-		EXPECT_EQ(it, obj.rend());
-		EXPECT_EQ(it, obj.crend());
+		this->testIteratorsCoverSameRange(
+			obj.crbegin(), obj.crend(), obj.rbegin(), obj.rend()
+		);
 	}
 
 	REGISTER_TYPED_TEST_SUITE_P(

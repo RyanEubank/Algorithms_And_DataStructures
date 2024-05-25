@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../../test_suites/collection_test_fixture.h"
+#include "../../test_suites/sequential_collection_tests/sequential_collection_test_fixture.h"
 #include "../../mocks/mock_allocator.h"
 #include "../../test_data/test_types.h"
 
@@ -25,7 +25,6 @@
 
 namespace collection_tests {
 
-	using testing::_;
 	using namespace collections;
 
 	template <class T>
@@ -36,7 +35,7 @@ namespace collection_tests {
 
 	template <class params>
 	class LinkedListTest :
-		public CollectionTests<params>,
+		public SequentialCollectionTests<params>,
 		public MockAllocatorTest<typename params::element_t>
 	{
 	protected:

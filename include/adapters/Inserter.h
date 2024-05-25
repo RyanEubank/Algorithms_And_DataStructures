@@ -1,19 +1,19 @@
 /* ============================================================================
- * Copyright (C) 2023 Ryan Eubank
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- * ========================================================================= */
+* Copyright (C) 2023 Ryan Eubank
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <https://www.gnu.org/licenses/>.
+* ========================================================================= */
 
 #pragma once
 
@@ -27,16 +27,17 @@ namespace collections {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Class designed to implement a back insertion iterator for collections.
+	/// Class designed to implement an insertion iterator for collections.
 	/// </summary>
 	/// 
 	/// <typeparam name="collection">
 	/// The collection type to be iterator over.
 	/// </typeparam> ----------------------------------------------------------
-	template <class collection>
-	class back_insert_iterator {
+	template <ordered_collection collection_>
+	class insert_iterator {
 	public:
-		
+
+		using iterator = typename collection_::const_iterator;
 		using value_type = void;
 		using difference_type = std::ptrdiff_t;
 		using pointer = void;
@@ -45,17 +46,21 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Constructs a back insertion iterator for the given collection.
+		/// Constructs an insert iterator for the given collection.
 		/// </summary>
 		/// 
 		/// <param name="c">
-		/// The collection to construct a back_insert_iterator for.
+		/// The collection to construct a insert_iterator for.
 		/// </param> ----------------------------------------------------------
-		explicit back_insert_iterator(collection& c) : _collection(c) {}
+		explicit insert_iterator(collection_& c, iterator i) : 
+			_collection(c), _pos(i)
+		{
 
-		back_insert_iterator(const back_insert_iterator& it) = default;
-		back_insert_iterator(back_insert_iterator&& it) = default;
-		~back_insert_iterator() = default;
+		}
+
+		insert_iterator(const insert_iterator& it) = default;
+		insert_iterator(insert_iterator&& it) = default;
+		~insert_iterator() = default;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -64,13 +69,13 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <param name="other">
-		/// The back_insert_iterator to copy.
+		/// The insert_iterator to copy.
 		/// </param>
 		/// 
 		/// <returns>
 		/// Returns the iterator after copying.
 		/// </returns> --------------------------------------------------------
-		back_insert_iterator& operator=(const back_insert_iterator& other) {
+		insert_iterator& operator=(const insert_iterator& other) {
 			_collection = other._collection;
 			return *this;
 		}
@@ -88,10 +93,11 @@ namespace collections {
 		/// <returns>
 		/// Returns the iterator after insertion.
 		/// </returns> --------------------------------------------------------
-		back_insert_iterator& operator=(
-			const typename collection::value_type& value
+		insert_iterator& operator=(
+			const typename collection_::value_type& value
 		) {
-			_collection.insertBack(value);
+			_pos = _collection.insert(_pos, value);
+			_pos++;
 			return *this;
 		}
 
@@ -108,60 +114,61 @@ namespace collections {
 		/// <returns>
 		/// Returns the iterator after insertion.
 		/// </returns> --------------------------------------------------------
-		back_insert_iterator& operator=(
-			typename collection::value_type&& value
+		insert_iterator& operator=(
+			typename collection_::value_type&& value
 		) {
-			_collection.insertBack(std::move(value));
+			_pos = _collection.insert(_pos, std::move(value));
+			_pos++;
 			return *this;
 		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Dereferences the back_insert_iterator, does nothing, but neccessary
-		/// for iterator semantics.
+		/// Dereferences the insert_iterator, does nothing, but neccessary for
+		/// iterator semantics.
 		/// </summary>
 		/// 
 		/// <returns>
 		/// Returns this iterator (NOP).
 		/// </returns> --------------------------------------------------------
-		back_insert_iterator& operator*() {
+		insert_iterator& operator*() {
 			return *this;
 		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Increments the back_insert_iterator, does nothing, but neccessary
-		/// for iterator semantics.
+		/// Increments the binsert_iterator, does nothing, but neccessary for
+		/// iterator semantics.
 		/// </summary>
 		/// 
 		/// <returns>
 		/// Returns this iterator (NOP).
 		/// </returns> --------------------------------------------------------
-		back_insert_iterator& operator++() {
+		insert_iterator& operator++() {
 			return *this;
 		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
-		/// Increments the back_insert_iterator, does nothing, but neccessary
-		/// for iterator semantics.
+		/// Increments the insert_iterator, does nothing, but neccessary for
+		/// iterator semantics.
 		/// </summary>
 		/// 
 		/// <returns>
 		/// Returns this iterator (NOP).
 		/// </returns> --------------------------------------------------------
-		back_insert_iterator& operator++(int) {
+		insert_iterator& operator++(int) {
 			return *this;
 		}
 
 	private:
-		collection& _collection;
-
+		collection_& _collection;
+		iterator _pos;
 	};
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Convienience method to construct a back_insert_iterator for the given
+	/// Convienience method to construct a insert_iterator for the given
 	/// collection.
 	/// </summary>
 	/// 
@@ -174,10 +181,13 @@ namespace collections {
 	/// </param>
 	/// 
 	/// <returns>
-	/// Returns a constructed back_insert_iterator for the given collection.
+	/// Returns a constructed insert_iterator for the given collection.
 	/// </returns> ------------------------------------------------------------
-	template <sequential collection>
-	back_insert_iterator<collection> back_inserter(collection& c) {
-		return back_insert_iterator{ c };
+	template <ordered_collection collection_>
+	insert_iterator<collection_> inserter(
+		collection_& c, 
+		typename collection_::const_iterator it
+	) {
+		return insert_iterator{ c, it };
 	}
 }

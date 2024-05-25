@@ -107,10 +107,10 @@ namespace collection_tests {
 
 		auto method = [](auto& obj) -> iterator {
 			auto begin = std::next(obj.begin());
-			auto end = std::next(obj.begin(), 4);
+			auto end = std::next(obj.begin(), 3);
 			return obj.remove(begin, end);
 		};
-		auto expected = [](auto& obj) { return *std::next(obj.begin(), 4); };
+		auto expected = [](auto& obj) { return *std::next(obj.begin(), 3); };
 
 		this->testMethodReturnsIteratorToExpectedElement(method, expected);
 	}

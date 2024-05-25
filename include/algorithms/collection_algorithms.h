@@ -439,7 +439,7 @@ namespace collections {
 		// --------------------------------------------------------------------
 		/// <summary>
 		/// Returns an iterator to the given value if found within the 
-		/// searchable collection.
+		/// associative collection.
 		/// </summary>
 		/// 
 		/// <typeparam name="T">
@@ -460,7 +460,7 @@ namespace collections {
 		/// Returns a valid iterator to the searched element or the end 
 		/// iterator if the value is not found.
 		/// </returns> --------------------------------------------------------
-		template <class T, searchable_collection collection>
+		template <class T, associative_collection collection>
 		constexpr auto operator()(const collection& c, const T& value) const {
 			return c.find(value);
 		}
@@ -548,42 +548,6 @@ namespace collections {
 		>
 		constexpr auto operator()(const range& rg, Predicate p) const {
 			return (*this)(std::ranges::begin(rg), std::ranges::end(rg), p);
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns whether the given value is found within the given 
-		/// searchable collection.
-		/// </summary>
-		/// 
-		/// <typeparam name="T">
-		/// The type of the value being searched for.
-		/// </typeparam>
-		/// <typeparam name="collection">
-		/// The type of the collection to be searched.
-		/// </typeparam>
-		/// 
-		/// <param name="c">
-		/// The collection to be searched.
-		/// </param>
-		/// <param name="value">
-		/// The value to search for.
-		/// </param>
-		/// 
-		/// <returns>
-		/// Returns true if the value is contained by the collection, false 
-		/// otherwise.
-		/// </returns> --------------------------------------------------------
-		template <
-			class T,
-			searchable_collection collection, 
-			std::predicate<T, typename collection::value_type> Predicate
-		>
-		constexpr auto operator()(
-			const collection& c, 
-			Predicate p
-		) const {
-			return c.find_if(p);
 		}
 	};
 

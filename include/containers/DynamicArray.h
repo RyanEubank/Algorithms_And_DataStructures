@@ -20,7 +20,6 @@
 #include <sstream>
 
 #include "../algorithms/collection_algorithms.h"
-#include "../concepts/collection.h"
 
 namespace collections {
 
@@ -1382,7 +1381,6 @@ namespace collections {
 			std::basic_istream<char_t>& is,
 			DynamicArray& arr
 		) {
-			// TODO: optimize constructing values directly from stream.
 			size_type size = 0;
 			is >> size;
 
@@ -1639,7 +1637,12 @@ namespace collections {
 	};
 
 	static_assert(
-		list<DynamicArray<int>>,
-		"DynamicArray does not meet the requirements for a list."
+		sequential_collection<DynamicArray<int>>,
+		"DynamicArray does not meet the requirements for a sequential collection."
+	);
+
+	static_assert(
+		bidirectional_collection<DynamicArray<int>>,
+		"DynamicArray does not meet the requirements for a bidirectional collection."
 	);
 }

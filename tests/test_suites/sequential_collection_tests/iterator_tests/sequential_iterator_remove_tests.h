@@ -65,7 +65,7 @@ namespace collection_tests {
 		auto method = [](auto& obj) {
 			return obj.remove(std::next(obj.begin()));
 		};
-		auto expected = [&](auto& obj) { return obj.back(); };
+		auto expected = [&](auto& obj) { return *std::next(obj.begin(), 2); };
 
 		this->testMethodReturnsIteratorToExpectedElement(method, expected);
 	}
@@ -103,11 +103,11 @@ namespace collection_tests {
 		using iterator = TypeParam::collection_t::iterator;
 
 		auto method = [](auto& obj) -> iterator {
-			auto begin = obj.begin();
-			auto end = std::prev(obj.end());
+			auto begin = std::next(obj.begin());
+			auto end = std::next(obj.begin(), 3);
 			return obj.remove(begin, end);
 		};
-		auto expected = [](auto& obj) { return obj.back(); };
+		auto expected = [](auto& obj) { return *std::next(obj.begin(), 3); };
 
 		this->testMethodReturnsIteratorToExpectedElement(method, expected);
 	}

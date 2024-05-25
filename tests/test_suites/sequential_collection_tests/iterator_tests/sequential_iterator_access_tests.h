@@ -69,7 +69,7 @@ namespace collection_tests {
 	TYPED_TEST_P(SequentialIteratorAccessTests, ReverseIteratorsCoverFullReverseRange) {
 		FORWARD_TEST_TYPES();
 
-		if constexpr (!bidirectionally_iterable_collection<collection>)
+		if constexpr (!bidirectional_collection<collection>)
 			GTEST_SKIP();
 
 		DECLARE_TEST_DATA();
@@ -109,7 +109,7 @@ namespace collection_tests {
 	TYPED_TEST_P(SequentialIteratorAccessTests, ConstReverseIteratorsMatchNonConst) {
 		FORWARD_TEST_TYPES();
 
-		if constexpr (!bidirectionally_iterable_collection<collection>)
+		if constexpr (!bidirectional_collection<collection>)
 			GTEST_SKIP();
 
 		DECLARE_TEST_DATA();

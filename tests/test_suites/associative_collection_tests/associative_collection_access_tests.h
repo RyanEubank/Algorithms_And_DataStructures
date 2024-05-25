@@ -17,12 +17,13 @@
 
 #pragma once
 
-#include "../collection_test_fixture.h"
+#include "associative_collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params>
-	class AssociativeCollectionAccessTests : public CollectionTests<params> {};
+	class AssociativeCollectionAccessTests : 
+		public AssociativeCollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(AssociativeCollectionAccessTests);
 
@@ -71,15 +72,14 @@ namespace collection_tests {
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(
 		AssociativeCollectionAccessTests, 
-		FindIfReturnsMatch
+		ContainsReturnsTrueForExistingItem
 	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
 		const collection obj{ a, b, c };
-		auto predicate = [&](auto& e) { return e == a; };
 
-		EXPECT_NE(obj.find_if(predicate), obj.end());
+		EXPECT_TRUE(obj.contains(b));
 	}
 
 	// ------------------------------------------------------------------------
@@ -89,22 +89,21 @@ namespace collection_tests {
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(
 		AssociativeCollectionAccessTests, 
-		FindIfReturnEndIteratorForNoMatch
+		ContainsReturnsFalseForNonExistingItem
 	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
 		const collection obj{ a, b, c };
-		auto predicate = [&](auto& e) { return e == d; };
 
-		EXPECT_EQ(obj.find_if(predicate), obj.end());
+		EXPECT_FALSE(obj.contains(d));
 	}
 
 	REGISTER_TYPED_TEST_SUITE_P(
 		AssociativeCollectionAccessTests,
 		FindReturnsCorrectIteratorForExistingElement,
 		FindReturnsEndIteratorForNonExistingElement,
-		FindIfReturnsMatch,
-		FindIfReturnEndIteratorForNoMatch
+		ContainsReturnsTrueForExistingItem,
+		ContainsReturnsFalseForNonExistingItem
 	);
 }

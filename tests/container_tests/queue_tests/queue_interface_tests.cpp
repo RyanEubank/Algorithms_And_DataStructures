@@ -151,7 +151,7 @@ namespace collection_tests {
 		obj.dequeue_front();
 
 		EXPECT_EQ(obj.size(), 2);
-		EXPECT_NE(obj.front(), b);
+		EXPECT_EQ(obj.front(), b);
 	}
 
 	// ------------------------------------------------------------------------
@@ -173,7 +173,7 @@ namespace collection_tests {
 		obj.dequeue_back();
 
 		EXPECT_EQ(obj.size(), 2);
-		EXPECT_NE(obj.back(), b);
+		EXPECT_EQ(obj.back(), b);
 	}
 
 	// ------------------------------------------------------------------------

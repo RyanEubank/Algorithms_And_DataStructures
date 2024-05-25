@@ -132,7 +132,7 @@ namespace collection_tests {
 	// ------------------------------------------------------------------------
 	/// <summary>
 	/// Tests that the hinted insert range method will return an iterator to 
-	/// the first element in the range when successful.
+	/// the last element in the range when successful.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST_P(
 		AssociativeIteratorInsertTests, 
@@ -145,7 +145,7 @@ namespace collection_tests {
 		auto method = [&](auto& obj) { 
 			return obj.insert(obj.begin(), input.begin(), input.end()); 
 		};
-		auto expected = [&](auto& obj) { return *input.begin(); };
+		auto expected = [&](auto& obj) { return c; };
 
 		this->testMethodReturnsIteratorToExpectedElement(method, expected);
 	}

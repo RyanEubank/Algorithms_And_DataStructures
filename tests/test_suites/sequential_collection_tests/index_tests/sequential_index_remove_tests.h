@@ -152,10 +152,10 @@ namespace collection_tests {
 		SequentialIndexRemoveTests,
 		RemoveAllBetweenIndexReturnsIteratorToNextPosition
 	) {
-		auto expected = [](auto& obj) { return obj[2]; };
 		auto method = [](auto& obj) {
 			return obj.remove(IndexRange{ .begin = 0, .end = 2 });
-			};
+		};
+		auto expected = [](auto& obj) { return obj[2]; };
 
 		this->testMethodReturnsIteratorToExpectedElement(method, expected);
 	}

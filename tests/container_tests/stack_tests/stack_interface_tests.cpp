@@ -106,7 +106,7 @@ namespace collection_tests {
 		obj.pop();
 
 		EXPECT_EQ(obj.size(), 2);
-		EXPECT_NE(obj.peek(), b);
+		EXPECT_EQ(obj.peek(), b);
 	}
 
 	// ------------------------------------------------------------------------

@@ -54,7 +54,7 @@ namespace collection_tests {
 		auto method = [](auto& obj, const auto& value) {
 			auto index = Index{ obj.size() };
 			obj.emplace(index, value);
-			};
+		};
 		this->testMethodPlacesElementLast(method);
 	}
 
@@ -70,7 +70,7 @@ namespace collection_tests {
 		auto method = [](auto& obj, const auto& value) {
 			auto index = Index(1);
 			obj.emplace(index, value);
-			};
+		};
 		this->testMethodPlacesElementInTheMiddle(method);
 	}
 

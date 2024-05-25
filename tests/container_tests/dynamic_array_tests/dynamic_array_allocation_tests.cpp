@@ -19,6 +19,7 @@
 
 namespace collection_tests {
 
+	using testing::_;
 	using collection_types = instantiate_with_elements<DynamicArrayTestTypes>;
 
 	TYPED_TEST_SUITE(DynamicArrayTest, collection_types);

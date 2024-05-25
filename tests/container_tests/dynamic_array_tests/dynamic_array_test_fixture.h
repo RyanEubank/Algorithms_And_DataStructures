@@ -25,7 +25,6 @@
 
 namespace collection_tests {
 
-	using testing::_;
 	using namespace collections;
 
 	template <class T>

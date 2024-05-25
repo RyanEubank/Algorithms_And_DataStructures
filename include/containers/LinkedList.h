@@ -75,8 +75,7 @@ namespace collections {
 			_allocator(),
 			_node_allocator(allocator_type{})
 		{
-			_sentinel._next = &_sentinel;
-			_sentinel._prev = &_sentinel;
+			setSentinel(&_sentinel);
 		}
 
 		// --------------------------------------------------------------------
@@ -95,8 +94,7 @@ namespace collections {
 			_allocator(alloc),
 			_node_allocator(alloc)
 		{
-			_sentinel._next = &_sentinel;
-			_sentinel._prev = &_sentinel;
+			setSentinel(&_sentinel);
 		}
 
 		// --------------------------------------------------------------------
@@ -217,8 +215,7 @@ namespace collections {
 			sentinel end,
 			const allocator_type& alloc = allocator_type{}
 		) : LinkedList(alloc) {
-			while (begin != end)
-				insertBack(*begin++);		
+			insert(this->end(), begin, end);	
 		}
 
 		// --------------------------------------------------------------------
@@ -423,7 +420,7 @@ namespace collections {
 		/// list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] iterator begin() noexcept {
-			return LinkedListIterator<false>(_sentinel._next);
+			return iterator(_sentinel._next);
 		}
 
 		// --------------------------------------------------------------------
@@ -436,7 +433,7 @@ namespace collections {
 		/// element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] iterator end() noexcept {
-			return LinkedListIterator<false>(&_sentinel);
+			return iterator(&_sentinel);
 		}
 
 		// --------------------------------------------------------------------
@@ -450,7 +447,7 @@ namespace collections {
 		/// the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator begin() const noexcept {
-			return LinkedListIterator<true>(_sentinel._next);
+			return const_iterator(_sentinel._next);
 		}
 
 		// --------------------------------------------------------------------
@@ -463,7 +460,7 @@ namespace collections {
 		/// the last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator end() const noexcept {
-			return LinkedListIterator<true>(_sentinel._next->_prev);
+			return const_iterator(const_cast<_node_base*>(&_sentinel));
 		}
 
 		// --------------------------------------------------------------------
@@ -476,7 +473,7 @@ namespace collections {
 		/// the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cbegin() const noexcept {
-			return LinkedListIterator<true>(_sentinel._next);
+			return const_iterator(_sentinel._next);
 		}
 
 		// --------------------------------------------------------------------
@@ -489,7 +486,7 @@ namespace collections {
 		/// last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cend() const noexcept {
-			return LinkedListIterator<true>(_sentinel._next->_prev);
+			return const_iterator(const_cast<_node_base*>(&_sentinel));
 		}
 
 		// --------------------------------------------------------------------
@@ -814,7 +811,11 @@ namespace collections {
 			std::input_iterator in_iterator,
 			std::sentinel_for<in_iterator> sentinel
 		>
-		iterator insert(const_iterator position, in_iterator begin, sentinel end) {
+		iterator insert(
+			const_iterator position, 
+			in_iterator begin, 
+			sentinel end
+		) {
 			if (begin != end) {
 				size_type size = 1;
 				_node_base* head = createNode(*begin++);
@@ -1159,16 +1160,15 @@ namespace collections {
 			std::basic_istream<char_t>& is,
 			LinkedList& list
 		) {
-			// TODO: refactor and optimize
-			value_type v{};
 			size_type size = 0;
-
 			is >> size;
+
 			list.clear();
 
 			for (size_type i = 0; i < size; ++i) {
-				is >> v;
-				list.insertBack(std::move(v));
+				value_type value;
+				is >> value;
+				list.insert(list.end(), value);
 			}
 
 			return is;
@@ -1219,6 +1219,11 @@ namespace collections {
 			node* n = allocate();
 			constructNode(n, std::forward<Args>(args)...);
 			return n;
+		}
+
+		void setSentinel(_node_base* n) {
+			_sentinel._next = n;
+			_sentinel._prev = n;
 		}
 
 		[[nodiscard]] const _node_base* getNodeAt(size_type index) const {
@@ -1365,44 +1370,26 @@ namespace collections {
 			throw std::out_of_range(err.str().c_str());
 		}
 
-		friend void swap(_node_base& a, _node_base& b) noexcept {
-			using std::swap;
-
-			// empty list sentinels are self referential: swapping forward and
-			// backward pointers on both sides of the sentinels is no longer an 
-			// option - requires more complicated logic
-
-			bool bothPopulated = a._next != &a && b._next != &b;
-			bool atLeastOnePopulated = a._next != &a || b._next != &b;
-			bool only_B_Populated = a._next == &a && b._next != &b;
-			bool only_A_Populated = a._next != &a && b._next == &b;
-
-			if (atLeastOnePopulated) {
-				swap(a._next, b._next);
-				swap(a._prev, b._prev);
-
-				if (bothPopulated) {
-					swap(a._next->_prev, b._next->_prev);
-					swap(a._prev->_next, b._prev->_next);
-				}
-				else if (only_A_Populated) {
-					b._next->_prev = &b;
-					b._prev->_next = &b;
-					a._next = &a;
-					a._prev = &a;
-				}
-				else if (only_B_Populated) {
-					a._next->_prev = &a;
-					a._prev->_next = &a;
-					b._next = &b;
-					b._prev = &b;
-				}
-			}
-		}
-
 		friend void swapData(LinkedList& a, LinkedList& b) noexcept {
 			using std::swap;
-			swap(a._sentinel, b._sentinel);
+
+			if (a.isEmpty() && b.isEmpty())
+				return;
+
+			auto a_next = a._sentinel._next;
+			auto a_prev = a._sentinel._prev;
+			auto b_next = b._sentinel._next;
+			auto b_prev = b._sentinel._prev;
+
+			a._sentinel._next = b.isEmpty() ? &a._sentinel : b_next;
+			a._sentinel._prev = b.isEmpty() ? &a._sentinel : b_prev;
+			b._sentinel._next = a.isEmpty() ? &b._sentinel : a_next;
+			b._sentinel._prev = a.isEmpty() ? &b._sentinel : a_prev;
+			a._sentinel._next->_prev = &a._sentinel;
+			a._sentinel._prev->_next = &a._sentinel;
+			b._sentinel._next->_prev = &b._sentinel;
+			b._sentinel._prev->_next = &b._sentinel;
+
 			swap(a._size, b._size);
 		}
 
@@ -1511,9 +1498,10 @@ namespace collections {
 			/// </typeparam> --------------------------------------------------
 			template<
 				bool wasConst, 
-				class = std::enable_if_t<isConst && !wasConst>>
+				class = std::enable_if_t<isConst && !wasConst>
+			>
 			LinkedListIterator(LinkedListIterator<wasConst> copy)
-				: _node(copy._node) {}
+				: LinkedListIterator(copy._node) {}
 
 			// ----------------------------------------------------------------
 			/// <summary>
@@ -1620,7 +1608,12 @@ namespace collections {
 
 
 	static_assert(
-		list<LinkedList<int>>,
-		"LinkedList does not meet the requirements for a list."
+		sequential_collection<LinkedList<int>>,
+		"LinkedList does not meet the requirements for a sequential_collecion."
+	);
+
+	static_assert(
+		bidirectional_collection<LinkedList<int>>,
+		"LinkedList does not meet the requirements for a bidirectional collection."
 	);
 }

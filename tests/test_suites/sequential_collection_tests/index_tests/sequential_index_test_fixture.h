@@ -22,7 +22,6 @@
 namespace collection_tests {
 
 	template <class params> 
-		requires indexable_collection<typename params::collection_t, size_t>
 	class SequentialIndexTests : public SequentialCollectionTests<params> {
 	protected:
 

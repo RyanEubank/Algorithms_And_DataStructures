@@ -53,16 +53,19 @@ namespace collection_tests {
 		/// <param name="func">
 		/// The method under test.
 		/// </param> ----------------------------------------------------------
-		template <class c = collection> requires iterable_collection<collection>
+		template <std::ranges::input_range c = collection>
 		void testMethodReturnsIteratorToExpectedElement(
 			std::function<typename c::iterator(collection&)> func,
 			std::function<element(collection&)> expected
 		) {
 			DECLARE_TEST_DATA();
 
-			collection obj{ a, b, c };
+			collection obj{ a, b, c, d, e, f };
 			auto exp = expected(obj);
 			auto result = func(obj);
+
+			auto eee = exp;
+			auto r = *result;
 
 			EXPECT_EQ(*result, exp);
 		}
