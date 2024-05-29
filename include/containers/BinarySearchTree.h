@@ -288,10 +288,9 @@ namespace collections {
 				swapAll(*this, other);
 			else {
 				clear();
-				insert(
-					std::move_iterator(other.begin()), 
-					std::move_iterator(other.end())
-				);
+				auto begin = std::move_iterator(other.begin());
+				auto end = std::move_iterator(other.end());
+				insert(begin, end);
 			}
 
 			return *this;
@@ -362,8 +361,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <traversal_order order = traversal_order::IN_ORDER>
 		[[nodiscard]] iterator begin() noexcept {
-			return iterator(
-				this, const_cast<_node_base*>(firstNodeIn(order)), order);
+			return iterator(this, firstNodeIn(order), order);
 		}
 
 		// --------------------------------------------------------------------
@@ -401,8 +399,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <traversal_order order = traversal_order::IN_ORDER>
 		[[nodiscard]] const_iterator begin() const noexcept {
-			return const_iterator(
-				this, const_cast<_node_base*>(firstNodeIn(order)), order);
+			return const_iterator(this, firstNodeIn(order), order);
 		}
 
 		// --------------------------------------------------------------------
@@ -421,8 +418,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <traversal_order order = traversal_order::IN_ORDER>
 		[[nodiscard]] const_iterator end() const noexcept {
-			return const_iterator(
-				this, const_cast<_node_base*>(&_sentinel), order);
+			return const_iterator(this, &_sentinel, order);
 		}
 
 		// --------------------------------------------------------------------
@@ -441,8 +437,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <traversal_order order = traversal_order::IN_ORDER>
 		[[nodiscard]] const_iterator cbegin() const noexcept {
-			return const_iterator(
-				this, const_cast<_node_base*>(firstNodeIn(order)), order);
+			return const_iterator(this, firstNodeIn(order), order);
 		}
 
 		// --------------------------------------------------------------------
@@ -461,8 +456,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <traversal_order order = traversal_order::IN_ORDER>
 		[[nodiscard]] const_iterator cend() const noexcept {
-			return const_iterator(
-				this, const_cast<_node_base*>(&_sentinel), order);
+			return const_iterator(this, &_sentinel, order);
 		}
 
 		// --------------------------------------------------------------------
@@ -593,7 +587,7 @@ namespace collections {
 		/// tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
 		iterator find(const_reference element) {
-			node* n = traverseTo(element);
+			auto n = traverseTo(element);
 			return isNull(n) ? end() : iterator(this, n);
 		}
 
@@ -627,10 +621,8 @@ namespace collections {
 		/// the tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
 		const_iterator find(const_reference element) const {
-			const _node_base* n = traverseTo(element);
-			return isNull(n) 
-				? end() 
-				: const_iterator(this, const_cast<_node_base*>(n));
+			auto n = traverseTo(element);
+			return isNull(n) ? end() : const_iterator(this, n);
 		}
 
 		// --------------------------------------------------------------------
@@ -1006,12 +998,12 @@ namespace collections {
 			BinarySearchTree& tree
 		) {
 			size_type size = 0;
+			value_type value;
 			is >> size;
 
 			tree.clear();
 
 			for (size_type i = 0; i < size; ++i) {
-				value_type value;
 				is >> value;
 				tree.insert(value);
 			}
@@ -1163,19 +1155,27 @@ namespace collections {
 				return from;
 		}
 
-		[[nodiscard]] _node_base* findParent(const_reference key) {
-			const _node_base* parent = std::as_const(*this).findParent(key);
-			return const_cast<_node_base*>(parent);
+		[[nodiscard]] _node_base* findParent(
+			const _node_base* root,
+			const_reference key
+		) {
+			const _node_base* parent = std::as_const(*this)
+				.findParent(root, key);
+			return const_cast<_node_base*>(parent, root);
 		}
 
-		[[nodiscard]] const _node_base* findParent(const_reference key) const {
-			const _node_base* parent = root();
+		[[nodiscard]] const _node_base* findParent(
+			const _node_base* root,
+			const_reference key
+		) const {
+			const _node_base* parent = root;
 			const _node_base* child = parent;
 
 			while (!isNull(child) && !isDuplicate(child, key)) {
 				parent = child;
 				child = takeStep(parent, key);
 			}
+
 			return parent;
 		}
 
@@ -1185,55 +1185,67 @@ namespace collections {
 		}
 
 		[[nodiscard]] const _node_base* traverseTo(const_reference key) const {
-			const _node_base* parent = findParent(key);
+			const _node_base* parent = findParent(root(), key);
 			if (isNull(parent) || isDuplicate(parent, key))
 				return parent;
 			else
 				return takeStep(parent, key);
 		}
 
-		[[nodiscard]] const _node_base* floor(
-			const _node_base* hint, 
+		[[nodiscard]] const _node_base* checkSmallerHint(
+			const _node_base* hint,
 			const_reference key
-		) const {
-			const _node_base* predecessor = inOrderPredecessorOf(hint);
-			while (!isNull(predecessor) && compare(key, predecessor)) {
-				hint = predecessor;
-				predecessor = inOrderPredecessorOf(hint);
+		) {
+			auto prev = inOrderPredecessorOf(hint);
+			if (compare(prev, key)) {
+				if (isNull(prev->_right))
+					return prev;
+				else
+					return hint;
 			}
-			return hint;
+			return findParent(root(), key);
 		}
 
-		[[nodiscard]] const _node_base* ceiling(
-			const _node_base* hint, 
+		[[nodiscard]] const _node_base* checkLargerHint(
+			const _node_base* hint,
 			const_reference key
-		) const {
-			const _node_base* successor = inOrderSuccessorOf(hint);
-			while (!isNull(successor) && compare(successor, key)) {
-				hint = successor;
-				successor = inOrderSuccessorOf(hint);
+		) {
+			auto next = inOrderSuccessorOf(hint);
+			if (compare(key, next)) {
+				if (isNull(hint->_right))
+					return hint;
+				else
+					return next;
 			}
-			return hint;
+			return findParent(root(), key);
 		}
 
 		[[nodiscard]] _node_base* checkHint(
 			const _node_base* hint, 
 			const_reference key
 		) {
-			const _node_base* result = hint;
-			if (!isNull(hint)) {
-				if (compare(key, hint))
-					result = floor(hint, key);
-				else if (compare(hint, key))
-					result = ceiling(hint, key);
-			}
+			auto result = hint;
+
+			if (isEmpty())
+				result = &_sentinel;
+			else if (compare(key, smallestNode()))
+				result = smallestNode();
+			else if (compare(largestNode(), key))
+				result = largestNode();
+			else if (isNull(hint))
+				result = findParent(root(), key);
+			else if (compare(key, hint))
+				result = checkSmallerHint(hint, key);
+			else if (compare(hint, key))
+				result = checkLargerHint(hint, key);
+
 			return const_cast<_node_base*>(result);
 		}
 
 		template <class... Args>
 		iterator tryInsert(Args&&... args) {
 			node* child = createNode(std::forward<Args>(args)...);
-			_node_base* parent = findParent(child->_element);
+			_node_base* parent = checkHint(root(), child->_element);
 			_node_base* result = tryLink(parent, child);
 			return iterator(this, result);
 		}
@@ -1389,7 +1401,7 @@ namespace collections {
 			return n;
 		}
 
-		const _node_base* firstNodeIn(traversal_order order) const {
+		auto firstNodeIn(traversal_order order) const {
 			if (isEmpty())
 				return &_sentinel;
 
@@ -1407,7 +1419,7 @@ namespace collections {
 			}
 		}
 
-		const _node_base* lastNodeIn(traversal_order order) const {
+		auto lastNodeIn(traversal_order order) const {
 			if (isEmpty())
 				return &_sentinel;
 
@@ -1425,25 +1437,38 @@ namespace collections {
 			}
 		}
 
-		const _node_base* successorOf(
+		auto successorOf(const _node_base* n, traversal_order order) const {
+			switch (order) {
+			case collections::traversal_order::IN_ORDER:
+				return inOrderSuccessorOf(n);
+			case collections::traversal_order::PRE_ORDER:
+				return preOrderSuccessorOf(n);
+			case collections::traversal_order::POST_ORDER:
+				return postOrderSuccessorOf(n);
+			case collections::traversal_order::LEVEL_ORDER:
+				return levelOrderSuccessorOf(n);
+			default:
+				return n;
+			}
+		}
+
+
+		auto predecessorOf(
 			const _node_base* n, 
 			traversal_order order
 		) const {
 			switch (order) {
 			case collections::traversal_order::IN_ORDER:
-				n = inOrderSuccessorOf(n);
-				break;
+				return inOrderPredecessorOf(n);
 			case collections::traversal_order::PRE_ORDER:
-				n = preOrderSuccessorOf(n);
-				break;
+				return preOrderPredecessorOf(n);
 			case collections::traversal_order::POST_ORDER:
-				n = postOrderSuccessorOf(n);
-				break;
+				return postOrderPredecessorOf(n);
 			case collections::traversal_order::LEVEL_ORDER:
-				n = levelOrderSuccessorOf(n);
-				break;
+				return levelOrderPredecessorOf(n);
+			default:
+				return n;
 			}
-			return n;
 		}
 
 		const _node_base* inOrderSuccessorOf(const _node_base* n) const {
@@ -1496,27 +1521,6 @@ namespace collections {
 				return n;
 
 			throw std::exception("Not yet implemented"); //TODO
-		}
-
-		const _node_base* predecessorOf(
-			const _node_base* n, 
-			traversal_order order
-		) const {
-			switch (order) {
-			case collections::traversal_order::IN_ORDER:
-				n = inOrderPredecessorOf(n);
-				break;
-			case collections::traversal_order::PRE_ORDER:
-				n = preOrderPredecessorOf(n);
-				break;
-			case collections::traversal_order::POST_ORDER:
-				n = postOrderPredecessorOf(n);
-				break;
-			case collections::traversal_order::LEVEL_ORDER:
-				n = levelOrderPredecessorOf(n);
-				break;
-			}
-			return n;
 		}
 
 		const _node_base* inOrderPredecessorOf(const _node_base* n) const {
@@ -1623,9 +1627,9 @@ namespace collections {
 
 			explicit BinaryTreeIterator(
 				const BinarySearchTree* tree,
-				node_base* n, 
+				const node_base* n, 
 				traversal_order order = traversal_order::IN_ORDER
-			) : _tree(tree), _node(n), _order(order) {
+			) : _tree(tree), _node(const_cast<node_base*>(n)), _order(order) {
 				
 			}
 
