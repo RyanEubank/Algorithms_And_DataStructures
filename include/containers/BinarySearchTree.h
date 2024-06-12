@@ -66,7 +66,7 @@ namespace collections {
 			_allocator(),
 			_node_allocator(allocator_type{})
 		{
-			setSentinel(&_sentinel);
+			
 		}
 
 		// --------------------------------------------------------------------
@@ -86,7 +86,7 @@ namespace collections {
 			_allocator(alloc),
 			_node_allocator(alloc)
 		{
-			setSentinel(&_sentinel);
+			
 		}
 
 		// --------------------------------------------------------------------
@@ -347,6 +347,44 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
+		/// Returns the root of the tree.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const_reference to the element at the root of the tree.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reference root() const noexcept {
+			return static_cast<const node*>(rootNode())->_element;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns the minimum element in the tree.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const_reference to the leftmost element in the tree, or
+		/// the smallest node.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reference minimum() const noexcept {
+			return static_cast<const node*>(smallestNode())->_element;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns the maximum element in the tree.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const_reference to the rightmost element in the tree, or
+		/// the largest node.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reference maximum() const noexcept {
+			return static_cast<const node*>(largestNode())->_element;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
 		/// Returns an iterator pointing to the first element in the tree's
 		/// traversal.
 		/// </summary>
@@ -551,7 +589,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <traversal_order order = traversal_order::IN_ORDER>
 		[[nodiscard]] const_reverse_iterator crbegin() const noexcept {
-			return std::make_reverse_iterator(end<order>());
+			return std::make_reverse_iterator(end());
 		}
 
 		// --------------------------------------------------------------------
@@ -588,7 +626,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		iterator find(const_reference element) {
 			auto n = traverseTo(element);
-			return isNull(n) ? end() : iterator(this, n);
+			return n ? iterator(this, n) : end();
 		}
 
 		// --------------------------------------------------------------------
@@ -604,7 +642,7 @@ namespace collections {
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
 		bool contains(const_reference element) {
-			return !isNull(traverseTo(element));
+			return traverseTo(element) != nullptr;
 		}
 
 		// --------------------------------------------------------------------
@@ -622,7 +660,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		const_iterator find(const_reference element) const {
 			auto n = traverseTo(element);
-			return isNull(n) ? end() : const_iterator(this, n);
+			return n ? const_iterator(this, n) : end();
 		}
 
 		// --------------------------------------------------------------------
@@ -638,7 +676,7 @@ namespace collections {
 		///  Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
 		bool contains(const_reference element) const {
-			return !isNull(traverseTo(element));
+			return traverseTo(element) != nullptr;
 		}
 
 		// --------------------------------------------------------------------
@@ -655,7 +693,7 @@ namespace collections {
 		/// preventing insertion if unsuccessful.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_reference element) {
-			return tryInsert(element);
+			return tryInsert(rootNode(), element);
 		}
 
 		// --------------------------------------------------------------------
@@ -672,7 +710,7 @@ namespace collections {
 		/// preventing insertion if unsuccessful.
 		/// </returns> --------------------------------------------------------
 		iterator insert(value_type&& element) {
-			return tryInsert(element);
+			return tryInsert(rootNode(), element);
 		}
 
 		// --------------------------------------------------------------------
@@ -698,10 +736,8 @@ namespace collections {
 		>
 		iterator insert(in_iterator begin, sentinel end) {
 			iterator result = this->end();
-
 			while (begin != end) 
-				result = tryInsert(*begin++);
-
+				result = tryInsert(rootNode(), *begin++);
 			return result;
 		}
 
@@ -805,7 +841,8 @@ namespace collections {
 		/// Removes all elements in the given iterator range [begin, end).
 		/// </summary>
 		/// 
-		/// <returns>		/// Returns end after removing elements in the given range.
+		/// <returns>
+		/// Returns end after removing elements in the given range.
 		/// </returns> --------------------------------------------------------
 		iterator remove(
 			const_iterator begin, 
@@ -832,7 +869,7 @@ namespace collections {
 		template <class T, class ...Args> 
 			requires (!std::convertible_to<T, const_iterator>)
 		iterator emplace(T&& arg1, Args&&... args) {
-			return tryInsert(arg1, std::forward<Args>(args)...);
+			return tryInsert(rootNode(), arg1, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -936,11 +973,13 @@ namespace collections {
 			const BinarySearchTree& lhs,
 			const BinarySearchTree& rhs
 		) noexcept requires std::three_way_comparable<value_type> {
+			using comparison = decltype(value_type{} <=> value_type{});
 
 			auto compareSize = lhs.size() <=> rhs.size();
 			if (compareSize == 0)
 				return collections::lexicographic_compare(lhs, rhs);
-			return static_cast<decltype(value_type{} <=> value_type{})> (compareSize);
+
+			return static_cast<comparison>(compareSize);
 		}
 
 		// --------------------------------------------------------------------
@@ -998,7 +1037,7 @@ namespace collections {
 			BinarySearchTree& tree
 		) {
 			size_type size = 0;
-			value_type value;
+			value_type value{};
 			is >> size;
 
 			tree.clear();
@@ -1012,7 +1051,7 @@ namespace collections {
 		}
 
 	private:
-		
+
 		struct _node_base {
 			_node_base* _parent = nullptr;
 			_node_base* _left = nullptr;
@@ -1065,11 +1104,11 @@ namespace collections {
 			_sentinel._parent = n;
 		}
 
-		[[nodiscard]] _node_base* root() {
+		[[nodiscard]] _node_base* rootNode() {
 			return _sentinel._parent;
 		}
 
-		[[nodiscard]] const _node_base* root() const {
+		[[nodiscard]] const _node_base* rootNode() const {
 			return _sentinel._parent;
 		}
 
@@ -1096,9 +1135,9 @@ namespace collections {
 
 		[[nodiscard]] size_type degree(const _node_base* n) const {
 			size_type result = 0;
-			if (!isNull(n->_left))
+			if (n->_left)
 				result++;
-			if (!isNull(n->_right))
+			if (n->_right)
 				result++;
 			return result;
 		}
@@ -1108,10 +1147,6 @@ namespace collections {
 			const_reference key
 		) const {
 			return static_cast<const node*>(n)->_element == key;
-		}
-
-		[[nodiscard]] bool isNull(const _node_base* n) const {
-			return !n || n == &_sentinel;
 		}
 
 		[[nodiscard]] bool compare(
@@ -1143,7 +1178,7 @@ namespace collections {
 			return compare_t{}(e1, e2);
 		}
 
-		[[nodiscard]] const _node_base* takeStep(
+		[[nodiscard]] const _node_base* stepToward(
 			const _node_base* from, 
 			const_reference key
 		) const {
@@ -1155,119 +1190,87 @@ namespace collections {
 				return from;
 		}
 
-		[[nodiscard]] _node_base* findParent(
-			const _node_base* root,
-			const_reference key
-		) {
-			const _node_base* parent = std::as_const(*this)
-				.findParent(root, key);
-			return const_cast<_node_base*>(parent, root);
-		}
-
 		[[nodiscard]] const _node_base* findParent(
 			const _node_base* root,
 			const_reference key
-		) const {
+		) {
 			const _node_base* parent = root;
 			const _node_base* child = parent;
 
-			while (!isNull(child) && !isDuplicate(child, key)) {
+			while (child && !isDuplicate(child, key)) {
 				parent = child;
-				child = takeStep(parent, key);
+				child = stepToward(parent, key);
 			}
 
 			return parent;
 		}
 
-		[[nodiscard]] _node_base* traverseTo(const_reference key) {
-			const _node_base* n = std::as_const(*this).traverseTo(key);
-			return const_cast<_node_base*>(n);
-		}
-
 		[[nodiscard]] const _node_base* traverseTo(const_reference key) const {
-			const _node_base* parent = findParent(root(), key);
-			if (isNull(parent) || isDuplicate(parent, key))
-				return parent;
-			else
-				return takeStep(parent, key);
+			const _node_base* current = rootNode();
+			while (current && !isDuplicate(current, key))
+				current = stepToward(current, key);
+			return current;
 		}
 
-		[[nodiscard]] const _node_base* checkSmallerHint(
-			const _node_base* hint,
-			const_reference key
-		) {
-			auto prev = inOrderPredecessorOf(hint);
-			if (compare(prev, key)) {
-				if (isNull(prev->_right))
-					return prev;
-				else
-					return hint;
-			}
-			return findParent(root(), key);
+		template <class... Args>
+		iterator tryInsert(_node_base* n, Args&&... args) {
+			node* child = createNode(std::forward<Args>(args)...);
+			return tryInsertNewNode(n, child);
 		}
 
-		[[nodiscard]] const _node_base* checkLargerHint(
-			const _node_base* hint,
-			const_reference key
-		) {
-			auto next = inOrderSuccessorOf(hint);
-			if (compare(key, next)) {
-				if (isNull(hint->_right))
-					return hint;
-				else
-					return next;
-			}
-			return findParent(root(), key);
+		iterator tryInsertNewNode(_node_base* hint, node* child) {
+			_node_base* parent = checkHint(hint, child->_element);
+			_node_base* result = tryLink(parent, child);
+			return iterator(this, result);
 		}
 
 		[[nodiscard]] _node_base* checkHint(
 			const _node_base* hint, 
 			const_reference key
 		) {
-			auto result = hint;
+			const _node_base* result = hint;
 
 			if (isEmpty())
-				result = &_sentinel;
+				result = nullptr;
 			else if (compare(key, smallestNode()))
 				result = smallestNode();
 			else if (compare(largestNode(), key))
 				result = largestNode();
-			else if (isNull(hint))
-				result = findParent(root(), key);
+			else if (!hint || hint == rootNode())
+				result = findParent(rootNode(), key);
 			else if (compare(key, hint))
-				result = checkSmallerHint(hint, key);
+				result = checkHintPredecessor(hint, key);
 			else if (compare(hint, key))
-				result = checkLargerHint(hint, key);
-
+				result = checkHintSuccessor(hint, key);
+			
 			return const_cast<_node_base*>(result);
 		}
 
-		template <class... Args>
-		iterator tryInsert(Args&&... args) {
-			node* child = createNode(std::forward<Args>(args)...);
-			_node_base* parent = checkHint(root(), child->_element);
-			_node_base* result = tryLink(parent, child);
-			return iterator(this, result);
+		[[nodiscard]] const _node_base* checkHintPredecessor(
+			const _node_base* hint,
+			const_reference key
+		) {
+			auto prev = inOrderPredecessorOf(hint);
+			if (compare(prev, key)) 
+				return prev->_right ? hint : prev;
+			return findParent(rootNode(), key);
 		}
 
-		template <class... Args>
-		iterator tryInsert(_node_base* n, Args&&... args) {
-			node* child = createNode(std::forward<Args>(args)...);
-			_node_base* parent = checkHint(n, child->_element);
-			_node_base* result = tryLink(parent, child);
-			return iterator(this, result);
+		[[nodiscard]] const _node_base* checkHintSuccessor(
+			const _node_base* hint,
+			const_reference key
+		) {
+			auto next = inOrderSuccessorOf(hint);
+			if (compare(key, next)) 
+				return hint->_right ? next : hint;
+			return findParent(rootNode(), key);
 		}
 
-		_node_base* tryLink(_node_base* parent, node* child) {
-			if (isNull(parent)) {
-				_sentinel._parent = child;
-				_sentinel._left = child;
-				_sentinel._right = child;
-			}
-			else if (!isDuplicate(parent, child->_element)) {
-				linkNodes(parent, child);
-				updateSentinelOnInsert(parent, child);
-			}
+		[[nodiscard]] _node_base* tryLink(_node_base* parent, node* child) {
+			if (!parent) 
+				setSentinel(child);
+			else if (!isDuplicate(parent, child->_element)) 
+				insertNode(parent, child);
 			else {
 				destroyNode(child);
 				return parent;
@@ -1277,19 +1280,14 @@ namespace collections {
 			return child;
 		}
 
-		void linkNodes(_node_base* parent, _node_base* child) {
+		void insertNode(_node_base* parent, _node_base* child) {
 			child->_parent = parent;
 
 			if (compare(child, parent))
 				parent->_left = child;
 			else
 				parent->_right = child;
-		}
 
-		void updateSentinelOnInsert(
-			const _node_base* parent, 
-			_node_base* child
-		) {
 			if (_sentinel._left == parent && parent->_left == child) 
 				_sentinel._left = child;
 			if (_sentinel._right == parent && parent->_right == child) 
@@ -1297,52 +1295,60 @@ namespace collections {
 		}
 
 		void remove(_node_base* n) {
-			if (isNull(n))
-				return;
-
-			_node_base* replacement = getReplacementFor(n);
-			updateReplacementLinks(n, replacement);
-			updateParentLinks(n, replacement);
-			updateSentinelOnRemove(n);
-			destroyNode(static_cast<node*>(n));
-			_size--;
+			if (n) {
+				_node_base* replacement = getReplacementFor(n);
+				updateReplacementOnRemove(n, replacement);
+				updateParentOnRemove(n, replacement);
+				updateSentinelOnRemove(n, replacement);
+				destroyNode(static_cast<node*>(n));
+				_size--;
+			}
 		}
 
-		_node_base* getReplacementFor(const _node_base* n) {
+		[[nodiscard]] _node_base* getReplacementFor(const _node_base* n) {
 			size_type degree = this->degree(n);
 
 			if (degree == 0) 
 				return nullptr;
 			else if (degree == 1) 
-				return isNull(n->_left) ? n->_right : n->_left;
+				return n->_left ? n->_left : n->_right;
 			else 
 				return const_cast<_node_base*>(inOrderPredecessorOf(n));
 		}
 
-		void updateReplacementLinks(
+		void updateReplacementOnRemove(
 			const _node_base* n, 
 			_node_base* replacement
 		) {
-			if (!isNull(replacement)) {
-				if (replacement != n->_right) {
-					replacement->_right = n->_right;
+			if (replacement) {
+				if (degree(n) > 1) {
+					if (replacement->_parent->_right == replacement)
+						replacement->_parent->_right = replacement->_left;
+					else if (replacement->_parent->_left == replacement)
+						replacement->_parent->_left = replacement->_right;
 
 					if (replacement != n->_left) {
-						replacement->_parent->_right = replacement->_left;
 						replacement->_left = n->_left;
+						if (n->_left)
+							n->_left->_parent = replacement;
+					}
+					if (replacement != n->_right) {
+						replacement->_right = n->_right;
+						if (n->_right)
+							n->_right->_parent = replacement;
 					}
 				}
 				replacement->_parent = n->_parent;
 			}
 		}
 
-		void updateParentLinks(
+		void updateParentOnRemove(
 			const _node_base* n, 
 			_node_base* replacement
 		) {
 			_node_base* parent = n->_parent;
 
-			if (!isNull(parent)) {
+			if (parent) {
 				if (parent->_left == n)
 					parent->_left = replacement;
 				else
@@ -1350,58 +1356,75 @@ namespace collections {
 			}
 		}
 
-		void updateSentinelOnRemove(const _node_base* n) {
+		void updateSentinelOnRemove(
+			const _node_base* n, 
+			_node_base* replacement
+		) {
 			if (_sentinel._left == n)
-				_sentinel._left = n->_parent;
+				_sentinel._left = replacement ? replacement : n->_parent;
 			if (_sentinel._right == n)
-				_sentinel._right = n->_parent;
+				_sentinel._right = replacement ? replacement : n->_parent;
 			if (_sentinel._parent == n)
-				_sentinel._parent = n->_parent;
+				_sentinel._parent = replacement;
 		}
 
-		const _node_base* leftMostChildOf(const _node_base* n) const {
-			while (!isNull(n->_left))
+		[[nodiscard]] const _node_base* leftMostChildOf(
+			const _node_base* n
+		) const {
+			while (n->_left)
 				n = n->_left;
 			return n;
 		}
 
-		const _node_base* rightMostChildOf(const _node_base* n) const {
-			while (!isNull(n->_right))
+		[[nodiscard]] const _node_base* rightMostChildOf(
+			const _node_base* n
+		) const {
+			while (n->_right)
 				n = n->_right;
 			return n;
 		}
 
-		const _node_base* leftMostAncestorOf(const _node_base* n) const {
+		[[nodiscard]] const _node_base* leftMostAncestorOf(
+			const _node_base* n
+		) const {
 			auto parent = n->_parent;
-			while (!isNull(parent) && parent->_left == n) {
+			while (parent && parent->_left == n) {
 				n = parent;
 				parent = parent->_parent;
 			}
 			return n;
 		}
 
-		const _node_base* rightMostAncestorOf(const _node_base* n) const {
+		[[nodiscard]] const _node_base* rightMostAncestorOf(
+			const _node_base* n
+		) const {
 			auto parent = n->_parent;
-			while (!isNull(parent) && parent->_right == n) {
+			while (parent && parent->_right == n) {
 				n = parent;
 				parent = parent->_parent;
 			}
 			return n;
 		}
 
-		const _node_base* findNextLeftSubtree(const _node_base* n) const {
-			while (!isNull(n) && !isLeaf(n))
-				n = !isNull(n->_left) ? n->_left : n->_right;
+		[[nodiscard]] const _node_base* findNextLeftSubtree(
+			const _node_base* n
+		) const {
+			while (n && !isLeaf(n))
+				n = n->_left ? n->_left : n->_right;
 			return n;
 		}
 
-		const _node_base* findNextRightSubtree(const _node_base* n) const {
-			while (!isNull(n) && !isLeaf(n))
-				n = !isNull(n->_right) ? n->_right : n->_left;
+		[[nodiscard]] const _node_base* findNextRightSubtree(
+			const _node_base* n
+		) const {
+			while (n && !isLeaf(n))
+				n = n->_right ? n->_right : n->_left;
 			return n;
 		}
 
-		auto firstNodeIn(traversal_order order) const {
+		[[nodiscard]] const _node_base* firstNodeIn(
+			traversal_order order
+		) const {
 			if (isEmpty())
 				return &_sentinel;
 
@@ -1409,17 +1432,19 @@ namespace collections {
 			case collections::traversal_order::IN_ORDER:
 				return smallestNode();
 			case collections::traversal_order::PRE_ORDER:
-				return root();
+				return rootNode();
 			case collections::traversal_order::POST_ORDER:
-				return findNextLeftSubtree(root());
+				return findNextLeftSubtree(rootNode());
 			case collections::traversal_order::LEVEL_ORDER:
-				return root();
+				return rootNode();
 			default:
 				return &_sentinel;
 			}
 		}
 
-		auto lastNodeIn(traversal_order order) const {
+		[[nodiscard]] const _node_base* lastNodeIn(
+			traversal_order order
+		) const {
 			if (isEmpty())
 				return &_sentinel;
 
@@ -1427,9 +1452,9 @@ namespace collections {
 			case collections::traversal_order::IN_ORDER:
 				return largestNode();
 			case collections::traversal_order::PRE_ORDER:
-				return findNextRightSubtree(root());
+				return findNextRightSubtree(rootNode());
 			case collections::traversal_order::POST_ORDER:
-				return root();
+				return rootNode();
 			case collections::traversal_order::LEVEL_ORDER:
 				throw std::exception("Not yet implemented"); //TODO
 			default:
@@ -1437,7 +1462,10 @@ namespace collections {
 			}
 		}
 
-		auto successorOf(const _node_base* n, traversal_order order) const {
+		[[nodiscard]] const _node_base* successorOf(
+			const _node_base* n, 
+			traversal_order order
+		) const {
 			switch (order) {
 			case collections::traversal_order::IN_ORDER:
 				return inOrderSuccessorOf(n);
@@ -1453,7 +1481,7 @@ namespace collections {
 		}
 
 
-		auto predecessorOf(
+		[[nodiscard]] const _node_base* predecessorOf(
 			const _node_base* n, 
 			traversal_order order
 		) const {
@@ -1471,43 +1499,49 @@ namespace collections {
 			}
 		}
 
-		const _node_base* inOrderSuccessorOf(const _node_base* n) const {
-			if (isNull(n))
+		[[nodiscard]] const _node_base* inOrderSuccessorOf(
+			const _node_base* n
+		) const {
+			if (!n)
 				return n;
 
 			// if right sub-tree exists successor is left-most node
-			if (!isNull(n->_right)) 
+			if (n->_right) 
 				return leftMostChildOf(n->_right);
 			// else traverse back up to the root of the next unexplored subtree
 			else {
 				auto next = rightMostAncestorOf(n);
-				return next != root() ? next->_parent : &_sentinel;
+				return next != rootNode() ? next->_parent : &_sentinel;
 			}
 		}
 
-		const _node_base* preOrderSuccessorOf(const _node_base* n) const {
-			if (isNull(n))
+		[[nodiscard]] const _node_base* preOrderSuccessorOf(
+			const _node_base* n
+		) const {
+			if (!n)
 				return n;
 
 			// if a left or right child exist return the child first
-			if (!isNull(n->_left))
+			if (n->_left)
 				return n->_left;
-			else if (!isNull(n->_right))
+			else if (n->_right)
 				return n->_right;
 			// otherwise traverse up to next unexplored right subtree
 			else {
 				auto next = rightMostAncestorOf(n);
-				return next != root() ? next->_parent->_right : &_sentinel;
+				return next != rootNode() ? next->_parent->_right : &_sentinel;
 			}
 		}
 
-		const _node_base* postOrderSuccessorOf(const _node_base* n) const {
-			if (isNull(n))
+		[[nodiscard]] const _node_base* postOrderSuccessorOf(
+			const _node_base* n
+		) const {
+			if (!n)
 				return n;
 
 			// if at root or a right child then parent is successor
 			auto result = n->_parent;
-			if (isNull(result))
+			if (!result)
 				return &_sentinel;
 			if (result->_right == n)
 				return result;
@@ -1516,59 +1550,69 @@ namespace collections {
 			return findNextLeftSubtree(result->_right);
 		}
 
-		const _node_base* levelOrderSuccessorOf(const _node_base* n) const {
-			if (isNull(n))
+		[[nodiscard]] const _node_base* levelOrderSuccessorOf(
+			const _node_base* n
+		) const {
+			if (!n)
 				return n;
 
 			throw std::exception("Not yet implemented"); //TODO
 		}
 
-		const _node_base* inOrderPredecessorOf(const _node_base* n) const {
-			if (isNull(n))
+		[[nodiscard]] const _node_base* inOrderPredecessorOf(
+			const _node_base* n
+		) const {
+			if (!n)
 				return n;
 
 			// if left sub-tree exists predeccessor is right-most node
-			if (!isNull(n->_left)) 
+			if (n->_left) 
 				return rightMostChildOf(n->_left);
 			// otherwise traverse up until the node is a right child
 			// and return its parent.
 			else {
 				auto next = leftMostAncestorOf(n);
-				return next != root() ? next->_parent : &_sentinel;
+				return next != rootNode() ? next->_parent : &_sentinel;
 			}
 		}
 
-		const _node_base* preOrderPredecessorOf(const _node_base* n) const {
-			if (isNull(n) || isNull(n->_parent))
+		[[nodiscard]] const _node_base* preOrderPredecessorOf(
+			const _node_base* n
+		) const {
+			if (!n || !n->_parent)
 				return &_sentinel;
 
 			// return left sibling if it exists
-			if (!isNull(n->_parent->_left) && n->_parent->_left != n)
+			if (n->_parent->_left && n->_parent->_left != n)
 				return n->_parent->_left;
 			// else return parent
 			else
-				return n != root() ? n->_parent : &_sentinel;
+				return n != rootNode() ? n->_parent : &_sentinel;
 		}
 
-		const _node_base* postOrderPredecessorOf(const _node_base* n) const {
-			if (isNull(n))
+		[[nodiscard]] const _node_base* postOrderPredecessorOf(
+			const _node_base* n
+		) const {
+			if (!n)
 				return n;
 
 			// if a right or left child exist return the child first
-			if (!isNull(n->_right))
+			if (n->_right)
 				return n->_right;
-			else if (!isNull(n->_left))
+			else if (n->_left)
 				return n->_left;
 			// otherwise traverse up until the node is a right child
 			// and return its left sibling.
 			else {
 				auto next = leftMostAncestorOf(n);
-				return next != root() ? next->_parent->_left : &_sentinel;
+				return next != rootNode() ? next->_parent->_left : &_sentinel;
 			}
 		}
 
-		const _node_base* levelOrderPredecessorOf(const _node_base* n) const {
-			if (isNull(n))
+		[[nodiscard]] const _node_base* levelOrderPredecessorOf(
+			const _node_base* n
+		) const {
+			if (!n)
 				return n;
 
 			throw std::exception("Not yet implemented"); //TODO
@@ -1618,33 +1662,33 @@ namespace collections {
 		class BinaryTreeIterator {
 		private:
 
-			using node_base = BinarySearchTree::_node_base;
+			using base_node = BinarySearchTree::_node_base;
 			using node = BinarySearchTree::node;
 
 			const BinarySearchTree* _tree;
-			node_base* _node;
+			base_node* _node;
 			traversal_order _order;
 
 			explicit BinaryTreeIterator(
 				const BinarySearchTree* tree,
-				const node_base* n, 
+				const base_node* n, 
 				traversal_order order = traversal_order::IN_ORDER
-			) : _tree(tree), _node(const_cast<node_base*>(n)), _order(order) {
+			) : _tree(tree), _node(const_cast<base_node*>(n)), _order(order) {
 				
 			}
 
 			void increment() {
-				auto next = _tree->successorOf(_node, _order);
-				next = next ? next : &_tree->_sentinel;
-				_node = const_cast<node_base*>(next);
+				const base_node* successor = _tree->successorOf(_node, _order);
+				const base_node* next = successor ? successor : &_tree->_sentinel;
+				_node = const_cast<base_node*>(next);
 			}
 
 			void decrement() {
-				if (_tree->isNull(_node))
-					_node = const_cast<node_base*>(_tree->lastNodeIn(_order));
+				if (_node == &_tree->_sentinel)
+					_node = const_cast<base_node*>(_tree->lastNodeIn(_order));
 				else {
 					auto prev = _tree->predecessorOf(_node, _order);
-					_node = const_cast<node_base*>(prev);
+					_node = const_cast<base_node*>(prev);
 				}
 			}
 
