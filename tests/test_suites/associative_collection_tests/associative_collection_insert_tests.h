@@ -141,11 +141,11 @@ namespace collection_tests {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
-		auto input = { a, b, c };
+		auto input = { d, e, f };
 		auto method = [&](auto& obj) { 
 			return obj.insert(input.begin(), input.end()); 
 		};
-		auto expected = [&](auto& obj) { return c; };
+		auto expected = [&](auto& obj) { return f; };
 
 		this->testMethodReturnsIteratorToExpectedElement(method, expected);
 	}

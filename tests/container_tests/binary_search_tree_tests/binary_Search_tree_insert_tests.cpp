@@ -17,6 +17,7 @@
 
 #include "binary_search_tree_test_fixture.h"
 #include "../../test_suites/associative_collection_tests/associative_collection_insert_tests.h"
+#include "../../test_suites/associative_collection_tests/associative_set_insert_tests.h"
 #include "../../test_suites/associative_collection_tests/iterator_tests/associative_iterator_insert_tests.h"
 
 namespace collection_tests {
@@ -32,6 +33,12 @@ namespace collection_tests {
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		BinarySearchTreeTest,
 		AssociativeIteratorInsertTests,
+		collection_types
+	);
+
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		BinarySearchTreeTest,
+		AssociativeSetInsertTests,
 		collection_types
 	);
 }
