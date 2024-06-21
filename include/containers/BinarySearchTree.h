@@ -693,7 +693,7 @@ namespace collections {
 		/// preventing insertion if unsuccessful.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_reference element) {
-			return tryInsert(rootNode(), element);
+			return insertAt(rootNode(), element);
 		}
 
 		// --------------------------------------------------------------------
@@ -710,7 +710,7 @@ namespace collections {
 		/// preventing insertion if unsuccessful.
 		/// </returns> --------------------------------------------------------
 		iterator insert(value_type&& element) {
-			return tryInsert(rootNode(), element);
+			return insertAt(rootNode(), element);
 		}
 
 		// --------------------------------------------------------------------
@@ -737,7 +737,7 @@ namespace collections {
 		iterator insert(in_iterator begin, sentinel end) {
 			iterator result = this->end();
 			while (begin != end) 
-				result = tryInsert(rootNode(), *begin++);
+				result = insertAt(rootNode(), *begin++);
 			return result;
 		}
 
@@ -759,7 +759,7 @@ namespace collections {
 		/// preventing insertion.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_iterator position, const_reference element) {
-			return tryInsert(position._node, element);
+			return insertAt(position._node, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -780,7 +780,7 @@ namespace collections {
 		/// preventing insertion.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_iterator position, value_type&& element) {
-			return tryInsert(position._node, element);
+			return insertAt(position._node, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -815,7 +815,7 @@ namespace collections {
 		) {
 			auto result = iterator(this, position._node);
 			while (begin != end) 
-				result = tryInsert(result._node, *begin++);
+				result = insertAt(result._node, *begin++);
 			return result;
 		}
 
@@ -869,7 +869,7 @@ namespace collections {
 		template <class T, class ...Args> 
 			requires (!std::convertible_to<T, const_iterator>)
 		iterator emplace(T&& arg1, Args&&... args) {
-			return tryInsert(rootNode(), arg1, std::forward<Args>(args)...);
+			return insertAt(rootNode(), arg1, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -890,7 +890,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <class ...Args>
 		iterator emplace(const_iterator position, Args&&... args) {
-			return tryInsert(position._node, std::forward<Args>(args)...);
+			return insertAt(position._node, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1178,18 +1178,14 @@ namespace collections {
 		}
 
 		template <class... Args>
-		iterator tryInsert(_node_base* n, Args&&... args) {
+		iterator insertAt(_node_base* hint, Args&&... args) {
 			node* child = createNode(std::forward<Args>(args)...);
-			return tryInsertNewNode(n, child);
-		}
-
-		iterator tryInsertNewNode(_node_base* hint, node* child) {
-			_node_base* parent = checkHint(hint, child->_element);
-			const _node_base* result = tryLink(parent, child);
+			_node_base* parent = getInsertLocation(hint, child->_element);
+			const _node_base* result = tryInsert(parent, child);
 			return iterator(this, result);
 		}
 
-		[[nodiscard]] _node_base* checkHint(
+		[[nodiscard]] _node_base* getInsertLocation(
 			const _node_base* hint, 
 			const_reference key
 		) {
@@ -1204,14 +1200,14 @@ namespace collections {
 			else if (!hint || hint == rootNode())
 				result = findParent(rootNode(), key);
 			else if (compare(key, hint))
-				result = checkHintPredecessor(hint, key);
+				result = checkPredecessor(hint, key);
 			else if (compare(hint, key))
-				result = checkHintSuccessor(hint, key);
+				result = checkSuccessor(hint, key);
 			
 			return const_cast<_node_base*>(result);
 		}
 
-		[[nodiscard]] const _node_base* checkHintPredecessor(
+		[[nodiscard]] const _node_base* checkPredecessor(
 			const _node_base* hint,
 			const_reference key
 		) {
@@ -1221,7 +1217,7 @@ namespace collections {
 			return findParent(rootNode(), key);
 		}
 
-		[[nodiscard]] const _node_base* checkHintSuccessor(
+		[[nodiscard]] const _node_base* checkSuccessor(
 			const _node_base* hint,
 			const_reference key
 		) {
@@ -1231,26 +1227,27 @@ namespace collections {
 			return findParent(rootNode(), key);
 		}
 
-		[[nodiscard]] const _node_base* tryLink(
+		[[nodiscard]] const _node_base* tryInsert(
 			_node_base* parent, 
 			node* child
 		) {
-			if (!parent) 
-				initSentinel(child);
-			else {
-				const _node_base* next = stepToward(parent, child->_element);
-				if (!next)
-					insertNode(parent, child);
+			if (parent) {
+				const _node_base* duplicate = stepToward(parent, child->_element);
+				if (!duplicate) 
+					link(parent, child);
 				else {
 					destroyNode(child);
-					return next != parent ? next : parent;
+					return duplicate;
 				}
 			}
+			else 
+				initSentinel(child);
+
 			_size++;
 			return child;
 		}
 
-		void insertNode(_node_base* parent, _node_base* child) {
+		void link(_node_base* parent, _node_base* child) {
 			child->_parent = parent;
 
 			if (compare(child, parent))
@@ -1260,22 +1257,20 @@ namespace collections {
 
 			if (_sentinel._left == parent && parent->_left == child) 
 				_sentinel._left = child;
-			if (_sentinel._right == parent && parent->_right == child) 
+			else if (_sentinel._right == parent && parent->_right == child) 
 				_sentinel._right = child;
 		}
 
 		void remove(_node_base* n) {
 			if (n) {
-				_node_base* replacement = getReplacementFor(n);
-				updateReplacementOnRemove(n, replacement);
-				updateParentOnRemove(n, replacement);
-				updateSentinelOnRemove(n, replacement);
+				_node_base* replacement = replacementFor(n);
+				unlink(n, replacement);
 				destroyNode(static_cast<node*>(n));
 				_size--;
 			}
 		}
 
-		[[nodiscard]] _node_base* getReplacementFor(const _node_base* n) {
+		[[nodiscard]] _node_base* replacementFor(const _node_base* n) {
 			size_type degree = n->degree();
 
 			if (degree == 0)
@@ -1286,15 +1281,15 @@ namespace collections {
 				return const_cast<_node_base*>(inOrderPredecessorOf(n));
 		}
 
-		void updateReplacementOnRemove(
-			const _node_base* n, 
+		void unlink(
+			const _node_base* n,
 			_node_base* replacement
 		) {
 			if (replacement) {
-				if (n->degree() > 1) {
+				if (n->degree() == 2) {
 					if (replacement->_parent->_right == replacement)
 						replacement->_parent->_right = replacement->_left;
-					else if (replacement->_parent->_left == replacement)
+					else
 						replacement->_parent->_left = replacement->_right;
 
 					if (replacement != n->_left) {
@@ -1310,26 +1305,14 @@ namespace collections {
 				}
 				replacement->_parent = n->_parent;
 			}
-		}
 
-		void updateParentOnRemove(
-			const _node_base* n, 
-			_node_base* replacement
-		) {
-			_node_base* parent = n->_parent;
-
-			if (parent) {
-				if (parent->_left == n)
-					parent->_left = replacement;
+			if (n->_parent) {
+				if (n->_parent->_left == n)
+					n->_parent->_left = replacement;
 				else
-					parent->_right = replacement;
+					n->_parent->_right = replacement;
 			}
-		}
 
-		void updateSentinelOnRemove(
-			const _node_base* n, 
-			_node_base* replacement
-		) {
 			if (_sentinel._left == n)
 				_sentinel._left = replacement ? replacement : n->_parent;
 			if (_sentinel._right == n)
