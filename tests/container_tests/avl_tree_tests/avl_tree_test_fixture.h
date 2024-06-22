@@ -21,26 +21,26 @@
 #include "../../mocks/mock_allocator.h"
 #include "../../test_data/test_types.h"
 
-#include "containers/BinarySearchTree.h"
+#include "containers/AVLTree.h"
 
 namespace collection_tests {
 
 	using namespace collections;
 
 	template <class T>
-	struct BinarySearchTreeTestTypes {
+	struct AVLTreeTestTypes {
 		using element_t = T;
-		using collection_t = BinarySearchTree<T>;
+		using collection_t = AVLTree<T>;
 	};
 
 	template <class params>
-	class BinarySearchTreeTest :
+	class AVLTreeTest :
 		public CollectionTests<params>,
 		public MockAllocatorTest<typename params::element_t>
 	{
 	protected:
 		using element_t = params::element_t;
 		using collection_t = params::collection_t;
-		using mock_t = BinarySearchTree<element_t, std::less<element_t>, MockAllocatorWrapper<element_t>>;
+		using mock_t = AVLTree<element_t, std::less<element_t>, MockAllocatorWrapper<element_t>>;
 	};
 }

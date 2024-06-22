@@ -15,32 +15,30 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#pragma once
-
-#include "../../test_suites/collection_test_fixture.h"
-#include "../../mocks/mock_allocator.h"
-#include "../../test_data/test_types.h"
-
-#include "containers/BinarySearchTree.h"
+#include "avl_tree_test_fixture.h"
+#include "../../test_suites/associative_collection_tests/associative_collection_insert_tests.h"
+#include "../../test_suites/associative_collection_tests/associative_set_insert_tests.h"
+#include "../../test_suites/associative_collection_tests/iterator_tests/associative_iterator_insert_tests.h"
 
 namespace collection_tests {
 
-	using namespace collections;
+	using collection_types = instantiate_with_elements<AVLTreeTestTypes>;
 
-	template <class T>
-	struct BinarySearchTreeTestTypes {
-		using element_t = T;
-		using collection_t = BinarySearchTree<T>;
-	};
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		AVLTreeTest,
+		AssociativeCollectionInsertTests,
+		collection_types
+	);
 
-	template <class params>
-	class BinarySearchTreeTest :
-		public CollectionTests<params>,
-		public MockAllocatorTest<typename params::element_t>
-	{
-	protected:
-		using element_t = params::element_t;
-		using collection_t = params::collection_t;
-		using mock_t = BinarySearchTree<element_t, std::less<element_t>, MockAllocatorWrapper<element_t>>;
-	};
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		AVLTreeTest,
+		AssociativeIteratorInsertTests,
+		collection_types
+	);
+
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		AVLTreeTest,
+		AssociativeSetInsertTests,
+		collection_types
+	);
 }

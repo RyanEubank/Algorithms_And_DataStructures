@@ -29,6 +29,8 @@ namespace collection_tests {
 			auto begin = expected.begin();
 			for (const auto& e : preOrder(tree))
 				EXPECT_EQ(e, *begin++);
+
+			EXPECT_EQ(begin, expected.end());
 		}
 
 		void testPostOrderSequence(const auto& tree, const auto& expected) {
@@ -37,6 +39,8 @@ namespace collection_tests {
 			auto begin = expected.begin();
 			for (const auto& e : postOrder(tree))
 				EXPECT_EQ(e, *begin++);
+
+			EXPECT_EQ(begin, expected.end());
 		}
 
 		void testInOrderSequence(const auto& tree, const auto& expected) {
@@ -45,6 +49,8 @@ namespace collection_tests {
 			auto begin = expected.begin();
 			for (const auto& e : inOrder(tree))
 				EXPECT_EQ(e, *begin++);
+
+			EXPECT_EQ(begin, expected.end());
 		}
 	};
 

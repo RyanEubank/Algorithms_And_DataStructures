@@ -15,32 +15,16 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#pragma once
-
-#include "../../test_suites/collection_test_fixture.h"
-#include "../../mocks/mock_allocator.h"
-#include "../../test_data/test_types.h"
-
-#include "containers/BinarySearchTree.h"
+#include "../../test_suites/collection_tests.h"
+#include "avl_tree_test_fixture.h"
 
 namespace collection_tests {
 
-	using namespace collections;
+	using collection_types = instantiate_with_elements<AVLTreeTestTypes>;
 
-	template <class T>
-	struct BinarySearchTreeTestTypes {
-		using element_t = T;
-		using collection_t = BinarySearchTree<T>;
-	};
-
-	template <class params>
-	class BinarySearchTreeTest :
-		public CollectionTests<params>,
-		public MockAllocatorTest<typename params::element_t>
-	{
-	protected:
-		using element_t = params::element_t;
-		using collection_t = params::collection_t;
-		using mock_t = BinarySearchTree<element_t, std::less<element_t>, MockAllocatorWrapper<element_t>>;
-	};
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		AVLTreeTest,
+		CollectionTests,
+		collection_types
+	);
 }
