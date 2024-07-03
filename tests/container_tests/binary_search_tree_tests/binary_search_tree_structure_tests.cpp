@@ -15,49 +15,18 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#include "binary_search_tree_test_fixture.h"
+#include "../../test_suites/binary_tree_test_fixture.h"
+
 #include "adapters/TreeTraversalAdapters.h"
+#include "containers/BinarySearchTree.h"
 
 namespace collection_tests {
 
-	class BinarySearchTreeStructureTest : public testing::Test {
-	protected:
+	using namespace collections;
 
-		void testPreOrderSequence(const auto& tree, const auto& expected) {
-			ASSERT_EQ(tree.size(), expected.size());
+	class BinarySearchTreeStructureTest : public BinaryTreeStructureTest {};
 
-			auto begin = expected.begin();
-			for (const auto& e : preOrder(tree))
-				EXPECT_EQ(e, *begin++);
-
-			EXPECT_EQ(begin, expected.end());
-		}
-
-		void testPostOrderSequence(const auto& tree, const auto& expected) {
-			ASSERT_EQ(tree.size(), expected.size());
-
-			auto begin = expected.begin();
-			for (const auto& e : postOrder(tree))
-				EXPECT_EQ(e, *begin++);
-
-			EXPECT_EQ(begin, expected.end());
-		}
-
-		void testInOrderSequence(const auto& tree, const auto& expected) {
-			ASSERT_EQ(tree.size(), expected.size());
-
-			auto begin = expected.begin();
-			for (const auto& e : inOrder(tree))
-				EXPECT_EQ(e, *begin++);
-
-			EXPECT_EQ(begin, expected.end());
-		}
-	};
-
-	TEST_F(
-		BinarySearchTreeStructureTest, 
-		InsertPlacesSmallestElement
-	) {
+	TEST_F(BinarySearchTreeStructureTest, InsertPlacesSmallestElement) {
 		/*
 						     (5)
 						    /   \
@@ -96,10 +65,7 @@ namespace collection_tests {
 		EXPECT_EQ(tree.maximum(), 8);
 	}
 
-	TEST_F(
-		BinarySearchTreeStructureTest, 
-		InsertPlacesElementInMiddleOfTree
-	) {
+	TEST_F(BinarySearchTreeStructureTest, InsertPlacesElementInMiddleOfTree) {
 		/*
 							(5)
 						   /   \
@@ -138,10 +104,7 @@ namespace collection_tests {
 		EXPECT_EQ(tree.maximum(), 11);
 	}
 
-	TEST_F(
-		BinarySearchTreeStructureTest, 
-		InsertPlacesLargestElement
-	) {
+	TEST_F(BinarySearchTreeStructureTest, InsertPlacesLargestElement) {
 		/*
 				   (5)
 				  /   \
@@ -178,10 +141,53 @@ namespace collection_tests {
 		EXPECT_EQ(tree.maximum(), 10);
 	}
 
-	TEST_F(
-		BinarySearchTreeStructureTest,
-		RemoveDeletesLeafNodesCorrectly
-	) {
+	TEST_F(BinarySearchTreeStructureTest, RemoveDeletesSmallestElement) {
+		/*
+						 (5) 
+						/   \
+					  (3)  (8) 
+					 /   \    \	   
+				   (1)   (4)  (10)	   
+				   /\		  /
+				    \       (9)
+					 \
+					  \____ Delete Here
+		*/
+
+		BinarySearchTree<int> tree = { 5, 3, 8, 1, 4, 10, 9 };
+
+		auto node = tree.begin();
+		ASSERT_EQ(tree.minimum(), 1);
+		ASSERT_EQ(*node, 1);
+
+		tree.remove(node);
+
+		EXPECT_EQ(tree.minimum(), 3);
+	}
+
+	TEST_F(BinarySearchTreeStructureTest, RemoveDeletesLargestElement) {
+		/*
+				(5) 
+			   /   \
+			  (3)  (8) 
+			 /   \    \	   
+		   (1)   (4)  (10)	<------ Delete Here   
+					  /
+					(9) 
+		*/
+
+		BinarySearchTree<int> tree = { 5, 3, 8, 1, 4, 10, 9 };
+
+		auto node = --tree.end();
+		ASSERT_EQ(tree.maximum(), 10);
+		ASSERT_EQ(*node, 10);
+
+		tree.remove(node);
+
+		EXPECT_EQ(tree.maximum(), 9);
+	}
+
+	TEST_F(BinarySearchTreeStructureTest, RemoveDeletesLeafNodesCorrectly) {
 		/*
 					 (5)
 					/   \
@@ -262,10 +268,7 @@ namespace collection_tests {
 		EXPECT_EQ(tree.maximum(), 10);
 	}
 
-	TEST_F(
-		BinarySearchTreeStructureTest,
-		RemoveDeletesFullNodesCorrectly
-	) {
+	TEST_F(BinarySearchTreeStructureTest, RemoveDeletesFullNodesCorrectly) {
 		/*
 						 (5) <---- delete here
 						/   \
@@ -302,5 +305,30 @@ namespace collection_tests {
 		EXPECT_EQ(tree.root(), 4);
 		EXPECT_EQ(tree.minimum(), 1);
 		EXPECT_EQ(tree.maximum(), 10);
+	}
+
+	TEST_F(BinarySearchTreeStructureTest, NodeHeightIsReportedCorrectly) { 
+		/*
+				  (5)
+				 /   \
+			    (3)  (8) 
+			   /   \    \	   
+		     (1)   (4)  (10)	   
+					    /
+					  (9)
+		*/
+
+		BinarySearchTree<int> tree = { 5, 3, 8, 1, 4, 10, 9 };
+		auto it = tree.begin();
+
+		// in order traversal -> expected height of each
+		EXPECT_EQ(tree.heightOf(it++), 0);	// 1
+		EXPECT_EQ(tree.heightOf(it++), 1);	// 3
+		EXPECT_EQ(tree.heightOf(it++), 0);	// 4
+		EXPECT_EQ(tree.heightOf(it++), 3);;	// 5
+		EXPECT_EQ(tree.heightOf(it++), 2);	// 8
+		EXPECT_EQ(tree.heightOf(it++), 0);	// 9
+		EXPECT_EQ(tree.heightOf(it++), 1);	// 10
+		EXPECT_EQ(it, tree.end());
 	}
 }
