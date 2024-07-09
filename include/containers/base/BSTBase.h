@@ -409,7 +409,7 @@ namespace collections::impl {
 		/// tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
 		iterator find(const_reference element) {
-			const base_node* n = traverseTo(rootNode(), element);
+			const base_node* n = lookup(rootNode(), element).get();
 			return n ? iterator(this, n) : end();
 		}
 
@@ -426,7 +426,7 @@ namespace collections::impl {
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
 		bool contains(const_reference element) {
-			return traverseTo(rootNode(), element) != nullptr;
+			return lookup(rootNode(), element).get() != nullptr;
 		}
 
 		// --------------------------------------------------------------------
@@ -443,7 +443,7 @@ namespace collections::impl {
 		/// the tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
 		const_iterator find(const_reference element) const {
-			const base_node* n = traverseTo(rootNode(), element);
+			const base_node* n = lookup(rootNode(), element).get();
 			return n ? const_iterator(this, n) : end();
 		}
 
@@ -461,7 +461,7 @@ namespace collections::impl {
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
 		bool contains(const_reference element) const {
-			return traverseTo(rootNode(), element) != nullptr;
+			return lookup(rootNode(), element).get() != nullptr;
 		}
 
 		// --------------------------------------------------------------------
@@ -729,10 +729,7 @@ namespace collections::impl {
 		/// ordering according to in-order traversal. This is not the same as
 		/// isomorphic equality.
 		/// </returns> --------------------------------------------------------
-		friend bool operator==(
-			const BSTBase& lhs,
-			const BSTBase& rhs
-		) noexcept {
+		friend bool operator==(const BSTBase& lhs,const BSTBase& rhs) noexcept {
 			bool isSizeEqual = (lhs.size() == rhs.size());
 			if (isSizeEqual)
 				return collections::lexicographic_compare(lhs, rhs) == 0;
@@ -756,10 +753,9 @@ namespace collections::impl {
 		/// according to in-order traversal. Always returns false for trees of 
 		/// different size.
 		/// </returns> --------------------------------------------------------
-		friend auto operator<=>(
-			const BSTBase& lhs,
-			const BSTBase& rhs
-		) noexcept requires std::three_way_comparable<value_type> {
+		friend auto operator<=>(const BSTBase& lhs, const BSTBase& rhs) 
+			noexcept requires std::three_way_comparable<value_type> 
+		{
 			using comparison = decltype(value_type{} <=> value_type{});
 
 			auto compareSize = lhs.size() <=> rhs.size();
@@ -887,8 +883,8 @@ namespace collections::impl {
 		}
 
 		[[nodiscard]] const base_node* tryInsert(base_node* hint, node* child) {
-			base_node* parent = getInsertLocation(hint, child->_element);
-			return tryLink(parent, child);
+			_lookupResult location = getInsertLocation(hint, child->_element);
+			return tryLink(location, child);
 		}
 
 		base_node* remove(base_node* n) {
@@ -968,6 +964,30 @@ namespace collections::impl {
 
 		// ------------------------ ACCESS HELPERS ------------------------- //
 
+		enum class Direction {
+			LEFT,
+			RIGHT,
+			NONE
+		};
+
+		struct _lookupResult {
+			const base_node* _parent = nullptr;
+			Direction _direction = Direction::NONE;
+
+			const base_node* get() {
+				switch (_direction) {
+				case (Direction::LEFT):
+					return _parent->_left;
+				case (Direction::RIGHT):
+					return _parent->_right;
+				case (Direction::NONE):
+					return _parent;
+				default:
+					return nullptr;
+				}
+			}
+		};
+
 		[[nodiscard]] derived_t* this_derived() {
 			return static_cast<derived_t*>(this);
 		}
@@ -1003,21 +1023,17 @@ namespace collections::impl {
 		// ----------------------- INSERTION HELPERS ----------------------- //
 
 		[[nodiscard]] const base_node* tryLink(
-			base_node* parent, 
+			_lookupResult result, 
 			node* child
 		) {
-			if (parent) {
-				const base_node* duplicate = stepToward(parent, child->_element);
-
-				if (!duplicate)
-					link(parent, child);
-				else {
-					this_derived()->destroyNode(child);
-					return duplicate;
-				}
-			}
-			else
+			if (!result._parent)
 				insertOnEmpty(child);
+			else if (result.get()) {
+				this_derived()->destroyNode(child);
+				return result.get();
+			}
+			else 
+				link(result, child);
 
 			_size++;
 			return child;
@@ -1029,69 +1045,73 @@ namespace collections::impl {
 			_sentinel._parent = n;
 		}
 
-		void link(base_node* parent, base_node* child) {
+		void link(_lookupResult result, base_node* child) {
+			base_node* parent = const_cast<base_node*>(result._parent);
 			child->_parent = parent;
-
-			if (compare(child, parent))
+			
+			if (result._direction == Direction::LEFT) {
 				parent->_left = child;
-			else
+				if (_sentinel._left == parent) 
+					_sentinel._left = child;
+			}
+			else {
 				parent->_right = child;
-
-			if (_sentinel._left == parent && parent->_left == child) 
-				_sentinel._left = child;
-			else if (_sentinel._right == parent && parent->_right == child) 
-				_sentinel._right = child;
+				if (_sentinel._right == parent)
+					_sentinel._right = child;
+			}
 		}
 
-		[[nodiscard]] base_node* getInsertLocation(
-			const base_node* hint, 
+		[[nodiscard]] _lookupResult getInsertLocation(
+			base_node* hint, 
 			const_reference key
 		) {
-			const base_node* result = hint;
-
 			if (isEmpty())
-				result = nullptr;
+				return { nullptr, Direction::NONE };
 			else if (compare(key, smallestNode()))
-				result = smallestNode();
+				return { smallestNode(), Direction::LEFT };
 			else if (compare(largestNode(), key))
-				result = largestNode();
-			else if (!hint || hint == rootNode())
-				result = findParent(rootNode(), key);
+				return { largestNode(), Direction::RIGHT };
+			else if (!hint || hint == rootNode()) 
+				return lookup(rootNode(), key);
 			else if (compare(key, hint))
-				result = checkInsertHintPredecessor(hint, key);
+				return checkInsertHintPredecessor(hint, key);
 			else if (this->compare(hint, key))
-				result = checkInsertHintSuccessor(hint, key);
-
-			return const_cast<base_node*>(result);
+				return checkInsertHintSuccessor(hint, key);
+			else
+				return { hint, Direction::NONE };
 		}
 
-		[[nodiscard]] const base_node* checkInsertHintPredecessor(
-			const base_node* hint,
+		[[nodiscard]] _lookupResult checkInsertHintPredecessor(
+			base_node* hint,
 			const_reference key
 		) {
 			const base_node* prev = inOrderPredecessorOf(hint);
-			if (compare(prev, key)) 
-				return prev->_right ? hint : prev;
-			return findParent(rootNode(), key);
+			if (compare(prev, key)) {
+				if (prev->_right)
+					return { hint, Direction::LEFT };
+				else
+					return { prev, Direction::RIGHT };
+			}
+			return lookup(rootNode(), key);
 		}
 
-		[[nodiscard]] const base_node* checkInsertHintSuccessor(
-			const base_node* hint,
+		[[nodiscard]] const _lookupResult checkInsertHintSuccessor(
+			base_node* hint,
 			const_reference key
 		) {
 			const base_node* next = inOrderSuccessorOf(hint);
-			if (!next || compare(key, next)) 
-				return hint->_right ? next : hint;
-			return findParent(rootNode(), key);
+			if (!next || compare(key, next)) {
+				if (hint->_right)
+					return { next, Direction::LEFT };
+				else
+					return { hint, Direction::RIGHT };
+			}
+			return lookup(rootNode(), key);
 		}
 
 		// ----------------------- ROTATION HELPERS ------------------------ //
 		
-		void onRotation(
-			base_node* pivot, 
-			base_node* parent, 
-			base_node* child
-		) {
+		void onRotation(base_node* pivot, base_node* parent, base_node* child) {
 			child->_parent = parent;
 			pivot->_parent = child;
 
@@ -1119,10 +1139,10 @@ namespace collections::impl {
 		}
 
 		base_node* removeDegree2(base_node* n) {
-			base_node* replacement = 
-				const_cast<base_node*>(inOrderPredecessorOf(n));
-
+			base_node* replacement = const_cast<base_node*>
+				(inOrderPredecessorOf(n));
 			base_node* result = remove(replacement);
+
 			if (result == n)
 				result = replacement;
 
@@ -1166,40 +1186,28 @@ namespace collections::impl {
 
 		// ----------------------- TRAVERSAL HELPERS ----------------------- //
 
-		[[nodiscard]] static const base_node* findParent(
+		[[nodiscard]] static _lookupResult lookup(
 			const base_node* root,
 			const_reference key
 		) {
 			const base_node* parent = root;
 			const base_node* child = parent;
+			Direction dir = Direction::NONE;
 
 			while (child && (elementOf(child) != key)) {
 				parent = child;
-				child = stepToward(parent, key);
+
+				if (compare(key, parent)) {
+					child = parent->_left;
+					dir = Direction::LEFT;
+				}
+				else if (compare(parent, key)) {
+					child = parent->_right;
+					dir = Direction::RIGHT;
+				}
 			}
 
-			return parent;
-		}
-
-		[[nodiscard]] static const base_node* stepToward(
-			const base_node* from, 
-			const_reference key
-		) {
-			if (compare(key, from))
-				return from->_left;
-			else if (compare(from, key))
-				return from->_right;
-			else
-				return from;
-		}
-
-		[[nodiscard]] static const base_node* traverseTo(
-			const base_node* root,
-			const_reference key
-		) {
-			while (root && (elementOf(root) != key))
-				root = stepToward(root, key);
-			return root;
+			return { parent, dir };
 		}
 
 		[[nodiscard]] static const base_node* leftMostChildOf(
@@ -1252,6 +1260,8 @@ namespace collections::impl {
 			return n;
 		}
 
+		// ----------------------------- UTILS ----------------------------- //
+
 		[[nodiscard]] static reference elementOf(base_node* n) {
 			return static_cast<node*>(n)->_element;
 		}
@@ -1287,6 +1297,8 @@ namespace collections::impl {
 		) {
 			return compare_t{}(e1, e2);
 		}
+
+		// ----------------------- TRAVERSAL_METHODS ----------------------- //
 
 		[[nodiscard]] const base_node* firstNodeIn(
 			traversal_order order

@@ -331,4 +331,45 @@ namespace collection_tests {
 		EXPECT_EQ(tree.heightOf(it++), 1);	// 10
 		EXPECT_EQ(it, tree.end());
 	}
+
+	TEST_F(
+		BinarySearchTreeStructureTest,
+		BinarySearchTreeCorrectlyTracksRootMinAndMaxOnRemove
+	) {
+		/*
+					remove tree2 ---> (1)
+									 /   \
+		        remove tree1 --->  (0)   (2) 
+											\
+											(3) <--- remove tree3
+		*/
+
+		BinarySearchTree<int> tree1 = { 1, 0, 2, 3 };
+		BinarySearchTree<int> tree2 = { 1, 0, 2, 3 };
+		BinarySearchTree<int> tree3 = { 1, 0, 2, 3 };
+
+		auto it1 = tree1.begin();
+		auto it2 = tree2.begin<traversal_order::PRE_ORDER>();
+		auto it3 = std::prev(tree3.end());
+
+		ASSERT_EQ(*it1, 0);
+		ASSERT_EQ(*it2, 1);
+		ASSERT_EQ(*it3, 3);
+
+		tree1.remove(it1);
+		tree2.remove(it2);
+		tree3.remove(it3);
+
+		EXPECT_EQ(tree1.minimum(), 1);
+		EXPECT_EQ(tree1.maximum(), 3);
+		EXPECT_EQ(tree1.root(), 1);
+
+		EXPECT_EQ(tree2.minimum(), 0);
+		EXPECT_EQ(tree2.maximum(), 3);
+		EXPECT_EQ(tree2.root(), 0);
+
+		EXPECT_EQ(tree3.minimum(), 0);
+		EXPECT_EQ(tree3.maximum(), 2);
+		EXPECT_EQ(tree3.root(), 1);
+	}
 }

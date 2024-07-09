@@ -295,6 +295,45 @@ namespace collection_tests {
 
 	TEST_F(
 		AVLTreeStructureTest, 
+		LeftRotationRebalancesAfterRemovingNonLeafNodes
+	) {
+		AVLTree<int> tree{ 0, -1, 1, 2 };
+
+		// Before delete
+		//
+		//		(0) <--- Delete Here
+		//	    / \
+		//   (-1) (1)
+		//          \
+		//	   	    (2)
+
+		auto it = tree.begin<traversal_order::PRE_ORDER>();
+		ASSERT_EQ(*it, 0);
+		tree.remove(it);
+
+		// Expected tree after delete and rotation
+		//
+		//		(1)
+		//	   /   \
+		//	 (-1)   (2)
+
+		EXPECT_EQ(tree.root(), 1);
+		EXPECT_EQ(tree.minimum(), -1);
+		EXPECT_EQ(tree.maximum(), 2);
+
+		auto inOrderAfter = { -1, 1, 2 };
+		auto preOrderAfter = { 1, -1, 2 };
+		auto postOrderAfter = { -1, 2, 1 };
+		auto inOrderHeightsAfter = { 0, 1, 0 };
+
+		this->testInOrderSequence(tree, inOrderAfter);
+		this->testPreOrderSequence(tree, preOrderAfter);
+		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+	}
+
+	TEST_F(
+		AVLTreeStructureTest, 
 		RightRotationAfterDeletionRebalancesTree
 	) {
 		AVLTree<int> tree{ 2, 1, 3, 0 };
@@ -348,7 +387,46 @@ namespace collection_tests {
 
 	TEST_F(
 		AVLTreeStructureTest, 
-		DoubleLeftRightRotationAfterDeletionRebalancesTree
+		RightRotationRebalancesAfterRemovingNonLeafNodes
+	) {
+		AVLTree<int> tree{ 2, 1, 3, 0 };
+
+		// Before delete
+		//
+		//		 (2) <--- Delete Here
+		//	     / \
+		//     (1) (3) 
+		//     /    
+		//   (0)     
+
+		auto it = tree.begin<traversal_order::PRE_ORDER>();
+		ASSERT_EQ(*it, 2);
+		tree.remove(it);
+
+		// Expected tree after delete and rotation
+		//
+		//		(1)
+		//	   /   \
+		//	 (0)   (3)
+
+		EXPECT_EQ(tree.root(), 1);
+		EXPECT_EQ(tree.minimum(), 0);
+		EXPECT_EQ(tree.maximum(), 3);
+
+		auto inOrderAfter = { 0, 1, 3 };
+		auto preOrderAfter = { 1, 0, 3 };
+		auto postOrderAfter = { 0, 3, 1 };
+		auto inOrderHeightsAfter = { 0, 1, 0 };
+
+		this->testInOrderSequence(tree, inOrderAfter);
+		this->testPreOrderSequence(tree, preOrderAfter);
+		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+	}
+
+	TEST_F(
+		AVLTreeStructureTest, 
+		DoubleRightLeftRotationAfterDeletionRebalancesTree
 	) {
 		AVLTree<int> tree{ 0, -1, 2, 1 };
 
@@ -403,9 +481,48 @@ namespace collection_tests {
 
 	TEST_F(
 		AVLTreeStructureTest, 
-		DoubleRightLeftRotationAfterDeletionRebalancesTree
+		DoubleRightLeftRebalancesAfterRemovingNonLeafNodes
 	) {
+		AVLTree<int> tree{ 0, -1, 2, 1 };
 
+		// Before delete
+		//
+		//		 (0) <--- Delete Here
+		//	    /   \
+		//   (-1)   (2)
+		//          / 
+		//	      (1)	
+
+		auto it = tree.begin<traversal_order::PRE_ORDER>();
+		ASSERT_EQ(*it, 0);
+		tree.remove(it);
+
+		// Expected tree after delete and rotation
+		//
+		//		(1)
+		//	   /   \
+		//	 (-1)   (2)
+
+
+		EXPECT_EQ(tree.root(), 1);
+		EXPECT_EQ(tree.minimum(), -1);
+		EXPECT_EQ(tree.maximum(), 2);
+
+		auto inOrderAfter = { -1, 1, 2 };
+		auto preOrderAfter = { 1, -1, 2 };
+		auto postOrderAfter = { -1, 2, 1 };
+		auto inOrderHeightsAfter = { 0, 1, 0 };
+
+		this->testInOrderSequence(tree, inOrderAfter);
+		this->testPreOrderSequence(tree, preOrderAfter);
+		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+	}
+
+	TEST_F(
+		AVLTreeStructureTest, 
+		DoubleLeftRightRotationAfterDeletionRebalancesTree
+	) {
 		AVLTree<int> tree{ 2, 0, 3, 1 };
 
 		// Before delete
@@ -457,8 +574,108 @@ namespace collection_tests {
 
 	TEST_F(
 		AVLTreeStructureTest, 
-		TreeIsRebalancedWithMultipleRotationsAfterRemove
+		DoubleLeftRightRebalancesAfterRemovingNonLeafNodes
 	) {
-		AVLTree<int> tree{};
+		AVLTree<int> tree{ 2, 0, 3, 1 };
+
+		// Before delete
+		//
+		//		 (2) <--- Delete Here
+		//	     / \
+		//     (0) (3) 
+		//       \   
+		//       (1)   
+
+
+		auto it = tree.begin<traversal_order::PRE_ORDER>();
+		ASSERT_EQ(*it, 2);
+		tree.remove(it);
+
+		// Expected tree after delete and rotation
+		//
+		//		(1)
+		//	   /   \
+		//	 (0)   (3)
+
+		EXPECT_EQ(tree.root(), 1);
+		EXPECT_EQ(tree.minimum(), 0);
+		EXPECT_EQ(tree.maximum(), 3);
+
+		auto inOrderAfter = { 0, 1, 3 };
+		auto preOrderAfter = { 1, 0, 3 };
+		auto postOrderAfter = { 0, 3, 1 };
+		auto inOrderHeightsAfter = { 0, 1, 0 };
+
+		this->testInOrderSequence(tree, inOrderAfter);
+		this->testPreOrderSequence(tree, preOrderAfter);
+		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+	}
+
+	TEST_F(AVLTreeStructureTest, MutlipleRotationsOnRemoveRebalancesTree) {
+		AVLTree<int> tree{ 8, 5, 11, 3, 7, 10, 12, 2, 4, 6, 9, 1 };
+
+		// Before delete
+		//				    (8)	 
+		//	              /     \
+		//             (5)       (11)
+		//           /    \      /   \
+		//         (3)    (7)  (10)  (12) <-- delete here
+		//        /  \    /    /
+		//       (2) (4)(6)   (9) 
+		//       /
+		//      (1)   
+
+		EXPECT_EQ(tree.root(), 8);
+		EXPECT_EQ(tree.minimum(), 1);
+		EXPECT_EQ(tree.maximum(), 12);
+
+		auto inOrderBefore = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+		auto preOrderBefore = { 8, 5, 3, 2, 1, 4, 7, 6, 11, 10, 9, 12 };
+		auto postOrderBefore = { 1, 2, 4, 3, 6, 7, 5, 9, 10, 12, 11, 8 };
+		auto inOrderHeightsBefore = { 0, 1, 2, 0, 3, 0, 1, 4, 0, 1, 2, 0 };
+
+		this->testInOrderSequence(tree, inOrderBefore);
+		this->testPreOrderSequence(tree, preOrderBefore);
+		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
+
+		auto it = std::prev(tree.end());
+		ASSERT_EQ(*it, 12);
+		tree.remove(it);
+
+		// After 1st rotation
+		//				  (8)	 
+		//	            /     \
+		//            (5)      (10)
+		//          /    \     /   \ 
+		//         (3)    (7) (9)  (11)
+		//        /  \    /   
+		//       (2) (4)(6)    
+		//       /
+		//      (1)  
+		
+		// After 2nd Rotation
+		//			  (5)
+		//          /     \   
+		//       (3)       (8)
+		//      /   \      /  \
+		//    (2)   (4)  (7)  (10)
+		//    /          /    /  \
+		//   (1)        (6) (9)  (11)
+
+		EXPECT_EQ(tree.root(), 5);
+		EXPECT_EQ(tree.minimum(), 1);
+		EXPECT_EQ(tree.maximum(), 11);
+
+		auto inOrderAfter = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+		auto preOrderAfter = { 5, 3, 2, 1, 4, 8, 7, 6, 10, 9, 11 };
+		auto postOrderAfter = { 1, 2, 4, 3, 6, 7, 9, 11, 10, 8, 5 };
+		auto inOrderHeightsAfter = { 0, 1, 2, 0, 3, 0, 1, 2, 0, 1, 0 };
+
+		this->testInOrderSequence(tree, inOrderAfter);
+		this->testPreOrderSequence(tree, preOrderAfter);
+		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 }

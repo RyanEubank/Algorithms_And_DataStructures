@@ -334,14 +334,10 @@ namespace collections {
 			return n;
 		}
 
-		bool updateHeight(base_node* n) {
+		void updateHeight(base_node* n) {
 			node* avl_n = static_cast<node*>(n);
-
-			size_type prevHeight = avl_n->_height;
-			size_type max = std::max(avl_n->leftHeight(), avl_n->rightHeight());
+			int64_t max = std::max(avl_n->leftHeight(), avl_n->rightHeight());
 			avl_n->_height = max + 1;
-
-			return avl_n->_height != prevHeight;
 		}
 
 		int64_t balanceOf(const base_node* n) noexcept {
@@ -389,17 +385,16 @@ namespace collections {
 		}
 
 		base_node* rebalance(base_node* n) {
-			base_node* new_root = n;
 			int64_t balance = balanceOf(n);
 
 			if (balance < -1)
-				new_root = rebalanceLeftChild(n);
+				n = rebalanceLeftChild(n);
 			else if (balance > 1)
-				new_root = rebalanceRightChild(n);
+				n = rebalanceRightChild(n);
 			else 
 				updateHeight(n);
 
-			return new_root;
+			return n;
 		}
 
 		base_node* rebalanceLeftChild(base_node* pivot) {
