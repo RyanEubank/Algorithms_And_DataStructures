@@ -1184,6 +1184,44 @@ namespace collections::impl {
 				updateSentinelOnRemove(n,  n->_parent);			
 		}
 
+		// ----------------------------- UTILS ----------------------------- //
+
+		[[nodiscard]] static reference elementOf(base_node* n) {
+			return static_cast<node*>(n)->_element;
+		}
+
+		[[nodiscard]] static const_reference elementOf(const base_node* n) {
+			return static_cast<const node*>(n)->_element;
+		}
+
+		[[nodiscard]] static bool compare(
+			const base_node* n1,
+			const base_node* n2
+		) {
+			return compare(elementOf(n1), elementOf(n2));
+		}
+
+		[[nodiscard]] static bool compare(
+			const_reference key, 
+			const base_node* n
+		) {
+			return compare_t{}(key, elementOf(n));
+		}
+
+		[[nodiscard]] static bool compare(
+			const base_node* n,
+			const_reference key
+		) {
+			return compare_t{}(elementOf(n), key);
+		}
+
+		[[nodiscard]] static bool compare(
+			const_reference e1,
+			const_reference e2
+		) {
+			return compare_t{}(e1, e2);
+		}
+
 		// ----------------------- TRAVERSAL HELPERS ----------------------- //
 
 		[[nodiscard]] static _lookupResult lookup(
@@ -1258,44 +1296,6 @@ namespace collections::impl {
 			while (n && !n->isLeaf())
 				n = n->_right ? n->_right : n->_left;
 			return n;
-		}
-
-		// ----------------------------- UTILS ----------------------------- //
-
-		[[nodiscard]] static reference elementOf(base_node* n) {
-			return static_cast<node*>(n)->_element;
-		}
-
-		[[nodiscard]] static const_reference elementOf(const base_node* n) {
-			return static_cast<const node*>(n)->_element;
-		}
-
-		[[nodiscard]] static bool compare(
-			const base_node* n1,
-			const base_node* n2
-		) {
-			return compare(elementOf(n1), elementOf(n2));
-		}
-
-		[[nodiscard]] static bool compare(
-			const_reference key, 
-			const base_node* n
-		) {
-			return compare_t{}(key, elementOf(n));
-		}
-
-		[[nodiscard]] static bool compare(
-			const base_node* n,
-			const_reference key
-		) {
-			return compare_t{}(elementOf(n), key);
-		}
-
-		[[nodiscard]] static bool compare(
-			const_reference e1,
-			const_reference e2
-		) {
-			return compare_t{}(e1, e2);
 		}
 
 		// ----------------------- TRAVERSAL_METHODS ----------------------- //
@@ -1394,7 +1394,7 @@ namespace collections::impl {
 			const base_node* n
 		) {
 			if (!n)
-				return n;
+				return nullptr;
 
 			if (n->_left)
 				return n->_left;
@@ -1410,7 +1410,7 @@ namespace collections::impl {
 			const base_node* n
 		) {
 			if (!n)
-				return n;
+				return nullptr;
 
 			if (!n->_parent || n->_parent->_right == n || n->_parent->degree() == 1)
 				return n->_parent;
@@ -1422,7 +1422,7 @@ namespace collections::impl {
 			const base_node* n
 		) {
 			if (!n)
-				return n;
+				return nullptr;
 
 			throw std::exception("Not yet implemented"); //TODO
 		}
@@ -1431,7 +1431,7 @@ namespace collections::impl {
 			const base_node* n
 		) {
 			if (!n)
-				return n;
+				return nullptr;
 
 			if (n->_left)
 				return rightMostChildOf(n->_left);
@@ -1457,7 +1457,7 @@ namespace collections::impl {
 			const base_node* n
 		) {
 			if (!n)
-				return n;
+				return nullptr;
 
 			if (n->_right)
 				return n->_right;
@@ -1473,7 +1473,7 @@ namespace collections::impl {
 			const base_node* n
 		) {
 			if (!n)
-				return n;
+				return nullptr;
 
 			throw std::exception("Not yet implemented"); //TODO
 		}
