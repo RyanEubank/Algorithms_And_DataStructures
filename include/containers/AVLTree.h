@@ -356,7 +356,7 @@ namespace collections {
 			const base_node* result = this->tryInsert(hint, child);
 
 			if (this->size() > prev_size) 
-				balanceTreeOnInsert(child->_parent);
+				balanceTreeOnInsert(result->_parent);
 
 			return iterator(this, result);
 		}
