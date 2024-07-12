@@ -332,13 +332,12 @@ namespace collections {
 
 				while (count--) {
 					const base_node* next = queue.front();
+					queue.dequeue_front();
 
 					if (next->_left)
 						queue.enqueue_back(next->_left);
 					if (next->_right)
 						queue.enqueue_back(next->_right);
-
-					queue.dequeue_front();
 				}
 				
 			}

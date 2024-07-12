@@ -57,12 +57,14 @@ namespace collection_tests {
 		auto inOrderBefore = { 0, 1 };
 		auto preOrderBefore = { 0, 1 };
 		auto postOrderBefore = { 1, 0 };
+		auto levelOrderBefore = { 0, 1 };
 		auto inOrderHeightsBefore = { 1, 0 };
 		
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 
 		// Expected tree after insert and rotation
 		//
@@ -79,12 +81,14 @@ namespace collection_tests {
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
 		auto postOrderAfter = { 0, 2, 1 };
+		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 	}
 
 	TEST_F(AVLTreeStructureTest, RightRotationAfterInsertionRebalancesTree) {
@@ -106,11 +110,13 @@ namespace collection_tests {
 		auto inOrderBefore = { 1, 2 };
 		auto preOrderBefore = { 2, 1 };
 		auto postOrderBefore = { 1, 2 };
+		auto levelOrderBefore = { 2, 1 };
 		auto inOrderHeightsBefore = { 0, 1 };
 
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
 
 		// Expected tree after insert and rotation
@@ -128,11 +134,13 @@ namespace collection_tests {
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
 		auto postOrderAfter = { 0, 2, 1 };
+		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
@@ -157,11 +165,13 @@ namespace collection_tests {
 		auto inOrderBefore = { 0, 2 };
 		auto preOrderBefore = { 2, 0 };
 		auto postOrderBefore = { 0, 2 };
+		auto levelOrderBefore = { 2, 0 };
 		auto inOrderHeightsBefore = { 0, 1 };
 
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
 
 		// Expected tree after insert and rotation
@@ -179,11 +189,13 @@ namespace collection_tests {
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
 		auto postOrderAfter = { 0, 2, 1 };
+		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
@@ -208,11 +220,13 @@ namespace collection_tests {
 		auto inOrderBefore = { 0, 2 };
 		auto preOrderBefore = { 0, 2 };
 		auto postOrderBefore = { 2, 0 };
+		auto levelOrderBefore = { 0, 2 };
 		auto inOrderHeightsBefore = { 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
 
 		// Expected tree after insert and rotation
@@ -230,11 +244,13 @@ namespace collection_tests {
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
 		auto postOrderAfter = { 0, 2, 1 };
+		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
@@ -261,11 +277,13 @@ namespace collection_tests {
 		auto inOrderBefore = { -1, 0, 1, 2 };
 		auto preOrderBefore = { 0, -1, 1, 2 };
 		auto postOrderBefore = { -1, 2, 1, 0 };
+		auto levelOrderBefore = { 0, -1, 1, 2 };
 		auto inOrderHeightsBefore = { 0, 2, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
 
 		// Expected tree after delete and rotation
@@ -285,11 +303,13 @@ namespace collection_tests {
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
 		auto postOrderAfter = { 0, 2, 1 };
+		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
@@ -324,11 +344,13 @@ namespace collection_tests {
 		auto inOrderAfter = { -1, 1, 2 };
 		auto preOrderAfter = { 1, -1, 2 };
 		auto postOrderAfter = { -1, 2, 1 };
+		auto levelOrderAfter = { 1, -1, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
@@ -353,11 +375,13 @@ namespace collection_tests {
 		auto inOrderBefore = { 0, 1, 2, 3 };
 		auto preOrderBefore = { 2, 1, 0, 3 };
 		auto postOrderBefore = { 0, 1, 3, 2 };
+		auto levelOrderBefore = { 2, 1, 3, 0 };
 		auto inOrderHeightsBefore = { 0, 1, 2, 0 };
 
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
 
 		// Expected tree after delete and rotation
@@ -377,16 +401,18 @@ namespace collection_tests {
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
 		auto postOrderAfter = { 0, 2, 1 };
+		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
-		AVLTreeStructureTest, 
+		AVLTreeStructureTest,
 		RightRotationRebalancesAfterRemovingNonLeafNodes
 	) {
 		AVLTree<int> tree{ 2, 1, 3, 0 };
@@ -416,11 +442,13 @@ namespace collection_tests {
 		auto inOrderAfter = { 0, 1, 3 };
 		auto preOrderAfter = { 1, 0, 3 };
 		auto postOrderAfter = { 0, 3, 1 };
+		auto levelOrderAfter = { 1, 0, 3 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
@@ -447,11 +475,13 @@ namespace collection_tests {
 		auto inOrderBefore = { -1, 0, 1, 2 };
 		auto preOrderBefore = { 0, -1, 2, 1 };
 		auto postOrderBefore = { -1, 1, 2, 0 };
+		auto levelOrderBefore = { 0, -1, 2, 1 };
 		auto inOrderHeightsBefore = { 0, 2, 0, 1 };
 
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
 
 		// Expected tree after delete and rotation
@@ -471,11 +501,13 @@ namespace collection_tests {
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
 		auto postOrderAfter = { 0, 2, 1 };
+		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
@@ -511,11 +543,13 @@ namespace collection_tests {
 		auto inOrderAfter = { -1, 1, 2 };
 		auto preOrderAfter = { 1, -1, 2 };
 		auto postOrderAfter = { -1, 2, 1 };
+		auto levelOrderAfter = { 1, -1, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
@@ -540,11 +574,13 @@ namespace collection_tests {
 		auto inOrderBefore = { 0, 1, 2, 3 };
 		auto preOrderBefore = { 2, 0, 1, 3 };
 		auto postOrderBefore = { 1, 0, 3, 2 };
+		auto levelOrderBefore = { 2, 0, 3, 1 };
 		auto inOrderHeightsBefore = { 1, 0, 2, 0 };
 
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
 
 		// Expected tree after delete and rotation
@@ -564,11 +600,13 @@ namespace collection_tests {
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
 		auto postOrderAfter = { 0, 2, 1 };
+		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
@@ -604,11 +642,13 @@ namespace collection_tests {
 		auto inOrderAfter = { 0, 1, 3 };
 		auto preOrderAfter = { 1, 0, 3 };
 		auto postOrderAfter = { 0, 3, 1 };
+		auto levelOrderAfter = { 1, 0, 3 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 
@@ -633,11 +673,13 @@ namespace collection_tests {
 		auto inOrderBefore = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 		auto preOrderBefore = { 8, 5, 3, 2, 1, 4, 7, 6, 11, 10, 9, 12 };
 		auto postOrderBefore = { 1, 2, 4, 3, 6, 7, 5, 9, 10, 12, 11, 8 };
+		auto levelOrderBefore = { 8, 5, 11, 3, 7, 10, 12, 2, 4, 6, 9, 1 };
 		auto inOrderHeightsBefore = { 0, 1, 2, 0, 3, 0, 1, 4, 0, 1, 2, 0 };
 
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
 
 		auto it = std::prev(tree.end());
@@ -671,11 +713,13 @@ namespace collection_tests {
 		auto inOrderAfter = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
 		auto preOrderAfter = { 5, 3, 2, 1, 4, 8, 7, 6, 10, 9, 11 };
 		auto postOrderAfter = { 1, 2, 4, 3, 6, 7, 9, 11, 10, 8, 5 };
+		auto levelOrderAfter = { 5, 3, 8, 2, 4, 7, 10, 1, 6, 9, 11 };
 		auto inOrderHeightsAfter = { 0, 1, 2, 0, 3, 0, 1, 2, 0, 1, 0 };
 
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
 	}
 }

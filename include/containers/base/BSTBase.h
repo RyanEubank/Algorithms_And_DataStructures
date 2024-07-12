@@ -20,6 +20,7 @@
 #include "../../algorithms/collection_algorithms.h"
 #include "../../concepts/collection.h"
 #include "../../adapters/TreeTraversalAdapters.h"
+#include "../../adapters/Queue.h"
 
 namespace collections::impl {
 
@@ -1085,7 +1086,7 @@ namespace collections::impl {
 			base_node* hint,
 			const_reference key
 		) {
-			const base_node* prev = inOrderPredecessorOf(hint);
+			base_node* prev = predecessorOf(hint, traversal_order::IN_ORDER);
 			if (compare(prev, key)) {
 				if (prev->_right)
 					return { hint, Direction::LEFT };
@@ -1095,11 +1096,11 @@ namespace collections::impl {
 			return lookup(rootNode(), key);
 		}
 
-		[[nodiscard]] const _lookupResult checkInsertHintSuccessor(
+		[[nodiscard]] _lookupResult checkInsertHintSuccessor(
 			base_node* hint,
 			const_reference key
 		) {
-			const base_node* next = inOrderSuccessorOf(hint);
+			base_node* next = successorOf(hint, traversal_order::IN_ORDER);
 			if (!next || compare(key, next)) {
 				if (hint->_right)
 					return { next, Direction::LEFT };
@@ -1334,16 +1335,46 @@ namespace collections::impl {
 			case collections::traversal_order::POST_ORDER:
 				return rootNode();
 			case collections::traversal_order::LEVEL_ORDER:
-				throw std::exception("Not yet implemented"); //TODO
+				return lastNodeLevelOrder();
 			default:
 				return &_sentinel;
 			}
 		}
 
-		[[nodiscard]] static const base_node* successorOf(
+		[[nodiscard]] const base_node* lastNodeLevelOrder() const {
+			Queue<const base_node*> queue { rootNode() };
+			const base_node* n = nullptr;
+
+			while (!queue.isEmpty()) {
+				size_type count = queue.size();
+
+				while (count--) {
+					n = queue.front();
+
+					if (n->_left)
+						queue.enqueue_back(n->_left);
+					if (n->_right)
+						queue.enqueue_back(n->_right);
+
+					queue.dequeue_front();
+				}
+			}
+
+			return n;
+		}
+
+		[[nodiscard]] base_node* successorOf(
 			const base_node* n, 
 			traversal_order order
 		) {
+			const base_node* result =  std::as_const(*this).successorOf(n, order);
+			return const_cast<base_node*>(result);
+		}
+
+		[[nodiscard]] const base_node* successorOf(
+			const base_node* n, 
+			traversal_order order
+		) const {
 			switch (order) {
 			case collections::traversal_order::IN_ORDER:
 				return inOrderSuccessorOf(n);
@@ -1358,10 +1389,18 @@ namespace collections::impl {
 			}
 		}
 
-		[[nodiscard]] static const base_node* predecessorOf(
+		[[nodiscard]] base_node* predecessorOf(
 			const base_node* n, 
 			traversal_order order
 		) {
+			const base_node* result = std::as_const(*this).predecessorOf(n, order);
+			return const_cast<base_node*>(result);
+		}
+
+		[[nodiscard]] const base_node* predecessorOf(
+			const base_node* n, 
+			traversal_order order
+		) const {
 			switch (order) {
 			case collections::traversal_order::IN_ORDER:
 				return inOrderPredecessorOf(n);
@@ -1376,9 +1415,9 @@ namespace collections::impl {
 			}
 		}
 
-		[[nodiscard]] static const base_node* inOrderSuccessorOf(
+		[[nodiscard]] const base_node* inOrderSuccessorOf(
 			const base_node* n
-		) {
+		) const {
 			if (!n)
 				return nullptr;
 
@@ -1390,9 +1429,9 @@ namespace collections::impl {
 				return rightMostAncestorOf(n);
 		}
 
-		[[nodiscard]] static const base_node* preOrderSuccessorOf(
+		[[nodiscard]] const base_node* preOrderSuccessorOf(
 			const base_node* n
-		) {
+		) const {
 			if (!n)
 				return nullptr;
 
@@ -1406,9 +1445,9 @@ namespace collections::impl {
 			}
 		}
 
-		[[nodiscard]] static const base_node* postOrderSuccessorOf(
+		[[nodiscard]] const base_node* postOrderSuccessorOf(
 			const base_node* n
-		) {
+		) const {
 			if (!n)
 				return nullptr;
 
@@ -1418,18 +1457,39 @@ namespace collections::impl {
 			return findNextLeftSubtree(n->_parent->_right);
 		}
 
-		[[nodiscard]] static const base_node* levelOrderSuccessorOf(
+		[[nodiscard]] const base_node* levelOrderSuccessorOf(
 			const base_node* n
-		) {
+		) const {
 			if (!n)
 				return nullptr;
 
-			throw std::exception("Not yet implemented"); //TODO
+			Queue<const base_node*> queue{ rootNode() };
+			const base_node* next = nullptr;
+
+			while (!queue.isEmpty()) {
+				size_type count = queue.size();
+
+				while (count--) {
+					next = queue.front();
+
+					if (next->_left)
+						queue.enqueue_back(next->_left);
+					if (next->_right)
+						queue.enqueue_back(next->_right);
+
+					queue.dequeue_front();
+
+					if (next == n) 
+						return queue.isEmpty() ? nullptr : queue.front();
+				}
+			}
+
+			return n;
 		}
 
-		[[nodiscard]] static const base_node* inOrderPredecessorOf(
+		[[nodiscard]] const base_node* inOrderPredecessorOf(
 			const base_node* n
-		) {
+		) const {
 			if (!n)
 				return nullptr;
 
@@ -1441,9 +1501,9 @@ namespace collections::impl {
 				return leftMostAncestorOf(n);
 		}
 
-		[[nodiscard]] static const base_node* preOrderPredecessorOf(
+		[[nodiscard]] const base_node* preOrderPredecessorOf(
 			const base_node* n
-		) {
+		) const {
 			if (!n || !n->_parent)
 				return nullptr;
 
@@ -1453,9 +1513,9 @@ namespace collections::impl {
 				return n->_parent;
 		}
 
-		[[nodiscard]] static const base_node* postOrderPredecessorOf(
+		[[nodiscard]] const base_node* postOrderPredecessorOf(
 			const base_node* n
-		) {
+		) const {
 			if (!n)
 				return nullptr;
 
@@ -1469,13 +1529,36 @@ namespace collections::impl {
 			}
 		}
 
-		[[nodiscard]] static const base_node* levelOrderPredecessorOf(
+		[[nodiscard]] const base_node* levelOrderPredecessorOf(
 			const base_node* n
-		) {
-			if (!n)
+		) const {
+			if (!n || n == rootNode())
 				return nullptr;
 
-			throw std::exception("Not yet implemented"); //TODO
+			Queue<const base_node*> queue{ rootNode() };
+			Queue<const base_node*> reverse{};
+			const base_node* next = nullptr;
+
+			while (!queue.isEmpty()) {
+				size_type count = queue.size();
+
+				while (count--) {
+					next = queue.front();
+					queue.dequeue_front();
+
+					if (next == n) 
+						return reverse.back();
+
+					if (next->_left)
+						queue.enqueue_back(next->_left);
+					if (next->_right)
+						queue.enqueue_back(next->_right);
+				
+					reverse.enqueue_back(next);
+				}
+			}
+
+			return n;
 		}
 
 		// ----------------------------------------------------------------
@@ -1511,7 +1594,7 @@ namespace collections::impl {
 			}
 
 			void increment() {
-				const base_node* successor = successorOf(_node, _order);
+				const base_node* successor = _tree->successorOf(_node, _order);
 				const base_node* next = successor ? successor : &_tree->_sentinel;
 				_node = const_cast<base_node*>(next);
 			}
@@ -1520,7 +1603,7 @@ namespace collections::impl {
 				if (_node == &_tree->_sentinel)
 					_node = const_cast<base_node*>(_tree->lastNodeIn(_order));
 				else {
-					auto prev = predecessorOf(_node, _order);
+					auto prev = _tree->predecessorOf(_node, _order);
 					_node = const_cast<base_node*>(prev);
 				}
 			}
@@ -1698,8 +1781,8 @@ namespace collections::impl {
 			friend bool operator==(
 				const BinaryTreeIterator& lhs,
 				const BinaryTreeIterator& rhs
-				) {
-				return lhs._node == rhs._node;
+			) {
+				return lhs._tree == rhs._tree && lhs._node == rhs._node;
 			}
 		};
 

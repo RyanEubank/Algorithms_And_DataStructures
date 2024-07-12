@@ -52,5 +52,15 @@ namespace collection_tests {
 
 			EXPECT_EQ(begin, expected.end());
 		}
+
+		void testLevelOrderSequence(const auto& tree, const auto& expected) {
+			ASSERT_EQ(tree.size(), expected.size());
+
+			auto begin = expected.begin();
+			for (const auto& e : levelOrder(tree))
+				EXPECT_EQ(e, *begin++);
+
+			EXPECT_EQ(begin, expected.end());
+		}
 	};
 }

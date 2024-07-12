@@ -50,15 +50,20 @@ namespace collection_tests {
 		auto postOrderBefore = { 1, 4, 3, 8, 5 };
 		auto postOrderAfter = { 0, 1, 4, 3, 8, 5 };
 
+		auto levelOrderBefore = { 5, 3, 8, 1, 4 };
+		auto levelOrderAfter = { 5, 3, 8, 1, 4, 0 };
+
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 
 		tree.insert(0);
 
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 
 		EXPECT_EQ(tree.root(), 5);
 		EXPECT_EQ(tree.minimum(), 0);
@@ -89,15 +94,20 @@ namespace collection_tests {
 		auto postOrderBefore = { 0, 2, 3, 1, 7, 11, 8, 5 };
 		auto postOrderAfter = { 0, 2, 3, 1, 6, 7, 11, 8, 5 };
 
+		auto levelOrderBefore = { 5, 1, 8, 0, 3, 7, 11, 2 };
+		auto levelOrderAfter = { 5, 1, 8, 0, 3, 7, 11, 2, 6 };
+
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 
 		tree.insert(6);
 
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 
 		EXPECT_EQ(tree.root(), 5);
 		EXPECT_EQ(tree.minimum(), 0);
@@ -126,15 +136,20 @@ namespace collection_tests {
 		auto postOrderBefore = { 1, 4, 3, 8, 5 };
 		auto postOrderAfter = { 1, 4, 3, 10, 8, 5 };
 
+		auto levelOrderBefore = { 5, 3, 8, 1, 4 };
+		auto levelOrderAfter = { 5, 3, 8, 1, 4, 10 };
+
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 
 		tree.insert(10);
 
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 
 		EXPECT_EQ(tree.root(), 5);
 		EXPECT_EQ(tree.minimum(), 1);
@@ -209,9 +224,13 @@ namespace collection_tests {
 		auto postOrderBefore = { 1, 4, 3, 8, 5 };
 		auto postOrderAfter = { 1, 3, 8, 5 };
 
+		auto levelOrderBefore = { 5, 3, 8, 1, 4 };
+		auto levelOrderAfter = { 5, 3, 8, 1 };
+
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 
 		auto node = tree.find(4);
 		ASSERT_EQ(*node, 4);
@@ -220,6 +239,7 @@ namespace collection_tests {
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 
 		EXPECT_EQ(tree.root(), 5);
 		EXPECT_EQ(tree.minimum(), 1);
@@ -251,9 +271,13 @@ namespace collection_tests {
 		auto postOrderBefore = { 1, 4, 3, 9, 10, 8, 5 };
 		auto postOrderAfter = { 1, 4, 3, 9, 10, 5 };
 
+		auto levelOrderBefore = { 5, 3, 8, 1, 4, 10, 9 };
+		auto levelOrderAfter = { 5, 3, 10, 1, 4, 9 };
+
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 
 		auto node = tree.find(8);
 		ASSERT_EQ(*node, 8);
@@ -262,6 +286,7 @@ namespace collection_tests {
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 
 		EXPECT_EQ(tree.root(), 5);
 		EXPECT_EQ(tree.minimum(), 1);
@@ -290,9 +315,13 @@ namespace collection_tests {
 		auto postOrderBefore = { 1, 4, 3, 9, 10, 8, 5 };
 		auto postOrderAfter = { 1, 3, 9, 10, 8, 4 };
 
+		auto levelOrderBefore = { 5, 3, 8, 1, 4, 10, 9 };
+		auto levelOrderAfter = { 4, 3, 8, 1, 10, 9 };
+
 		this->testPreOrderSequence(tree, preOrderBefore);
 		this->testInOrderSequence(tree, inOrderBefore);
 		this->testPostOrderSequence(tree, postOrderBefore);
+		this->testLevelOrderSequence(tree, levelOrderBefore);
 
 		auto node = tree.find(5);
 		ASSERT_EQ(*node, 5);
@@ -301,6 +330,7 @@ namespace collection_tests {
 		this->testPreOrderSequence(tree, preOrderAfter);
 		this->testInOrderSequence(tree, inOrderAfter);
 		this->testPostOrderSequence(tree, postOrderAfter);
+		this->testLevelOrderSequence(tree, levelOrderAfter);
 
 		EXPECT_EQ(tree.root(), 4);
 		EXPECT_EQ(tree.minimum(), 1);
