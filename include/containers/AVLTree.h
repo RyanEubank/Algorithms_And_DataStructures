@@ -35,7 +35,7 @@ namespace collections {
 	private:
 		using avl = AVLTree<element_t, compare_t, allocator_t>;
 		using base = impl::BSTBase<element_t, compare_t, allocator_t, avl>;
-		using base_node = base::base_node;
+		using base_node = base::node;
 		using node = struct avl_node;
 		using alloc_traits = std::allocator_traits<allocator_t>::template rebind_traits<node>;
 		using node_allocator_type = alloc_traits::allocator_type;
@@ -120,7 +120,7 @@ namespace collections {
 		AVLTree(AVLTree&& other) noexcept(
 			std::is_nothrow_move_constructible_v<allocator_type>
 		) : AVLTree(std::move(other._allocator)) {
-			swapData(*this, other);
+			this->swapData(other);
 		}
 
 		// --------------------------------------------------------------------
@@ -271,9 +271,9 @@ namespace collections {
 			bool equalAllocators = this->_allocator == other._allocator;
 
 			if constexpr (alwaysEqual)
-				swapData(*this, other);
+				this->swapData(other);
 			else if (equalAllocators)
-				swapData(*this, other);
+				this->swapData(other);
 			else if (propagate)
 				swapAll(*this, other);
 			else {
@@ -433,7 +433,7 @@ namespace collections {
 			return result;
 		}
 
-		friend void swapAll(AVLTree& a, AVLTree& b) noexcept {
+		static void swapAll(AVLTree& a, AVLTree& b) noexcept {
 			using std::swap;
 			swap(a._allocator, b._allocator);
 			swap(a._node_allocator, b._node_allocator);

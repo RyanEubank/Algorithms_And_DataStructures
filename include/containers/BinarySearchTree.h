@@ -38,7 +38,6 @@ namespace collections {
 	private:
 		using bst = BinarySearchTree<element_t, compare_t, allocator_t>;
 		using base = impl::BSTBase<element_t, compare_t, allocator_t, bst>;
-		using base_node = base::base_node;
 		using node = base::node;
 		using alloc_traits = std::allocator_traits<allocator_t>::template rebind_traits<node>;
 		using node_allocator_type = alloc_traits::allocator_type;
@@ -123,7 +122,7 @@ namespace collections {
 		BinarySearchTree(BinarySearchTree&& other) noexcept(
 			std::is_nothrow_move_constructible_v<allocator_type>
 		) : BinarySearchTree(std::move(other._allocator)) {
-			swapData(*this, other);
+			this->swapData(other);
 		}
 
 		// --------------------------------------------------------------------
@@ -274,9 +273,9 @@ namespace collections {
 			bool equalAllocators = this->_allocator == other._allocator;
 
 			if constexpr (alwaysEqual)
-				swapData(*this, other);
+				this->swapData(other);
 			else if (equalAllocators)
-				swapData(*this, other);
+				this->swapData(other);
 			else if (propagate)
 				swapAll(*this, other);
 			else {
@@ -310,7 +309,7 @@ namespace collections {
 			);
 		}
 
-		void destroyNode(base_node* n) {
+		void destroyNode(node* n) {
 			alloc_traits::destroy(_node_allocator, static_cast<node*>(n));
 		}
 
@@ -321,8 +320,8 @@ namespace collections {
 			return n;
 		}
 
-		size_type heightOfNode(const base_node* n) const noexcept {
-			Queue<const base_node*> queue { n };
+		size_type heightOfNode(const node* n) const noexcept {
+			Queue<const node*> queue { n };
 			size_type level = 0;
 			size_type count = 0;
 
@@ -331,7 +330,7 @@ namespace collections {
 				count = queue.size();
 
 				while (count--) {
-					const base_node* next = queue.front();
+					const node* next = queue.front();
 					queue.dequeue_front();
 
 					if (next->_left)
@@ -346,21 +345,21 @@ namespace collections {
 		}
 
 		template <class... Args>
-		iterator insertAt(base_node* hint, Args&&... args) {
+		iterator insertAt(node* hint, Args&&... args) {
 			node* child = createNode(std::forward<Args>(args)...);
-			const base_node* result = this->tryInsert(hint, child);
+			const node* result = this->tryInsert(hint, child);
 			return iterator(this, result);
 		}
 
-		void removeAt(base_node* n) {
+		void removeAt(node* n) {
 			if (n) {
 				this->remove(n);
-				destroyNode(static_cast<node*>(n));
+				destroyNode(n);
 				this->_size--;
 			}
 		}
 
-		friend void swapAll(BinarySearchTree& a, BinarySearchTree& b) noexcept {
+		static void swapAll(BinarySearchTree& a, BinarySearchTree& b) noexcept {
 			using std::swap;
 			swap(a._allocator, b._allocator);
 			swap(a._node_allocator, b._node_allocator);
