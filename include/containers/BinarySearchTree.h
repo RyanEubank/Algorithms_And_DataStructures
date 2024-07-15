@@ -310,7 +310,7 @@ namespace collections {
 		}
 
 		void destroyNode(node* n) {
-			alloc_traits::destroy(_node_allocator, static_cast<node*>(n));
+			alloc_traits::destroy(_node_allocator, n);
 		}
 
 		template <class... Args>
@@ -344,19 +344,16 @@ namespace collections {
 			return level - 1;
 		}
 
-		template <class... Args>
-		iterator insertAt(node* hint, Args&&... args) {
-			node* child = createNode(std::forward<Args>(args)...);
-			const node* result = this->tryInsert(hint, child);
-			return iterator(this, result);
+		void onInsert(node* n) {
+			return; // basic bst does nothing after insertion
 		}
 
-		void removeAt(node* n) {
-			if (n) {
-				this->remove(n);
-				destroyNode(n);
-				this->_size--;
-			}
+		void onRemove(node* n) {
+			return; // basic bst does nothing after deletion
+		}
+
+		void onSearch(base::_lookupResult result) const {
+			return; // basic bst does nothing after search
 		}
 
 		static void swapAll(BinarySearchTree& a, BinarySearchTree& b) noexcept {

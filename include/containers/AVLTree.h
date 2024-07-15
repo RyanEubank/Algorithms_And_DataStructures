@@ -349,19 +349,7 @@ namespace collections {
 			return static_cast<const node*>(n)->_height;
 		}
 
-		template <class... Args>
-		iterator insertAt(base_node* hint, Args&&... args) {
-			size_type prev_size = this->size();
-			node* child = createNode(std::forward<Args>(args)...);
-			const base_node* result = this->tryInsert(hint, child);
-
-			if (this->size() > prev_size) 
-				balanceTreeOnInsert(result->_parent);
-
-			return iterator(this, result);
-		}
-
-		void balanceTreeOnInsert(base_node* n) {
+		void onInsert(base_node* n) {
 			while (n) {
 				base_node* root = rebalance(n);
 				if (root != n) // rotation occurred, tree is rebalanced
@@ -370,18 +358,13 @@ namespace collections {
 			}
 		}
 
-		void removeAt(base_node* n) {
-			if (n) {
-				base_node* replacement = this->remove(n);
-				balanceTreeOnRemove(replacement);
-				destroyNode(n);
-				this->_size--;
-			}
-		}
-
-		void balanceTreeOnRemove(base_node* n) {
+		void onRemove(base_node* n) {
 			while (n) 
 				n = rebalance(n)->_parent;
+		}
+
+		void onSearch(base::_lookupResult result) const {
+			return; // avl tree does nothing after search
 		}
 
 		base_node* rebalance(base_node* n) {

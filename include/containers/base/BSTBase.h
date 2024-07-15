@@ -409,8 +409,8 @@ namespace collections::impl {
 		/// tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
 		iterator find(const_reference element) {
-			const node* n = lookup(_root, element).get();
-			return n ? iterator(this, n) : end();
+			const node* n = this_derived()->search(element).get();
+			return iterator(this, n);
 		}
 
 		// --------------------------------------------------------------------
@@ -426,7 +426,7 @@ namespace collections::impl {
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
 		bool contains(const_reference element) {
-			return lookup(_root, element).get() != nullptr;
+			return this_derived()->search(element).get() != nullptr;
 		}
 
 		// --------------------------------------------------------------------
@@ -443,8 +443,8 @@ namespace collections::impl {
 		/// the tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
 		const_iterator find(const_reference element) const {
-			const node* n = lookup(_root, element).get();
-			return n ? const_iterator(this, n) : end();
+			const node* n = this_derived()->search(element).get();
+			return const_iterator(this, n);
 		}
 
 		// --------------------------------------------------------------------
@@ -461,7 +461,7 @@ namespace collections::impl {
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
 		bool contains(const_reference element) const {
-			return lookup(_root, element).get() != nullptr;
+			return this_derived()->search(element).get() != nullptr;
 		}
 
 		// --------------------------------------------------------------------
@@ -478,7 +478,7 @@ namespace collections::impl {
 		/// preventing insertion if unsuccessful.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_reference element) {
-			return this_derived()->insertAt(_root, element);
+			return insertAt(_root, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -495,7 +495,7 @@ namespace collections::impl {
 		/// preventing insertion if unsuccessful.
 		/// </returns> --------------------------------------------------------
 		iterator insert(value_type&& element) {
-			return this_derived()->insertAt(_root, element);
+			return insertAt(_root, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -522,7 +522,7 @@ namespace collections::impl {
 		iterator insert(in_iterator begin, sentinel end) {
 			iterator result = this->end();
 			while (begin != end) 
-				result = this_derived()->insertAt(_root, *begin++);
+				result = insertAt(_root, *begin++);
 			return result;
 		}
 
@@ -544,7 +544,7 @@ namespace collections::impl {
 		/// preventing insertion.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_iterator position, const_reference element) {
-			return this_derived()->insertAt(position._node, element);
+			return insertAt(position._node, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -565,7 +565,7 @@ namespace collections::impl {
 		/// preventing insertion.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_iterator position, value_type&& element) {
-			return this_derived()->insertAt(position._node, element);
+			return insertAt(position._node, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -600,7 +600,7 @@ namespace collections::impl {
 		) {
 			auto result = iterator(this, position._node);
 			while (begin != end) 
-				result = this_derived()->insertAt(result._node, *begin++);
+				result = insertAt(result._node, *begin++);
 			return result;
 		}
 
@@ -634,7 +634,7 @@ namespace collections::impl {
 			const_iterator end
 		) {
 			while (begin != end) 
-				this_derived()->removeAt((begin++)._node);
+				removeAt((begin++)._node);
 			return iterator(this, end._node);
 		}
 
@@ -654,8 +654,7 @@ namespace collections::impl {
 		template <class T, class ...Args> 
 			requires (!std::convertible_to<T, const_iterator>)
 		iterator emplace(T&& arg1, Args&&... args) {
-			return this_derived()->insertAt(
-				_root, arg1, std::forward<Args>(args)...);
+			return emplaceAt(_root, arg1, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -676,8 +675,7 @@ namespace collections::impl {
 		/// </returns> --------------------------------------------------------
 		template <class ...Args>
 		iterator emplace(const_iterator position, Args&&... args) {
-			return this_derived()->insertAt(
-				position._node, std::forward<Args>(args)...);
+			return emplaceAt(position._node, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -835,26 +833,35 @@ namespace collections::impl {
 	
 	protected:
 
+		enum class Direction {
+			LEFT,
+			RIGHT,
+			NONE
+		};
+
 		struct _node {
+
 			value_type _element;
-			_node* _parent = nullptr;
-			_node* _left = nullptr;
-			_node* _right = nullptr;
+			_node* _parent;
+			_node* _left;
+			_node* _right;
 
 			template <class ... Args>
-			_node(Args&&... args) : _element(std::forward<Args>(args)...) {}
+			_node(Args&&... args) : 
+				_element(std::forward<Args>(args)...),
+				_parent(nullptr),
+				_left(nullptr),
+				_right(nullptr)
+			{
+			
+			}
 
 			[[nodiscard]] size_type degree() const {
-				if (_left && _right)
-					return 2;
-				else if (_left || _right)
-					return 1;
-				else
-					return 0;
+				return (_left ? 1 : 0) + (_right ? 1 : 0);
 			}
 
 			[[nodiscard]] bool isLeaf() const {
-				return degree() == 0;
+				return !(_left || _right);
 			}
 
 			[[nodiscard]] bool isLeftChild() const {
@@ -867,6 +874,24 @@ namespace collections::impl {
 
 			[[nodiscard]] bool isChildOf(const node* n) const {
 				return (this != n->_left) && (this != n->_right);
+			}
+		};
+
+		struct _lookupResult {
+			const node* _parent = nullptr;
+			Direction _direction = Direction::NONE;
+
+			const node* get() {
+				switch (_direction) {
+				case (Direction::LEFT):
+					return _parent->_left;
+				case (Direction::RIGHT):
+					return _parent->_right;
+				case (Direction::NONE):
+					return _parent;
+				default:
+					return nullptr;
+				}
 			}
 		};
 
@@ -897,28 +922,12 @@ namespace collections::impl {
 
 		}
 
-		[[nodiscard]] const node* tryInsert(const node* hint, node* child) {
-			_lookupResult location = getInsertLocation(hint, child->_element);
-			return tryLink(location, child);
-		}
-
-		node* remove(node* n) {
-			size_type degree = n->degree();
-
-			if (degree == 0) 
-				return removeDegree0(n);
-			else if (degree == 1)
-				return removeDegree1(n);
-			else
-				return removeDegree2(n);
-		}
-
-		void swapData(BSTBase& b) noexcept {
+		void swapData(BSTBase& other) noexcept {
 			using std::swap;
-			swap(_root, b._root);
-			swap(_min, b._min);
-			swap(_max, b._max);
-			swap(_size, b._size);
+			swap(_root, other._root);
+			swap(_min, other._min);
+			swap(_max, other._max);
+			swap(_size, other._size);
 		};
 
 		node* rightRotation(node* pivot) {
@@ -961,30 +970,6 @@ namespace collections::impl {
 
 	private:
 
-		enum class Direction {
-			LEFT,
-			RIGHT,
-			NONE
-		};
-
-		struct _lookupResult {
-			const node* _parent = nullptr;
-			Direction _direction = Direction::NONE;
-
-			const node* get() {
-				switch (_direction) {
-				case (Direction::LEFT):
-					return _parent->_left;
-				case (Direction::RIGHT):
-					return _parent->_right;
-				case (Direction::NONE):
-					return _parent;
-				default:
-					return nullptr;
-				}
-			}
-		};
-
 		[[nodiscard]] derived_t* this_derived() {
 			return static_cast<derived_t*>(this);
 		}
@@ -996,40 +981,62 @@ namespace collections::impl {
 	
 		// ----------------------- INSERTION HELPERS ----------------------- //
 
-		[[nodiscard]] const node* tryLink(_lookupResult result, node* child) {
-			if (!result._parent)
-				insertOnEmpty(child);
-			else if (result.get()) {
-				this_derived()->destroyNode(child);
-				return result.get();
-			}
-			else 
-				link(result, child);
+		template <class... Args>
+		iterator emplaceAt(node* hint, Args&&... args) {
+			node* n = this_derived()->createNode(std::forward<Args>(args)...);
+			_lookupResult lookup = getInsertLocation(hint, n->_element);
+			const node* result = lookup.get();
 
-			_size++;
-			return child;
-		}
-
-		void insertOnEmpty(node* n) {
-			_min = n;
-			_max = n;
-			_root = n;
-		}
-
-		void link(_lookupResult result, node* child) {
-			node* parent = const_cast<node*>(result._parent);
-			child->_parent = parent;
-			
-			if (result._direction == Direction::LEFT) {
-				parent->_left = child;
-				if (_min == parent) 
-					_min = child;
+			if (result) {
+				this_derived()->destroyNode(n);
+				return iterator(this, result);
 			}
 			else {
-				parent->_right = child;
-				if (_max == parent)
-					_max = child;
+				insertNode(lookup, n);
+				this_derived()->onInsert(n);
+				return iterator(this, n);
 			}
+
+		}
+
+		iterator insertAt(node* hint, const_reference element) {
+			_lookupResult lookup = getInsertLocation(hint, element);
+			const node* result = lookup.get();
+
+			if (result)
+				return iterator(this, result);
+			else {
+				node* n = this_derived()->createNode(element);
+				insertNode(lookup, n);
+				this_derived()->onInsert(n);
+				return iterator(this, n);
+			}
+		}
+
+		void insertNode(_lookupResult lookup, node* n) {
+			node* parent = const_cast<node*>(lookup._parent);
+
+			if (parent) {
+				n->_parent = parent;
+
+				if (lookup._direction == Direction::LEFT) {
+					parent->_left = n;
+					if (_min == parent)
+						_min = n;
+				}
+				else {
+					parent->_right = n;
+					if (_max == parent)
+						_max = n;
+				}
+			}
+			else {
+				_min = n;
+				_max = n;
+				_root = n;
+			}
+
+			_size++;
 		}
 
 		[[nodiscard]] _lookupResult getInsertLocation(
@@ -1043,7 +1050,7 @@ namespace collections::impl {
 			else if (compare(_max->_element, key))
 				return { _max, Direction::RIGHT };
 			else if (!hint || hint == _root) 
-				return lookup(_root, key);
+				return search(key);
 			else if (compare(key, hint->_element))
 				return checkInsertHintPredecessor(hint, key);
 			else if (this->compare(hint->_element, key))
@@ -1063,7 +1070,7 @@ namespace collections::impl {
 				else
 					return { prev, Direction::RIGHT };
 			}
-			return lookup(_root, key);
+			return search(key);
 		}
 
 		[[nodiscard]] _lookupResult checkInsertHintSuccessor(
@@ -1077,10 +1084,30 @@ namespace collections::impl {
 				else
 					return { hint, Direction::RIGHT };
 			}
-			return lookup(_root, key);
+			return search(key);
 		}
 
 		// ----------------------- DELETION HELPERS ------------------------ //
+
+		void removeAt(node* n) {
+			if (n) {
+				node* result = this->remove(n);
+				this_derived()->destroyNode(n);
+				this->_size--;
+				this_derived()->onRemove(result);
+			}
+		}
+
+		node* remove(node* n) {
+			size_type degree = n->degree();
+
+			if (degree == 0) 
+				return removeDegree0(n);
+			else if (degree == 1)
+				return removeDegree1(n);
+			else
+				return removeDegree2(n);
+		}
 
 		node* removeDegree0(node* n) {
 			updateLinksOnRemove(n, nullptr);
@@ -1148,28 +1175,29 @@ namespace collections::impl {
 			return compare_t{}(e1, e2);
 		}
 
-		[[nodiscard]] static _lookupResult lookup(
-			const node* root,
-			const_reference key
-		) {
-			const node* parent = root;
-			const node* child = parent;
-			Direction dir = Direction::NONE;
+		[[nodiscard]] _lookupResult search(const_reference key) {
+			return std::as_const(*this).search(key);
+		}
+
+		[[nodiscard]] _lookupResult search(const_reference key) const {
+			_lookupResult result = { _root, Direction::NONE };
+			const node* child = result._parent;
 
 			while (child && child->_element != key) {
-				parent = child;
+				result._parent = child;
 
-				if (compare(key, parent->_element)) {
-					child = parent->_left;
-					dir = Direction::LEFT;
+				if (compare(key, result._parent->_element)) {
+					child = result._parent->_left;
+					result._direction = Direction::LEFT;
 				}
-				else if (compare(parent->_element, key)) {
-					child = parent->_right;
-					dir = Direction::RIGHT;
+				else if (compare(result._parent->_element, key)) {
+					child = result._parent->_right;
+					result._direction = Direction::RIGHT;
 				}
 			}
 
-			return { parent, dir };
+			this_derived()->onSearch(result);
+			return result;
 		}
 
 		// ----------------------- TRAVERSAL HELPERS ----------------------- //
