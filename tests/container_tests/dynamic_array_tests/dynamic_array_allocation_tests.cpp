@@ -35,12 +35,11 @@ namespace collection_tests {
 	) {
 		using mock_t = DynamicArrayTest<TypeParam>::mock_t;
 
-		ASSERT_EQ(0, mock_t::DEFAULT_CAPACITY);
 		EXPECT_CALL(this->allocator(), allocate(_)).Times(0);
 
 		const mock_t obj{};
 
-		EXPECT_EQ(obj.capacity(), mock_t::DEFAULT_CAPACITY);
+		EXPECT_EQ(obj.capacity(), 0);
 	}
 
 	// ------------------------------------------------------------------------
@@ -55,12 +54,14 @@ namespace collection_tests {
 		using mock_t = DynamicArrayTest<TypeParam>::mock_t;
 		const size_t size = 30;
 
-		EXPECT_CALL(this->allocator(), allocate(30));
+		EXPECT_CALL(this->allocator(), allocate(30)).Times(1);
 
 		const mock_t obj(Reserve{ size });
 
 		EXPECT_EQ(obj.capacity(), size);
 		EXPECT_TRUE(obj.isEmpty());
+
+		EXPECT_CALL(this->allocator(), deallocate(_, 30)).Times(1);
 	}
 
 	// ------------------------------------------------------------------------
@@ -143,6 +144,8 @@ namespace collection_tests {
 
 		EXPECT_TRUE(obj.isEmpty());
 		EXPECT_EQ(obj.capacity(), size);
+
+		EXPECT_CALL(this->allocator(), deallocate(_, size)).Times(1);
 	}
 
 	// ------------------------------------------------------------------------
@@ -161,10 +164,13 @@ namespace collection_tests {
 		mock_t obj{ a, b, c };
 
 		EXPECT_CALL(this->allocator(), allocate(newSize)).Times(1);
+		EXPECT_CALL(this->allocator(), deallocate(_, 3)).Times(1);
 		obj.reserve(newSize);
 
 		EXPECT_EQ(obj.size(), 3);
 		EXPECT_EQ(obj.capacity(), newSize);
+
+		EXPECT_CALL(this->allocator(), deallocate(_, newSize)).Times(1);
 	}
 
 	// ------------------------------------------------------------------------
@@ -184,6 +190,8 @@ namespace collection_tests {
 		obj.resize(10, a);
 
 		this->testObjectEqualsExpectedSequence(obj, expected);
+
+		EXPECT_CALL(this->allocator(), deallocate(_, 10)).Times(1);
 	}
 
 	// ------------------------------------------------------------------------
@@ -202,10 +210,13 @@ namespace collection_tests {
 		mock_t obj{ a, b, c };
 
 		EXPECT_CALL(this->allocator(), allocate(newSize)).Times(1);
+		EXPECT_CALL(this->allocator(), deallocate(_, 3)).Times(1);
 		obj.resize(newSize, d);
 
 		auto expected = { a, b, c, d, d, d, d, d, d, d };
 		this->testObjectEqualsExpectedSequence(obj, expected);
+
+		EXPECT_CALL(this->allocator(), deallocate(_, newSize)).Times(1);
 	}
 
 	// ------------------------------------------------------------------------
@@ -293,6 +304,7 @@ namespace collection_tests {
 
 		EXPECT_CALL(this->allocator(), allocate(_)).Times(1);
 		obj.insertBack(a);
+		EXPECT_CALL(this->allocator(), deallocate(_, _)).Times(1);
 	}
 
 	// ------------------------------------------------------------------------
@@ -306,12 +318,15 @@ namespace collection_tests {
 		using mock_t = DynamicArrayTest<TypeParam>::mock_t;
 
 		auto size = 2u;
-		auto expected_allocation = size * 2;
+		auto newSize = size * 2;
 
 		EXPECT_CALL(this->allocator(), allocate(size)).Times(1);
 		mock_t obj(Size{size});
 
-		EXPECT_CALL(this->allocator(), allocate(expected_allocation)).Times(1);
+		EXPECT_CALL(this->allocator(), allocate(newSize)).Times(1);
+		EXPECT_CALL(this->allocator(), deallocate(_, size)).Times(1);
 		obj.insertBack(a);
+
+		EXPECT_CALL(this->allocator(), deallocate(_, newSize)).Times(1);
 	}
 }
