@@ -707,6 +707,16 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <std::ranges::input_range range>
 		constexpr auto operator()(const range& r1, const range& r2) const {
+			if constexpr (std::ranges::sized_range<range>) {
+				using compare_type = decltype(
+					*std::ranges::begin(r1) <=> *std::ranges::begin(r2)
+				);
+
+				auto compare = std::ranges::size(r1) <=> std::ranges::size(r2);
+				if (compare != 0)
+					return static_cast<compare_type>(compare);
+			}
+
 			return (*this)(
 				std::ranges::begin(r1), 
 				std::ranges::end(r1), 
