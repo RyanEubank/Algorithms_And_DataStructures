@@ -1,4 +1,4 @@
-/* ============================================================================
+/* =============================================================================
  * Copyright (C) 2023 Ryan Eubank
  *
  * This program is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- * ========================================================================= */
+ * ========================================================================== */
 
 #pragma once
 
@@ -28,7 +28,7 @@ namespace collections {
 	/// </summary>
 	using Reserve = NamedType<size_t, struct ReserveType>;
 
-	// ------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
 	/// <summary>
 	/// DynamicArray is a collection class that maintains a dynamically sized
 	/// contiguous array for fast random access to its elements.
@@ -38,49 +38,50 @@ namespace collections {
 	/// The type of the elements contained by the array.
 	/// </typeparam>
 	/// <typeparam name="allocator_t">
-	/// The type of the allocator responsible for allocating memory to the 
+	/// The type of the allocator responsible for allocating memory to the
 	/// array.
-	/// </typeparam> ----------------------------------------------------------
+	/// </typeparam> -----------------------------------------------------------
 	template <class element_t, class allocator_t = std::allocator<element_t>>
 	class DynamicArray final {
 	private:
-		using alloc_traits = std::allocator_traits<allocator_t>;
+
+		using alloc_t		= rebind<allocator_t, element_t>;
+		using alloc_traits	= std::allocator_traits<alloc_t>;
 
 	public:
-		using allocator_type = allocator_t;
-		using value_type = allocator_type::value_type;
-		using size_type = size_t;
-		using reference = value_type&;
-		using const_reference = const value_type&;
-		using pointer = alloc_traits::pointer;
-		using const_pointer = alloc_traits::const_pointer;
-		using iterator = pointer;
-		using const_iterator = const_pointer;
-		using reverse_iterator = std::reverse_iterator<iterator>;
-		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-		static constexpr auto DEFAULT_CAPACITY = 0;
-		static constexpr auto MAX_CAPACITY = std::numeric_limits<size_type>::max();
+		using value_type		= element_t;
+		using allocator_type	= allocator_t;
+		using reference			= value_type&;
+		using const_reference	= const value_type&;
+		using size_type			= alloc_traits::size_type;
+		using difference_type	= alloc_traits::difference_type;
+		using pointer			= alloc_traits::pointer;
+		using const_pointer		= alloc_traits::const_pointer;
 
-		// --------------------------------------------------------------------
+		using iterator					= pointer;
+		using const_iterator			= const_pointer;
+		using reverse_iterator			= std::reverse_iterator<iterator>;
+		using const_reverse_iterator	= std::reverse_iterator<const_iterator>;
+
+		// ---------------------------------------------------------------------
 		/// <summary>
 		/// ~~~ Default Constructor ~~~
 		/// 
 		///	<para>
 		/// Constructs an empty array.
-		/// </para></summary> -------------------------------------------------
+		/// </para></summary> --------------------------------------------------
 		constexpr DynamicArray() 
-			noexcept(std::is_nothrow_default_constructible_v<allocator_type>) 
-		:
-			_array(nullptr),
+			noexcept(std::is_nothrow_default_constructible_v<allocator_type>) :
+			_begin(nullptr),
 			_end(nullptr),
-			_capacity(DEFAULT_CAPACITY),
+			_final(nullptr),
 			_allocator()
 		{
 
 		}
 
-		// --------------------------------------------------------------------
+		// ---------------------------------------------------------------------
 		/// <summary>
 		/// ~~~ Allocator Constructor ~~~
 		/// 
@@ -90,54 +91,61 @@ namespace collections {
 		/// 
 		/// <param name="alloc">
 		/// The allocator instance used by the array.
-		/// </param> ----------------------------------------------------------
-		constexpr explicit DynamicArray(const allocator_type& alloc) noexcept :
-			_array(nullptr),
+		/// </param> -----------------------------------------------------------
+		constexpr explicit DynamicArray(const allocator_type& alloc) 
+			noexcept(std::is_nothrow_copy_constructible_v<allocator_type>) :
+			_begin(nullptr),
 			_end(nullptr),
-			_capacity(DEFAULT_CAPACITY),
+			_final(nullptr),
 			_allocator(alloc)
 		{
 
 		}
 
-		// --------------------------------------------------------------------
+		// ---------------------------------------------------------------------
 		/// <summary>
 		/// ~~~ Copy Constructor ~~~
 		/// 
 		/// <para>
-		/// Constructs a deep copy of the specified DynamicArray.
+		/// Constructs a deep copy of the specified array.
 		/// </para></summary>
 		/// 
 		/// <param name="copy">
-		/// The DynamicArray to be copied.
-		/// </param> ----------------------------------------------------------
+		/// The array to be copied.
+		/// </param> -----------------------------------------------------------
 		DynamicArray(const DynamicArray& copy) : DynamicArray(
 			copy.begin(),
 			copy.end(),
-			alloc_traits::select_on_container_copy_construction(copy._allocator)
-		) {
+			alloc_traits::select_on_container_copy_construction(copy._allocator)) 
+		{
 
 		}
 
-		// --------------------------------------------------------------------
+		// ---------------------------------------------------------------------
 		/// <summary>
 		/// ~~~ Move Constructor ~~~
 		/// 
 		/// <para>
-		/// Constructs a DynamicArray by moving the data from the provided
-		/// object into the new one.
+		/// Constructs an array by moving the data from the provided array into
+		/// this one.
 		/// </para></summary>
 		/// 
 		/// <param name="other">
-		/// The DynamicArray to be moved into this one.
-		/// </param> ----------------------------------------------------------
-		DynamicArray(DynamicArray&& other) noexcept(
-			std::is_nothrow_move_constructible_v<allocator_type>
-		) : DynamicArray(std::move(other._allocator)) {
-			swapData(*this, other);
+		/// The array to be moved into this one.
+		/// </param> -----------------------------------------------------------
+		DynamicArray(DynamicArray&& other) 
+			noexcept(std::is_nothrow_move_constructible_v<allocator_type>) : 
+			_begin(other._begin),
+			_end(other._end),
+			_final(other._final),
+			_allocator(std::move(other._allocator))
+		{
+			other._begin = nullptr;
+			other._end = nullptr;
+			other._final = nullptr;
 		}
 
-		// --------------------------------------------------------------------
+		// ---------------------------------------------------------------------
 		/// <summary>
 		/// ~~~ Reserve Constructor ~~~
 		/// 
@@ -310,23 +318,18 @@ namespace collections {
 		/// Returns the caller with the copied data.
 		/// </returns> --------------------------------------------------------
 		DynamicArray& operator=(const DynamicArray& other) {
-			constexpr bool propagate = 
-				alloc_traits::propagate_on_container_copy_assignment::value;
-			constexpr bool alwaysEqual = 
+			static constexpr bool isAlwaysEqual = 
 				alloc_traits::is_always_equal::value;
+			static constexpr bool willPropagate = 
+				alloc_traits::propagate_on_container_copy_assignment::value;
+			bool isInstanceEqual = _allocator == other._allocator;
 
-			bool equalAllocators = this->_allocator == other._allocator;
-
-			if constexpr (alwaysEqual)
-				elementWiseCopyAssign(other);
-			else if (propagate && !equalAllocators) {
+			if (!isAlwaysEqual && !isInstanceEqual && willPropagate) {
 				releaseResources();
 				_allocator = other._allocator;
-				insert(_end, other._array, other._end);
 			}
-			else
-				elementWiseCopyAssign(other);
-			
+
+			elementWiseCopy(other);
 			return *this;
 		}
 
@@ -349,21 +352,23 @@ namespace collections {
 			alloc_traits::propagate_on_container_move_assignment::value || 
 			alloc_traits::is_always_equal::value
 		) {
-			constexpr bool propagate = 
-				alloc_traits::propagate_on_container_move_assignment::value;
-			constexpr bool alwaysEqual =
+			static constexpr bool isAlwaysEqual =
 				alloc_traits::is_always_equal::value;
+			static constexpr bool willPropagate = 
+				alloc_traits::propagate_on_container_move_assignment::value;
+			bool isInstanceEqual = _allocator == other._allocator;
 
-			bool equalAllocators = this->_allocator == other._allocator;
-
-			if constexpr (alwaysEqual)
-				swapData(*this, other);
-			else if (equalAllocators)
-				swapData(*this, other);
-			else if (propagate)
-				swapAll(*this, other);
+			if (isAlwaysEqual || isInstanceEqual) {
+				releaseResources();
+				moveMembers(std::move(other));
+			} 
+			else if (willPropagate) {
+				releaseResources();
+				_allocator = std::move(other._allocator);
+				moveMembers(std::move(other));
+			}
 			else
-				elementwiseMoveAssign(other);
+				elementWiseCopy(std::move(other));
 
 			return *this;
 		}
@@ -382,7 +387,7 @@ namespace collections {
 		/// array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reference operator[](size_type index) {
-			return _array[index];
+			return _begin[index];
 		}
 
 		// --------------------------------------------------------------------
@@ -399,7 +404,7 @@ namespace collections {
 		/// in the array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reference operator[](size_type index) const {
-			return _array[index];
+			return _begin[index];
 		}
 
 		// --------------------------------------------------------------------
@@ -418,7 +423,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reference at(size_type index) {
 			validateIndexExists(index);
-			return _array[index];
+			return _begin[index];
 		}
 
 		// --------------------------------------------------------------------
@@ -437,7 +442,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reference at(size_type index) const {
 			validateIndexExists(index);
-			return _array[index];
+			return _begin[index];
 		}
 
 		// --------------------------------------------------------------------
@@ -449,7 +454,7 @@ namespace collections {
 		/// Returns a pointer to the internal array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] pointer asRawArray() noexcept {
-			return _array;
+			return _begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -461,7 +466,7 @@ namespace collections {
 		/// Returns a const pointer to the internal array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_pointer asRawArray() const noexcept {
-			return _array;
+			return _begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -474,7 +479,7 @@ namespace collections {
 		/// space in number of elements it can hold.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] size_t capacity() const noexcept {
-			return _capacity;
+			return _final - _begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -499,7 +504,19 @@ namespace collections {
 		/// Returns the number of valid, constructed elements in the array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] size_type size() const noexcept {
-			return _end - _array;
+			return _end - _begin;
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the theoretical maximum size for the container.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns the size limit of the container type.
+		/// </returns> ---------------------------------------------------------
+		[[nodiscard]] size_type max_size() const noexcept {
+			return std::numeric_limits<alloc_traits::difference_type>::max();
 		}
 
 		// --------------------------------------------------------------------
@@ -511,7 +528,7 @@ namespace collections {
 		/// Returns true is the array contains zero elements, false otherwise.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] bool isEmpty() const noexcept {
-			return _end == _array;
+			return _end == _begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -520,8 +537,8 @@ namespace collections {
 		/// are destroyed.
 		/// </summary> --------------------------------------------------------
 		void clear() noexcept {
-			destroyElements(_array, _end);
-			_end = _array;
+			destroyElements(_begin, _end);
+			_end = _begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -547,10 +564,10 @@ namespace collections {
 		void reserve(size_type capacity) {
 			validateCapacity(capacity);
 
-			if (!_array) {
-				_array = allocate(capacity);
-				_end = _array;
-				_capacity = capacity;
+			if (!_begin) {
+				_begin = allocate(capacity);
+				_end = _begin;
+				_final = _begin + capacity;
 			}
 			else
 				reallocate(capacity);
@@ -585,7 +602,7 @@ namespace collections {
 		/// array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] iterator begin() noexcept {
-			return _array;
+			return _begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -611,7 +628,7 @@ namespace collections {
 		/// the array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator begin() const noexcept {
-			return _array;
+			return _begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -637,7 +654,7 @@ namespace collections {
 		/// the array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cbegin() const noexcept {
-			return _array;
+			return _begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -746,7 +763,7 @@ namespace collections {
 		/// Returns a reference to the first element in the array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reference front() {
-			return *_array;
+			return *_begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -758,7 +775,7 @@ namespace collections {
 		/// Returns a const reference to the first element in the array.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reference front() const {
-			return *_array;
+			return *_begin;
 		}
 
 		// --------------------------------------------------------------------
@@ -794,7 +811,7 @@ namespace collections {
 		/// Const lvalue reference to the element to be inserted.
 		/// </param> ----------------------------------------------------------
 		void insertFront(const_reference element) {
-			insertAt(_array, element);
+			insertAt(_begin, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -806,7 +823,7 @@ namespace collections {
 		/// Rvalue reference to the element to be inserted.
 		/// </param> ----------------------------------------------------------
 		void insertFront(value_type&& element) {
-			insertAt(_array, element);
+			insertAt(_begin, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -976,7 +993,7 @@ namespace collections {
 		iterator insert(Index index, in_iterator begin, sentinel end) {
 			size_type i = index.get();
 			validateIndexInRange(i);
-			return insertAt(_array + i, begin, end);
+			return insertAt(_begin + i, begin, end);
 		}
 
 		// --------------------------------------------------------------------
@@ -999,7 +1016,7 @@ namespace collections {
 		iterator insertUnstable(Index index, const_reference element) {
 			size_type i = index.get();
 			validateIndexInRange(i);
-			return insertUnstable(_array + i, element);
+			return insertUnstable(_begin + i, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -1025,9 +1042,9 @@ namespace collections {
 		) {
 			using std::swap;
 
-			size_type offset = position - _array;
+			size_type offset = position - _begin;
 			ensureCapacity();
-			iterator pos = _array + offset;
+			iterator pos = _begin + offset;
 
 			constructElement(_end, element);
 			swap(*pos, *_end++);
@@ -1050,7 +1067,7 @@ namespace collections {
 		iterator remove(Index index) {
 			size_type i = index.get();
 			validateIndexExists(i);
-			return remove(_array + i);
+			return remove(_begin + i);
 		}
 
 		// --------------------------------------------------------------------
@@ -1067,11 +1084,11 @@ namespace collections {
 		/// Returns an iterator to the position following the removed element.
 		/// </returns> --------------------------------------------------------
 		iterator remove(const_iterator position) {
-			auto offset = position - _array;
+			auto offset = position - _begin;
 			if (position++ != (_end - 1)) 
 				collections::shift(const_cast<iterator>(position), _end, -1);
 			destroyElement((_end--) - 1);
-			return _array + offset;
+			return _begin + offset;
 		}
 
 		// --------------------------------------------------------------------
@@ -1090,7 +1107,7 @@ namespace collections {
 		iterator removeUnstable(Index index) {
 			size_type i = index.get();
 			validateIndexExists(i);
-			return removeUnstable(_array + i);
+			return removeUnstable(_begin + i);
 		}
 
 		// --------------------------------------------------------------------
@@ -1111,7 +1128,7 @@ namespace collections {
 			if (position != _end - 1) 
 				swap(*const_cast<iterator>(position), *(_end - 1));
 			destroyElement((_end--) - 1);
-			return _array + (position - _array);
+			return _begin + (position - _begin);
 		}
 
 		// --------------------------------------------------------------------
@@ -1119,7 +1136,7 @@ namespace collections {
 		/// Removes the first element in the array.
 		/// </summary> --------------------------------------------------------
 		void removeFront() {
-			remove(_array);
+			remove(_begin);
 		}
 
 		// --------------------------------------------------------------------
@@ -1147,7 +1164,7 @@ namespace collections {
 			validateIndexInRange(range.end);
 			
 			if (range.begin < range.end)
-				return remove(_array + range.begin, _array + range.end);
+				return remove(_begin + range.begin, _begin + range.end);
 			else
 				throw std::exception("Begin index is greater than end.");
 		}
@@ -1161,12 +1178,12 @@ namespace collections {
 		/// Returns an iterator to the elemement following end.
 		/// </returns> --------------------------------------------------------
 		iterator remove(const_iterator begin, const_iterator end) {
-			size_type offset = begin - _array;
+			size_type offset = begin - _begin;
 			int64_t range_size = end - begin;
 			collections::shift(const_cast<iterator>(end), _end, -range_size);
 			destroyElements(_end - range_size, _end);
 			_end -= range_size;
-			return _array + offset;
+			return _begin + offset;
 		}
 
 		// --------------------------------------------------------------------
@@ -1180,7 +1197,7 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		template <class ...Args>
 		void emplaceFront(Args&&... args) {
-			insertAt(_array, std::forward<Args>(args)...);
+			insertAt(_begin, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1259,21 +1276,38 @@ namespace collections {
 		friend void swap(DynamicArray& a, DynamicArray& b) 
 			noexcept(alloc_traits::is_always_equal::value) 
 		{
-			constexpr bool propagate = 
-				alloc_traits::propagate_on_container_swap::value;
-			constexpr bool alwaysEqual = 
+			a.swap(b);
+		}
+
+		// -----------------------------------------------------------------
+		/// <summary> 
+		/// Swaps the contents of this DynamicArray with the given array..
+		/// </summary>
+		/// 
+		/// <param name="a">
+		/// The first container to be swapped.
+		/// </param>
+		/// <param name="b">
+		/// The second container to be swapped.
+		/// </param> -------------------------------------------------------
+		void swap(DynamicArray& other) noexcept(
+			alloc_traits::is_always_equal::value
+		) {
+			static constexpr bool isAlwaysEqual = 
 				alloc_traits::is_always_equal::value;
+			static constexpr bool willPropagate = 
+				alloc_traits::propagate_on_container_swap::value;
+			bool isInstanceEqual = _allocator == other._allocator;
 
-			bool equalAllocators = a._allocator == b._allocator;
-
-			if constexpr (alwaysEqual)
-				swapData(a, b);
-			else if (equalAllocators)
-				swapData(a, b);
-			else if (propagate) 
-				swapAll(a, b);
-			else
-				throw std::exception("Swap on unequal, stateful allocators");
+			if (isAlwaysEqual || isInstanceEqual)
+				swapMembers(other);
+			else if (willPropagate) {
+				using std::swap;
+				swap(_allocator, other._allocator);
+				swapMembers(other);
+			}
+			else // Undefined behavior under STL specification
+				;
 		}
 
 		// --------------------------------------------------------------------
@@ -1322,11 +1356,7 @@ namespace collections {
 			const DynamicArray& lhs,
 			const DynamicArray& rhs
 		) noexcept requires std::three_way_comparable<value_type> {
-
-			auto compareSize = lhs.size() <=> rhs.size();
-			if (compareSize == 0)
-				return collections::lexicographic_compare(lhs, rhs);
-			return static_cast<decltype(value_type{} <=> value_type{})> (compareSize);
+			return collections::lexicographic_compare(lhs, rhs);
 		}
 
 		// --------------------------------------------------------------------
@@ -1398,10 +1428,11 @@ namespace collections {
 		static constexpr auto ERR_MAX_SIZE = "Capacity exceeds maximum size.\n";
 		static constexpr auto ERR_TOO_SMALL = "Capacity too small for contents.\n";
 
-		pointer _array;
-		pointer _end;
+		[[no_unique_address, msvc::no_unique_address]] 
 		allocator_type _allocator;
-		size_type _capacity;
+		pointer _begin;
+		pointer _end;
+		pointer _final;
 
 		[[nodiscard]] pointer allocate(size_type size) {
 			return alloc_traits::allocate(_allocator, size);
@@ -1426,89 +1457,102 @@ namespace collections {
 				destroyElement(begin++);
 		}
 
-		void releaseResources() {
-			if (_array != nullptr) {
+		void releaseResources() noexcept {
+			if (_begin != nullptr) {
 				clear();
-				deallocate(_array, _capacity);
-				_array = nullptr;
-				_capacity = 0;
+				deallocate(_begin, capacity());
+				_begin = nullptr;
+				_final = nullptr;
 			}
 		}
 
-		void copyTo(pointer destination, size_type capacity) {
-			pointer begin = _array, end = _end, offset = destination;
+		void tranferTo(pointer copy, size_type capacity) {
+			pointer begin = _begin;
+			pointer current = copy;
 
-			while (begin != end) {
+			while (begin != _end) {
 				try {
-					constructElement(offset++, *begin++);
+					constructElement(current++, std::move_if_noexcept(*begin));
+					++begin;
 				}
 				catch (...) {
-					destroyElements(destination, offset);
-					deallocate(destination, capacity);
+					destroyElements(copy, current);
+					deallocate(copy, capacity);
 					throw;
 				}
 			}
-		}
-
-		void moveTo(pointer destination) {
-			pointer begin = _array, end = _end;
-			while (begin != end) 
-				constructElement(destination++, std::move(*begin++));
-		}
-
-		void tranferElementsTo(pointer destination, size_type capacity) {
-			assert(size() <= capacity);
-
-			if constexpr (std::is_nothrow_move_constructible_v<value_type>)
-				moveTo(destination);
-			else 
-				copyTo(destination, capacity);
 		}
 
 		void reallocate(size_type capacity) {
 			size_type size = this->size();
 
 			pointer copy = allocate(capacity);
-			tranferElementsTo(copy, capacity);
-			destroyElements(_array, _end);
-			deallocate(_array, _capacity);
+			tranferTo(copy, capacity);
+			clear();
+			deallocate(_begin, this->capacity());
 
-			_array = copy;
+			_begin = copy;
 			_end = copy + size;
-			_capacity = capacity;
+			_final = copy + capacity;
 		}
 
-		void elementWiseCopyAssign(const DynamicArray& other) {
-			if (size() < other.size()) {
-				collections::copy_n(other._array, size(), _array);
-				insert(_end, other._array + size(), other._end);
+		void elementWiseCopy(const DynamicArray& other) {
+			if constexpr (std::is_copy_assignable_v<value_type>) {
+				if (size() < other.size()) {
+					collections::copy_n(other._begin, size(), _begin);
+					insert(_end, other._begin + size(), other._end);
+				}
+				else {
+					iterator pos = collections::copy(other, _begin);
+					remove(pos, _end);
+				}
 			}
 			else {
-				auto pos = collections::copy(other, _array);
-				remove(pos, _end);
+				clear();
+				insert(_end, other._begin, other._end);
 			}
 		}
 
-		void elementwiseMoveAssign(DynamicArray&& other) {
-			if (size() < other.size()) {
-				collections::move_n(other._array, size(), _array);
-				insert(
-					_end, 
-					std::move_iterator(other._array + size()), 
-					other._end
-				);
+		void elementWiseCopy(DynamicArray&& other) {
+			if constexpr (std::is_move_assignable_v<value_type>) {
+				if (size() < other.size()) {
+					collections::move_n(other._begin, size(), _begin);
+					auto start = std::move_iterator(other._begin + size());
+					auto end = std::move_iterator(other._end);
+					insert(_end, start, end);
+				}
+				else {
+					iterator pos = collections::move(other, _begin);
+					remove(pos, _end);
+				}
 			}
 			else {
-				auto pos = collections::move(other, _array);
-				remove(pos, _end);
+				clear();
+				insert(_end, std::move_iterator(other._begin), other._end);
 			}
 		}
+
+		void moveMembers(DynamicArray&& other) noexcept {
+			_begin = std::move(other._begin);
+			_end = std::move(other._end);
+			_final = std::move(other._final);
+			other._begin = nullptr;
+			other._end = nullptr;
+			other._final = nullptr;
+		}
+
+		void swapMembers(DynamicArray& other) noexcept {
+			using std::swap;
+			swap(_begin, other._begin);
+			swap(_end, other._end);
+			swap(_final, other._final);
+		};
 
 		template <class T> 
 		iterator insertAt(iterator pos, T&& element) {
 			size_type offset = pos - begin();
 			ensureCapacity();
-			pos = _array + offset;
+			pos = _begin + offset;
 
 			if (pos == _end)
 				constructElement(_end++, std::forward<T>(element));
@@ -1524,7 +1568,7 @@ namespace collections {
 		iterator insertAt(Index index, T&& element) {
 			size_type i = index.get();
 			validateIndexInRange(i);
-			return insertAt(_array + i, std::forward<T>(element));
+			return insertAt(_begin + i, std::forward<T>(element));
 		}
 
 		template <
@@ -1532,7 +1576,7 @@ namespace collections {
 			std::sentinel_for<in_iterator> sentinel
 		>
 		iterator insertAt(iterator position, in_iterator begin, sentinel end) {
-			size_type offset = position - _array;
+			size_type offset = position - _begin;
 
 			while (begin != end) {
 				position = insertAt(const_cast<iterator>(position), *begin++);
@@ -1549,10 +1593,10 @@ namespace collections {
 			size_type range_size = std::distance(begin, end);
 			size_type total = size() + range_size;
 
-			if (_capacity < total) {
-				size_type offset = position - _array;
+			if (capacity() < total) {
+				size_type offset = position - _begin;
 				reserve(total);
-				position = _array + offset;
+				position = _begin + offset;
 			}
 
 			if (position == _end) 
@@ -1575,25 +1619,25 @@ namespace collections {
 		}
 
 		void ensureCapacity() {
-			if (_array == nullptr)
+			if (_begin == nullptr)
 				reserve(8);
-			else if (size() >= _capacity)
+			else if (size() >= capacity())
 				expand();
 		}
 
 		void expand() {
-			if (_capacity >= MAX_CAPACITY) 
+			if (capacity() >= max_size())
 				allocationError(ERR_MAX_SIZE);
 
 			size_type doubledSize = size() << 1;
 			if (doubledSize < size())
-				reserve(MAX_CAPACITY);
+				reserve(max_size());
 			else
 				reserve(doubledSize);
 		}
 
 		void validateCapacity(size_type capacity) {
-			if (capacity > _capacity && capacity > MAX_CAPACITY) 
+			if (capacity >  max_size())
 				allocationError(ERR_MAX_SIZE);
 			if (capacity < size())
 				allocationError(ERR_TOO_SMALL);
@@ -1620,19 +1664,6 @@ namespace collections {
 			err << INVALID_INDEX << std::endl << "Index: " << index
 				<< " Size: " << size() << std::endl;
 			throw std::out_of_range(err.str().c_str());
-		}
-
-		friend void swapData(DynamicArray& a, DynamicArray& b) noexcept {
-			using std::swap;
-			swap(a._array, b._array);
-			swap(a._end, b._end);
-			swap(a._capacity, b._capacity);
-		};
-
-		friend void swapAll(DynamicArray& a, DynamicArray& b) noexcept {
-			using std::swap;
-			swap(a._allocator, b._allocator);
-			swapData(a, b);
 		}
 	};
 
