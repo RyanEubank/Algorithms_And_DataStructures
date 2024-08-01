@@ -35,6 +35,9 @@ namespace collections {
 	using Size = NamedType<size_t, struct SizeType>;
 	using Index = NamedType<size_t, struct IndexType>;
 
+	template <class T, class U>
+	using rebind = std::allocator_traits<T>::template rebind_alloc<U>;
+
 	struct IndexRange {
 		size_t begin;
 		size_t end;

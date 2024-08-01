@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include "base/BSTBase.h"
-#include "../adapters/Queue.h"
+#include "base/BaseBST.h"
 
 namespace collections {
 
@@ -26,36 +25,37 @@ namespace collections {
 		class element_t,
 		class compare_t = std::less<element_t>,
 		class allocator_t = std::allocator<element_t>
-	> requires 
-		std::predicate<compare_t, element_t, element_t> && 
-		std::same_as<element_t, typename std::allocator_traits<allocator_t>::value_type>
-	class BinarySearchTree : public impl::BSTBase<
+	> 
+	class BinarySearchTree : public impl::BaseBST<
 		element_t,
 		compare_t,
 		allocator_t,
-		BinarySearchTree<element_t, compare_t, allocator_t>
-	> {
+		BinarySearchTree<element_t, compare_t, allocator_t>>
+	{
 	private:
-		using bst = BinarySearchTree<element_t, compare_t, allocator_t>;
-		using base = impl::BSTBase<element_t, compare_t, allocator_t, bst>;
-		using node = base::node;
-		using alloc_traits = std::allocator_traits<allocator_t>::template rebind_traits<node>;
-		using node_allocator_type = alloc_traits::allocator_type;
+		using tree	= BinarySearchTree<element_t, compare_t, allocator_t>;
+		using base	= impl::BaseBST<element_t, compare_t, allocator_t, tree>;
+
+		using node					= base::node;
+		using alloc_traits			= base::alloc_traits;
+		using node_allocator_t		= rebind<allocator_t, node>;
+		using node_alloc_traits		= std::allocator_traits<node_allocator_t>;
 
 		friend class base;
 
 	public:
-		using allocator_type = allocator_t;
-		using value_type = base::value_type;
-		using size_type = base::size_type;
-		using reference = base::reference;
-		using const_reference = base::const_reference;
-		using pointer = std::allocator_traits<allocator_t>::pointer;
-		using const_pointer = std::allocator_traits<allocator_t>::const_pointer;
-		using iterator = base::iterator;
-		using const_iterator = base::const_iterator;
-		using reverse_iterator = base::reverse_iterator;
-		using const_reverse_iterator = base::const_reverse_iterator;
+		using allocator_type			= base::allocator_type;
+		using value_type				= base::value_type;
+		using size_type					= base::size_type;
+		using difference_type			= base::difference_type;
+		using reference					= base::reference;
+		using const_reference			= base::const_reference;
+		using pointer					= base::pointer;
+		using const_pointer				= base::const_pointer;
+		using iterator					= base::iterator;
+		using const_iterator			= base::const_iterator;
+		using reverse_iterator			= base::reverse_iterator;
+		using const_reverse_iterator	= base::const_reverse_iterator;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -64,9 +64,10 @@ namespace collections {
 		///	<para>
 		/// Constructs an empty BinarySearchTree.
 		/// </para></summary> -------------------------------------------------
-		constexpr BinarySearchTree() : 
+		constexpr BinarySearchTree() 
+			noexcept(std::is_nothrow_default_constructible_v<node_allocator_t>) :
 			base(),
-			_node_allocator(allocator_type{})
+			_allocator(allocator_type{})
 		{
 			
 		}
@@ -81,9 +82,10 @@ namespace collections {
 		/// <param name="alloc">
 		/// The allocator instance used by the tree.
 		/// </param> ----------------------------------------------------------
-		constexpr explicit BinarySearchTree(const allocator_type& alloc) noexcept : 
-			base(alloc), 
-			_node_allocator(alloc)
+		constexpr explicit BinarySearchTree(const allocator_type& alloc) 
+			noexcept(std::is_nothrow_copy_constructible_v<node_allocator_t>) :
+			base(), 
+			_allocator(alloc)
 		{
 			
 		}
@@ -119,10 +121,12 @@ namespace collections {
 		/// <param name="other">
 		/// The BinarySearchTree to be moved into this one.
 		/// </param> ----------------------------------------------------------
-		BinarySearchTree(BinarySearchTree&& other) noexcept(
-			std::is_nothrow_move_constructible_v<allocator_type>
-		) : BinarySearchTree(std::move(other._allocator)) {
-			this->swapData(other);
+		BinarySearchTree(BinarySearchTree&& other)
+			noexcept(std::is_nothrow_move_constructible_v<node_allocator_t>) :
+			base(std::move(other)),
+			_allocator(std::move(other._allocator))
+		{
+			
 		}
 
 		// --------------------------------------------------------------------
@@ -228,23 +232,7 @@ namespace collections {
 		/// Returns this BinarySearchTree with the copied data.
 		/// </returns> --------------------------------------------------------
 		BinarySearchTree& operator=(const BinarySearchTree& other) {
-			constexpr bool propagate = 
-				alloc_traits::propagate_on_container_copy_assignment::value;
-			constexpr bool alwaysEqual = 
-				alloc_traits::is_always_equal::value;
-
-			bool equalAllocators = this->_allocator == other._allocator;
-
-			this->clear();
-
-			if (propagate && !equalAllocators) {
-				this->_allocator = other._allocator;
-				_node_allocator = other._node_allocator;
-			}
-
-			this->insert(other.begin(), other.end());
-
-			return *this;
+			return this->copyAssign(other);
 		}
 
 		// --------------------------------------------------------------------
@@ -265,52 +253,32 @@ namespace collections {
 		BinarySearchTree& operator=(BinarySearchTree&& other) 
 			noexcept(alloc_traits::is_always_equal::value) 
 		{
-			constexpr bool propagate = 
-				alloc_traits::propagate_on_container_move_assignment::value;
-			constexpr bool alwaysEqual =
-				alloc_traits::is_always_equal::value;
-
-			bool equalAllocators = this->_allocator == other._allocator;
-
-			if constexpr (alwaysEqual)
-				this->swapData(other);
-			else if (equalAllocators)
-				this->swapData(other);
-			else if (propagate)
-				swapAll(*this, other);
-			else {
-				this->clear();
-				auto begin = std::move_iterator(other.begin());
-				auto end = std::move_iterator(other.end());
-				this->insert(begin, end);
-			}
-
-			return *this;
+			return this->moveAssign(std::move(other));
 		}
 
 	private:
 		
-		node_allocator_type _node_allocator;
+		node_allocator_t _allocator;
 
 		[[nodiscard]] node* allocate() {
-			return alloc_traits::allocate(_node_allocator, 1);
+			return node_alloc_traits::allocate(_allocator, 1);
 		}
 
 		void deallocate(node* n) {
-			alloc_traits::deallocate(_node_allocator, n, 1);
+			node_alloc_traits::deallocate(_allocator, n, 1);
 		}
 
 		template <class... Args>
 		void constructNode(node* n, Args&&... args) {
-			alloc_traits::construct(
-				_node_allocator, 
+			node_alloc_traits::construct(
+				_allocator, 
 				n, 
 				std::forward<Args>(args)...
 			);
 		}
 
 		void destroyNode(node* n) {
-			alloc_traits::destroy(_node_allocator, n);
+			node_alloc_traits::destroy(_allocator, n);
 		}
 
 		template <class... Args>
@@ -320,48 +288,37 @@ namespace collections {
 			return n;
 		}
 
-		size_type heightOfNode(const node* n) const noexcept {
-			Queue<const node*> queue { n };
-			size_type level = 0;
-			size_type count = 0;
+		[[nodiscard]] size_type heightOfNode(const node* n) const noexcept {
+			return this->heightAt(n);
+		}
+	
+		// ---------------------------------------------------------------------
+		// Basic binary search tree does no extra work after insertion, removal,
+		// or searching and accessing its elements.
 
-			while (!queue.isEmpty()) {
-				level++;
-				count = queue.size();
-
-				while (count--) {
-					const node* next = queue.front();
-					queue.dequeue_front();
-
-					if (next->_left)
-						queue.enqueue_back(next->_left);
-					if (next->_right)
-						queue.enqueue_back(next->_right);
-				}
-				
-			}
-
-			return level - 1;
+		iterator onInsert(node* hint, const_reference element) {
+			node* result = this->insertAt(hint, element);
+			return iterator(this, result); 
 		}
 
-		void onInsert(node* n) {
-			return; // basic bst does nothing after insertion
+		template <class... Args>
+		iterator onEmplace(node* hint, Args&&... args) {
+			node* result = this->emplaceAt(hint, std::forward<Args>(args)...);
+			return iterator(this, result); 
 		}
 
 		void onRemove(node* n) {
-			return; // basic bst does nothing after deletion
+			this->removeAt(n);
 		}
 
-		void onSearch(base::_lookupResult result) const {
-			return; // basic bst does nothing after search
+		iterator onSearch(const_reference key) {
+			node* n = this->search(key).get();
+			return iterator(this, n);
 		}
 
-		static void swapAll(BinarySearchTree& a, BinarySearchTree& b) noexcept {
-			using std::swap;
-			swap(a._allocator, b._allocator);
-			swap(a._node_allocator, b._node_allocator);
-			swapData(a, b);
-		}	
+		iterator onAccessNode(node* n) {
+			return iterator(this, n);
+		}
 	};
 
 	static_assert(

@@ -50,9 +50,9 @@ namespace collection_tests {
 		//       \
 		//        _ <---- Insert 2 Here
 
-		ASSERT_EQ(tree.root(), 0);
-		ASSERT_EQ(tree.minimum(), 0);
-		ASSERT_EQ(tree.maximum(), 1);
+		ASSERT_EQ(*tree.root(), 0);
+		ASSERT_EQ(*tree.minimum(), 0);
+		ASSERT_EQ(*tree.maximum(), 1);
 
 		auto inOrderBefore = { 0, 1 };
 		auto preOrderBefore = { 0, 1 };
@@ -74,9 +74,9 @@ namespace collection_tests {
 
 		tree.insert(2);
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
@@ -103,9 +103,9 @@ namespace collection_tests {
 		//    /
 		//   _ <---- Insert 0 Here
 
-		EXPECT_EQ(tree.root(), 2);
-		EXPECT_EQ(tree.minimum(), 1);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 2);
+		EXPECT_EQ(*tree.minimum(), 1);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderBefore = { 1, 2 };
 		auto preOrderBefore = { 2, 1 };
@@ -127,9 +127,9 @@ namespace collection_tests {
 
 		tree.insert(0);
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
@@ -158,9 +158,9 @@ namespace collection_tests {
 		//      \
 		//       _ <---- Insert 1 Here
 
-		EXPECT_EQ(tree.root(), 2);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 2);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderBefore = { 0, 2 };
 		auto preOrderBefore = { 2, 0 };
@@ -182,9 +182,9 @@ namespace collection_tests {
 
 		tree.insert(1);
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
@@ -213,9 +213,9 @@ namespace collection_tests {
 		//        /
 		//       _ <---- Insert 1 Here
 
-		EXPECT_EQ(tree.root(), 0);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 0);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderBefore = { 0, 2 };
 		auto preOrderBefore = { 0, 2 };
@@ -237,9 +237,9 @@ namespace collection_tests {
 
 		tree.insert(1);
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 2);
 		
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
@@ -270,9 +270,9 @@ namespace collection_tests {
 		//	    \
 		//       \____ Delete -1 Here
 
-		EXPECT_EQ(tree.root(), 0);
-		EXPECT_EQ(tree.minimum(), -1);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 0);
+		EXPECT_EQ(*tree.minimum(), -1);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderBefore = { -1, 0, 1, 2 };
 		auto preOrderBefore = { 0, -1, 1, 2 };
@@ -296,9 +296,9 @@ namespace collection_tests {
 		ASSERT_EQ(*it, -1);
 		tree.remove(it);
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
@@ -337,9 +337,9 @@ namespace collection_tests {
 		//	   /   \
 		//	 (-1)   (2)
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), -1);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), -1);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderAfter = { -1, 1, 2 };
 		auto preOrderAfter = { 1, -1, 2 };
@@ -368,9 +368,9 @@ namespace collection_tests {
 		//     /    
 		//   (0)     
 
-		EXPECT_EQ(tree.root(), 2);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 3);
+		EXPECT_EQ(*tree.root(), 2);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 3);
 
 		auto inOrderBefore = { 0, 1, 2, 3 };
 		auto preOrderBefore = { 2, 1, 0, 3 };
@@ -394,9 +394,9 @@ namespace collection_tests {
 		ASSERT_EQ(*it, 3);
 		tree.remove(it);
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
@@ -435,9 +435,9 @@ namespace collection_tests {
 		//	   /   \
 		//	 (0)   (3)
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 3);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 3);
 
 		auto inOrderAfter = { 0, 1, 3 };
 		auto preOrderAfter = { 1, 0, 3 };
@@ -468,9 +468,9 @@ namespace collection_tests {
 		//	    \
 		//       \____ Delete -1 Here
 
-		EXPECT_EQ(tree.root(), 0);
-		EXPECT_EQ(tree.minimum(), -1);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 0);
+		EXPECT_EQ(*tree.minimum(), -1);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderBefore = { -1, 0, 1, 2 };
 		auto preOrderBefore = { 0, -1, 2, 1 };
@@ -494,9 +494,9 @@ namespace collection_tests {
 		ASSERT_EQ(*it, -1);
 		tree.remove(it);
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
@@ -536,9 +536,9 @@ namespace collection_tests {
 		//	 (-1)   (2)
 
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), -1);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), -1);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderAfter = { -1, 1, 2 };
 		auto preOrderAfter = { 1, -1, 2 };
@@ -567,9 +567,9 @@ namespace collection_tests {
 		//       \   
 		//       (1)   
 
-		EXPECT_EQ(tree.root(), 2);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 3);
+		EXPECT_EQ(*tree.root(), 2);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 3);
 
 		auto inOrderBefore = { 0, 1, 2, 3 };
 		auto preOrderBefore = { 2, 0, 1, 3 };
@@ -593,9 +593,9 @@ namespace collection_tests {
 		ASSERT_EQ(*it, 3);
 		tree.remove(it);
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 2);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 2);
 
 		auto inOrderAfter = { 0, 1, 2 };
 		auto preOrderAfter = { 1, 0, 2 };
@@ -635,9 +635,9 @@ namespace collection_tests {
 		//	   /   \
 		//	 (0)   (3)
 
-		EXPECT_EQ(tree.root(), 1);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 3);
+		EXPECT_EQ(*tree.root(), 1);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 3);
 
 		auto inOrderAfter = { 0, 1, 3 };
 		auto preOrderAfter = { 1, 0, 3 };
@@ -666,9 +666,9 @@ namespace collection_tests {
 		//       /
 		//      (1)   
 
-		EXPECT_EQ(tree.root(), 8);
-		EXPECT_EQ(tree.minimum(), 1);
-		EXPECT_EQ(tree.maximum(), 12);
+		EXPECT_EQ(*tree.root(), 8);
+		EXPECT_EQ(*tree.minimum(), 1);
+		EXPECT_EQ(*tree.maximum(), 12);
 
 		auto inOrderBefore = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 		auto preOrderBefore = { 8, 5, 3, 2, 1, 4, 7, 6, 11, 10, 9, 12 };
@@ -706,9 +706,9 @@ namespace collection_tests {
 		//    /          /    /  \
 		//   (1)        (6) (9)  (11)
 
-		EXPECT_EQ(tree.root(), 5);
-		EXPECT_EQ(tree.minimum(), 1);
-		EXPECT_EQ(tree.maximum(), 11);
+		EXPECT_EQ(*tree.root(), 5);
+		EXPECT_EQ(*tree.minimum(), 1);
+		EXPECT_EQ(*tree.maximum(), 11);
 
 		auto inOrderAfter = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
 		auto preOrderAfter = { 5, 3, 2, 1, 4, 8, 7, 6, 10, 9, 11 };

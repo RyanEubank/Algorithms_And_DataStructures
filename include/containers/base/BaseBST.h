@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "CRTP.h"
 #include "../../algorithms/collection_algorithms.h"
 #include "../../concepts/collection.h"
 #include "../../adapters/TreeTraversalAdapters.h"
@@ -29,27 +30,32 @@ namespace collections::impl {
 		class compare_t, 
 		class allocator_t, 
 		class derived_t
-	>
-	class BSTBase {
+	> requires std::predicate<compare_t, element_t, element_t>
+	class BaseBST : public CRTP<derived_t, BaseBST> {
 	protected:
 
 		template <bool isConst>
 		class BinaryTreeIterator;
 
-		using alloc_traits = std::allocator_traits<allocator_t>;
-		using node = struct _node;
+		using alloc_t		= rebind<allocator_t, element_t>;
+		using alloc_traits	= std::allocator_traits<alloc_t>;
+		using node			= struct _node;
 
 	public:
 
-		using allocator_type = allocator_t;
-		using value_type = allocator_type::value_type;
-		using size_type = size_t;
-		using reference = value_type&;
-		using const_reference = const value_type&;
-		using iterator = BinaryTreeIterator<false>;
-		using const_iterator = BinaryTreeIterator<true>;
-		using reverse_iterator = std::reverse_iterator<iterator>;
-		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+		using value_type		= element_t;
+		using allocator_type	= allocator_t;
+		using size_type			= alloc_traits::size_type;
+		using difference_type	= alloc_traits::difference_type;
+		using pointer			= alloc_traits::pointer;
+		using const_pointer		= alloc_traits::const_pointer;
+		using reference			= value_type&;
+		using const_reference	= const value_type&;
+		
+		using iterator					= BinaryTreeIterator<false>;
+		using const_iterator			= BinaryTreeIterator<true>;
+		using reverse_iterator			= std::reverse_iterator<iterator>;
+		using const_reverse_iterator	= std::reverse_iterator<const_iterator>;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -58,21 +64,8 @@ namespace collections::impl {
 		/// <para>
 		/// Destructs the tree safely releasing its memory.
 		/// </para></summary> -------------------------------------------------
-		~BSTBase() {
+		~BaseBST() {
 			clear();
-		}
-
-		// --------------------------------------------------------------------
-		/// <summary>
-		/// Returns the allocator managing memory for the container.
-		/// </summary>
-		/// 
-		/// <returns>
-		/// Returns a reference to the allocator managing memory for the 
-		/// container.
-		/// </returns> --------------------------------------------------------
-		[[nodiscard]] allocator_type allocator() const noexcept {
-			return _allocator;
 		}
 
 		// --------------------------------------------------------------------
@@ -98,7 +91,7 @@ namespace collections::impl {
 
 			while (begin != end) {
 				node* n = begin++._node;
-				this_derived()->destroyNode(n);
+				this->self().destroyNode(n);
 			}
 
 			_size = 0;
@@ -122,10 +115,22 @@ namespace collections::impl {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns a const_reference to the element at the root of the tree.
+		/// Returns an iterator to the element at the root of the tree.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] const_reference root() const noexcept {
-			return _root->_element;
+		[[nodiscard]] iterator root() noexcept {
+			return this->self().onAccessNode(_root);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns the root of the tree.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const_iterator to the element at the root of the tree.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator root() const noexcept {
+			return const_iterator(this, _root);
 		}
 
 		// --------------------------------------------------------------------
@@ -134,11 +139,24 @@ namespace collections::impl {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns a const_reference to the leftmost element in the tree, or
+		/// Returns an iterator to the leftmost element in the tree, or
 		/// the smallest node.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] const_reference minimum() const noexcept {
-			return _min->_element;
+		[[nodiscard]] iterator minimum() noexcept {
+			return this->self().onAccessNode(_min);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns the minimum element in the tree.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const_iterator to the leftmost element in the tree, or
+		/// the smallest node.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator minimum() const noexcept {
+			return const_iterator(this, _min);
 		}
 
 		// --------------------------------------------------------------------
@@ -147,11 +165,24 @@ namespace collections::impl {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns a const_reference to the rightmost element in the tree, or
+		/// Returns an iterator to the rightmost element in the tree, or
 		/// the largest node.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] const_reference maximum() const noexcept {
-			return _max->_element;
+		[[nodiscard]] iterator maximum() noexcept {
+			return this->self().onAccessNode(_max);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns the maximum element in the tree.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const_iterator to the rightmost element in the tree, or
+		/// the largest node.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator maximum() const noexcept {
+			return const_iterator(this, _max);
 		}
 
 		// --------------------------------------------------------------------
@@ -164,7 +195,7 @@ namespace collections::impl {
 		/// iterator position.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] size_type heightOf(const_iterator position) const noexcept {
-			return this_derived()->heightOfNode(position._node);
+			return this->self().heightOfNode(position._node);
 		}
 
 		// --------------------------------------------------------------------
@@ -409,8 +440,7 @@ namespace collections::impl {
 		/// tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
 		iterator find(const_reference element) {
-			const node* n = this_derived()->search(element).get();
-			return iterator(this, n);
+			return this->self().onSearch(element);
 		}
 
 		// --------------------------------------------------------------------
@@ -426,7 +456,7 @@ namespace collections::impl {
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
 		bool contains(const_reference element) {
-			return this_derived()->search(element).get() != nullptr;
+			return find(element) != end();
 		}
 
 		// --------------------------------------------------------------------
@@ -443,7 +473,7 @@ namespace collections::impl {
 		/// the tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
 		const_iterator find(const_reference element) const {
-			const node* n = this_derived()->search(element).get();
+			const node* n = search(element).get();
 			return const_iterator(this, n);
 		}
 
@@ -461,7 +491,7 @@ namespace collections::impl {
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
 		bool contains(const_reference element) const {
-			return this_derived()->search(element).get() != nullptr;
+			return find(element) != end();
 		}
 
 		// --------------------------------------------------------------------
@@ -478,7 +508,7 @@ namespace collections::impl {
 		/// preventing insertion if unsuccessful.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_reference element) {
-			return insertAt(_root, element);
+			return this->self().onInsert(_root, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -495,7 +525,7 @@ namespace collections::impl {
 		/// preventing insertion if unsuccessful.
 		/// </returns> --------------------------------------------------------
 		iterator insert(value_type&& element) {
-			return insertAt(_root, element);
+			return this->self().onInsert(_root, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -522,7 +552,7 @@ namespace collections::impl {
 		iterator insert(in_iterator begin, sentinel end) {
 			iterator result = this->end();
 			while (begin != end) 
-				result = insertAt(_root, *begin++);
+				result = this->self().onInsert(_root, *begin++);
 			return result;
 		}
 
@@ -544,7 +574,7 @@ namespace collections::impl {
 		/// preventing insertion.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_iterator position, const_reference element) {
-			return insertAt(position._node, element);
+			return this->self().onInsert(position._node, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -565,7 +595,7 @@ namespace collections::impl {
 		/// preventing insertion.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_iterator position, value_type&& element) {
-			return insertAt(position._node, element);
+			return this->self().onInsert(position._node, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -600,7 +630,7 @@ namespace collections::impl {
 		) {
 			auto result = iterator(this, position._node);
 			while (begin != end) 
-				result = insertAt(result._node, *begin++);
+				result = this->self().onInsert(result._node, *begin++);
 			return result;
 		}
 
@@ -634,7 +664,7 @@ namespace collections::impl {
 			const_iterator end
 		) {
 			while (begin != end) 
-				removeAt((begin++)._node);
+				this->self().onRemove((begin++)._node);
 			return iterator(this, end._node);
 		}
 
@@ -654,7 +684,8 @@ namespace collections::impl {
 		template <class T, class ...Args> 
 			requires (!std::convertible_to<T, const_iterator>)
 		iterator emplace(T&& arg1, Args&&... args) {
-			return emplaceAt(_root, arg1, std::forward<Args>(args)...);
+			return this->self().onEmplace(
+				_root, arg1, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -675,7 +706,26 @@ namespace collections::impl {
 		/// </returns> --------------------------------------------------------
 		template <class ...Args>
 		iterator emplace(const_iterator position, Args&&... args) {
-			return emplaceAt(position._node, std::forward<Args>(args)...);
+			return this->self().onEmplace(
+				position._node, std::forward<Args>(args)...);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary> 
+		/// Swaps the contents of the given trees.
+		/// </summary>
+		/// 
+		/// <param name="a">
+		/// The first tree to be swapped.
+		/// </param>
+		/// 
+		/// <param name="b">
+		/// The second tree to be swapped.
+		/// </param> ----------------------------------------------------------
+		friend void swap(BaseBST& a, BaseBST& b) 
+			noexcept(alloc_traits::is_always_equal::value) 
+		{
+			a.swap(b);
 		}
 
 		// --------------------------------------------------------------------
@@ -690,22 +740,23 @@ namespace collections::impl {
 		/// <param name="b">
 		/// The second tree to be swapped.
 		/// </param> ----------------------------------------------------------
-		friend void swap(BSTBase& a, BSTBase& b) 
+		void swap(BaseBST& other) 
 			noexcept(alloc_traits::is_always_equal::value) 
 		{
-			constexpr bool propagate = 
+			constexpr bool willPropagate = 
 				alloc_traits::propagate_on_container_swap::value;
-			constexpr bool alwaysEqual = 
+			constexpr bool isAlwaysEqual = 
 				alloc_traits::is_always_equal::value;
+			bool isInstanceEqual = 
+				this->self()._allocator == other.self()._allocator;
 
-			bool equalAllocators = a._allocator == b._allocator;
-
-			if constexpr (alwaysEqual)
-				a.swapData(b);
-			else if (equalAllocators)
-				a.swapData(b);
-			else if (propagate) 
-				this_derived()->swapAll(a, b);
+			if (isAlwaysEqual || isInstanceEqual)
+				swapMembers(other);
+			else if (willPropagate) {
+				using std::swap;
+				swap(this->self()._allocator, other.self()._allocator);
+				swapMembers(other);
+			}
 			else
 				throw std::exception("Swap on unequal, stateful allocators");
 		}
@@ -727,7 +778,7 @@ namespace collections::impl {
 		/// ordering according to in-order traversal. This is not the same as
 		/// isomorphic equality.
 		/// </returns> --------------------------------------------------------
-		friend bool operator==(const BSTBase& lhs,const BSTBase& rhs) noexcept {
+		friend bool operator==(const BaseBST& lhs,const BaseBST& rhs) noexcept {
 			bool isSizeEqual = (lhs.size() == rhs.size());
 			if (isSizeEqual)
 				return collections::lexicographic_compare(lhs, rhs) == 0;
@@ -751,7 +802,7 @@ namespace collections::impl {
 		/// according to in-order traversal. Always returns false for trees of 
 		/// different size.
 		/// </returns> --------------------------------------------------------
-		friend auto operator<=>(const BSTBase& lhs, const BSTBase& rhs) 
+		friend auto operator<=>(const BaseBST& lhs, const BaseBST& rhs) 
 			noexcept requires std::three_way_comparable<value_type> 
 		{
 			using comparison = decltype(value_type{} <=> value_type{});
@@ -785,7 +836,7 @@ namespace collections::impl {
 		template <typename char_t>
 		friend std::basic_ostream<char_t>& operator<<(
 			std::basic_ostream<char_t>& os,
-			const BSTBase& tree
+			const BaseBST& tree
 		) {
 			auto begin = tree.begin<traversal_order::PRE_ORDER>();
 			auto end = tree.end<traversal_order::PRE_ORDER>();
@@ -815,7 +866,7 @@ namespace collections::impl {
 		template <typename char_t>
 		friend std::basic_istream<char_t>& operator>>(
 			std::basic_istream<char_t>& is,
-			BSTBase& tree
+			BaseBST& tree
 		) {
 			size_type size = 0;
 			value_type value{};
@@ -878,57 +929,198 @@ namespace collections::impl {
 		};
 
 		struct _lookupResult {
-			const node* _parent = nullptr;
+			const node* _lastAccessed = nullptr;
 			Direction _direction = Direction::NONE;
 
-			const node* get() {
+			node* get() {
 				switch (_direction) {
 				case (Direction::LEFT):
-					return _parent->_left;
+					return _lastAccessed->_left;
 				case (Direction::RIGHT):
-					return _parent->_right;
+					return _lastAccessed->_right;
 				case (Direction::NONE):
-					return _parent;
+					return const_cast<node*>(_lastAccessed);
 				default:
 					return nullptr;
 				}
 			}
 		};
 
-		allocator_type _allocator;
 		size_type _size;
 		node* _root;
 		node* _min;
 		node* _max;
 
-		constexpr BSTBase() 
-			noexcept(std::is_nothrow_default_constructible_v<allocator_type>) :
+		constexpr BaseBST() noexcept :
 			_root(nullptr),
 			_min(nullptr),
 			_max(nullptr),
-			_size(0),
-			_allocator()
+			_size(0)
 		{
 
 		}
 
-		constexpr explicit BSTBase(const allocator_type& alloc) noexcept : 
-			_root(nullptr),
-			_min(nullptr),
-			_max(nullptr),
-			_size(0),
-			_allocator(alloc)
+		BaseBST(BaseBST&& other) :
+			_root(other._root),
+			_min(other._min),
+			_max(other._max),
+			_size(other._size)
 		{
-
+			other._root = nullptr;
+			other._min = nullptr;
+			other._max = nullptr;
+			other._size = 0;
 		}
 
-		void swapData(BSTBase& other) noexcept {
+		void moveMembers(BaseBST&& other) noexcept {
+			_root = std::move(other._root);
+			_min = std::move(other._min);
+			_max = std::move(other._max);
+			_size = std::move(other._size);
+			other._root = nullptr;
+			other._min = nullptr;
+			other._max = nullptr;
+			other._size = 0;
+		};
+
+		void swapMembers(BaseBST& other) noexcept {
 			using std::swap;
 			swap(_root, other._root);
 			swap(_min, other._min);
 			swap(_max, other._max);
 			swap(_size, other._size);
 		};
+
+
+		derived_t& copyAssign(const derived_t& other) {
+			constexpr bool willPropagate = 
+				alloc_traits::propagate_on_container_copy_assignment::value;
+			constexpr bool isAlwaysEqual = 
+				alloc_traits::is_always_equal::value;
+			bool isInstanceEqual = 
+				this->self()._allocator == other.self()._allocator;
+
+			clear();
+
+			if (!isAlwaysEqual && !isInstanceEqual && willPropagate) 
+				this->self()._allocator = other.self()._allocator;
+
+			insert(other.begin(), other.end());
+
+			return this->self();
+		}
+
+		derived_t& moveAssign(derived_t&& other) 
+			noexcept(alloc_traits::is_always_equal::value) 
+		{
+			constexpr bool willPropagate = 
+			alloc_traits::propagate_on_container_move_assignment::value;
+			constexpr bool isAlwaysEqual =
+				alloc_traits::is_always_equal::value;
+			bool isInstanceEqual = 
+				this->self()._allocator == other.self()._allocator;
+
+			clear();
+
+			if (isAlwaysEqual || isInstanceEqual) 
+				moveMembers(std::move(other));
+			else if (willPropagate) {
+				this->self()._allocator = std::move(other.self()._allocator);
+				moveMembers(std::move(other));
+			}
+			else {
+				auto begin = std::move_iterator(other.begin());
+				auto end = std::move_iterator(other.end());
+				insert(begin, end);
+			}
+
+			return this->self();
+		}
+
+		template <class... Args>
+		node* emplaceAt(node* hint, Args&&... args) {
+			node* n = this->self().createNode(std::forward<Args>(args)...);
+			_lookupResult lookup = getInsertLocation(hint, n->_element);
+			node* result = lookup.get();
+
+			if (result) {
+				this->self().destroyNode(n);
+				return result;
+			}
+			else {
+				insertNode(lookup, n);
+				return n;
+			}
+
+		}
+
+		node* insertAt(node* hint, const_reference element) {
+			_lookupResult lookup = getInsertLocation(hint, element);
+			node* result = lookup.get();
+
+			if (result)
+				return result;
+			else {
+				node* n = this->self().createNode(element);
+				insertNode(lookup, n);
+				return n;
+			}
+		}
+
+		node* removeAt(node* n) {
+			node* result = remove(n);
+			this->self().destroyNode(n);
+			this->_size--;
+			return result;
+		}
+
+		size_type heightAt(const node* n) const noexcept {
+			Queue<const node*> queue { n };
+			size_type level = 0;
+			size_type count = 0;
+
+			while (!queue.isEmpty()) {
+				level++;
+				count = queue.size();
+
+				while (count--) {
+					const node* next = queue.front();
+					queue.dequeue_front();
+
+					if (next->_left)
+						queue.enqueue_back(next->_left);
+					if (next->_right)
+						queue.enqueue_back(next->_right);
+				}
+
+			}
+
+			return level - 1;
+		}
+
+		[[nodiscard]] _lookupResult search(const_reference key) {
+			return std::as_const(*this).search(key);
+		}
+
+		[[nodiscard]] _lookupResult search(const_reference key) const {
+			_lookupResult result = { _root, Direction::NONE };
+			const node* child = result._lastAccessed;
+
+			while (child && child->_element != key) {
+				result._lastAccessed = child;
+
+				if (compare(key, result._lastAccessed->_element)) {
+					child = result._lastAccessed->_left;
+					result._direction = Direction::LEFT;
+				}
+				else if (compare(result._lastAccessed->_element, key)) {
+					child = result._lastAccessed->_right;
+					result._direction = Direction::RIGHT;
+				}
+			}
+
+			return result;
+		}
 
 		node* rightRotation(node* pivot) {
 			node* parent = pivot->_parent;
@@ -970,51 +1162,10 @@ namespace collections::impl {
 
 	private:
 
-		[[nodiscard]] derived_t* this_derived() {
-			return static_cast<derived_t*>(this);
-		}
-
-		[[nodiscard]] const derived_t* this_derived() const {
-			return static_cast<const derived_t*>(this);
-		}
-
-	
 		// ----------------------- INSERTION HELPERS ----------------------- //
 
-		template <class... Args>
-		iterator emplaceAt(node* hint, Args&&... args) {
-			node* n = this_derived()->createNode(std::forward<Args>(args)...);
-			_lookupResult lookup = getInsertLocation(hint, n->_element);
-			const node* result = lookup.get();
-
-			if (result) {
-				this_derived()->destroyNode(n);
-				return iterator(this, result);
-			}
-			else {
-				insertNode(lookup, n);
-				this_derived()->onInsert(n);
-				return iterator(this, n);
-			}
-
-		}
-
-		iterator insertAt(node* hint, const_reference element) {
-			_lookupResult lookup = getInsertLocation(hint, element);
-			const node* result = lookup.get();
-
-			if (result)
-				return iterator(this, result);
-			else {
-				node* n = this_derived()->createNode(element);
-				insertNode(lookup, n);
-				this_derived()->onInsert(n);
-				return iterator(this, n);
-			}
-		}
-
 		void insertNode(_lookupResult lookup, node* n) {
-			node* parent = const_cast<node*>(lookup._parent);
+			node* parent = const_cast<node*>(lookup._lastAccessed);
 
 			if (parent) {
 				n->_parent = parent;
@@ -1063,7 +1214,7 @@ namespace collections::impl {
 			const node* hint,
 			const_reference key
 		) {
-			node* prev = predecessorOf(hint, traversal_order::IN_ORDER);
+			const node* prev = inOrderPredecessorOf(hint);
 			if (compare(prev->_element, key)) {
 				if (prev->_right)
 					return { hint, Direction::LEFT };
@@ -1077,7 +1228,7 @@ namespace collections::impl {
 			const node* hint,
 			const_reference key
 		) {
-			node* next = successorOf(hint, traversal_order::IN_ORDER);
+			const node* next = inOrderSuccessorOf(hint);
 			if (!next || compare(key, next->_element)) {
 				if (hint->_right)
 					return { next, Direction::LEFT };
@@ -1088,15 +1239,6 @@ namespace collections::impl {
 		}
 
 		// ----------------------- DELETION HELPERS ------------------------ //
-
-		void removeAt(node* n) {
-			if (n) {
-				node* result = this->remove(n);
-				this_derived()->destroyNode(n);
-				this->_size--;
-				this_derived()->onRemove(result);
-			}
-		}
 
 		node* remove(node* n) {
 			size_type degree = n->degree();
@@ -1173,31 +1315,6 @@ namespace collections::impl {
 			const_reference e2
 		) {
 			return compare_t{}(e1, e2);
-		}
-
-		[[nodiscard]] _lookupResult search(const_reference key) {
-			return std::as_const(*this).search(key);
-		}
-
-		[[nodiscard]] _lookupResult search(const_reference key) const {
-			_lookupResult result = { _root, Direction::NONE };
-			const node* child = result._parent;
-
-			while (child && child->_element != key) {
-				result._parent = child;
-
-				if (compare(key, result._parent->_element)) {
-					child = result._parent->_left;
-					result._direction = Direction::LEFT;
-				}
-				else if (compare(result._parent->_element, key)) {
-					child = result._parent->_right;
-					result._direction = Direction::RIGHT;
-				}
-			}
-
-			this_derived()->onSearch(result);
-			return result;
 		}
 
 		// ----------------------- TRAVERSAL HELPERS ----------------------- //
@@ -1348,8 +1465,11 @@ namespace collections::impl {
 				return leftMostChildOf(n->_right);
 			else if (n->_parent && n->isLeftChild())
 				return n->_parent;
-			else
-				return rightMostAncestorOf(n);
+			else {
+				while (n->isRightChild())
+					n = n->_parent;
+				return n->_parent;
+			}
 		}
 
 		[[nodiscard]] const node* preOrderSuccessorOf(const node* n) const {
@@ -1412,8 +1532,12 @@ namespace collections::impl {
 				return rightMostChildOf(n->_left);
 			else if (n->_parent && n->isRightChild())
 				return n->_parent;
-			else
-				return leftMostAncestorOf(n);
+			else {
+				while (n->isLeftChild())
+					n = n->_parent;
+				return n->_parent;
+			}
+				
 		}
 
 		[[nodiscard]] const node* preOrderPredecessorOf(const node* n) const {
@@ -1485,14 +1609,14 @@ namespace collections::impl {
 		class BinaryTreeIterator {
 		private:
 
-			using node = BSTBase::node;
+			using node = BaseBST::node;
 
-			const BSTBase* _tree;
+			const BaseBST* _tree;
 			node* _node;
 			traversal_order _order;
 
 			explicit BinaryTreeIterator(
-				const BSTBase* tree,
+				const BaseBST* tree,
 				const node* n, 
 				traversal_order order = traversal_order::IN_ORDER
 			) : 
@@ -1514,11 +1638,13 @@ namespace collections::impl {
 			}
 
 			friend derived_t;
-			friend class BSTBase;
+			friend class BaseBST;
 
 		public:
 
-			using value_type = std::conditional_t<isConst, const element_t, element_t>;
+			// must be const to preserve ordering
+			using value_type = const element_t; 
+
 			using difference_type = std::ptrdiff_t;
 			using pointer = value_type*;
 			using reference = value_type&;

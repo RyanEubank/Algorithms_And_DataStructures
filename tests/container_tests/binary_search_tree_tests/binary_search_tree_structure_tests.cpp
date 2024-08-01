@@ -65,9 +65,9 @@ namespace collection_tests {
 		this->testPostOrderSequence(tree, postOrderAfter);
 		this->testLevelOrderSequence(tree, levelOrderAfter);
 
-		EXPECT_EQ(tree.root(), 5);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 8);
+		EXPECT_EQ(*tree.root(), 5);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 8);
 	}
 
 	TEST_F(BinarySearchTreeStructureTest, InsertPlacesElementInMiddleOfTree) {
@@ -109,9 +109,9 @@ namespace collection_tests {
 		this->testPostOrderSequence(tree, postOrderAfter);
 		this->testLevelOrderSequence(tree, levelOrderAfter);
 
-		EXPECT_EQ(tree.root(), 5);
-		EXPECT_EQ(tree.minimum(), 0);
-		EXPECT_EQ(tree.maximum(), 11);
+		EXPECT_EQ(*tree.root(), 5);
+		EXPECT_EQ(*tree.minimum(), 0);
+		EXPECT_EQ(*tree.maximum(), 11);
 	}
 
 	TEST_F(BinarySearchTreeStructureTest, InsertPlacesLargestElement) {
@@ -151,9 +151,9 @@ namespace collection_tests {
 		this->testPostOrderSequence(tree, postOrderAfter);
 		this->testLevelOrderSequence(tree, levelOrderAfter);
 
-		EXPECT_EQ(tree.root(), 5);
-		EXPECT_EQ(tree.minimum(), 1);
-		EXPECT_EQ(tree.maximum(), 10);
+		EXPECT_EQ(*tree.root(), 5);
+		EXPECT_EQ(*tree.minimum(), 1);
+		EXPECT_EQ(*tree.maximum(), 10);
 	}
 
 	TEST_F(BinarySearchTreeStructureTest, RemoveDeletesSmallestElement) {
@@ -172,12 +172,12 @@ namespace collection_tests {
 		BinarySearchTree<int> tree = { 5, 3, 8, 1, 4, 10, 9 };
 
 		auto node = tree.begin();
-		ASSERT_EQ(tree.minimum(), 1);
+		ASSERT_EQ(*tree.minimum(), 1);
 		ASSERT_EQ(*node, 1);
 
 		tree.remove(node);
 
-		EXPECT_EQ(tree.minimum(), 3);
+		EXPECT_EQ(*tree.minimum(), 3);
 	}
 
 	TEST_F(BinarySearchTreeStructureTest, RemoveDeletesLargestElement) {
@@ -194,12 +194,12 @@ namespace collection_tests {
 		BinarySearchTree<int> tree = { 5, 3, 8, 1, 4, 10, 9 };
 
 		auto node = --tree.end();
-		ASSERT_EQ(tree.maximum(), 10);
+		ASSERT_EQ(*tree.maximum(), 10);
 		ASSERT_EQ(*node, 10);
 
 		tree.remove(node);
 
-		EXPECT_EQ(tree.maximum(), 9);
+		EXPECT_EQ(*tree.maximum(), 9);
 	}
 
 	TEST_F(BinarySearchTreeStructureTest, RemoveDeletesLeafNodesCorrectly) {
@@ -241,9 +241,9 @@ namespace collection_tests {
 		this->testPostOrderSequence(tree, postOrderAfter);
 		this->testLevelOrderSequence(tree, levelOrderAfter);
 
-		EXPECT_EQ(tree.root(), 5);
-		EXPECT_EQ(tree.minimum(), 1);
-		EXPECT_EQ(tree.maximum(), 8);
+		EXPECT_EQ(*tree.root(), 5);
+		EXPECT_EQ(*tree.minimum(), 1);
+		EXPECT_EQ(*tree.maximum(), 8);
 	}
 
 	TEST_F(
@@ -288,9 +288,9 @@ namespace collection_tests {
 		this->testPostOrderSequence(tree, postOrderAfter);
 		this->testLevelOrderSequence(tree, levelOrderAfter);
 
-		EXPECT_EQ(tree.root(), 5);
-		EXPECT_EQ(tree.minimum(), 1);
-		EXPECT_EQ(tree.maximum(), 10);
+		EXPECT_EQ(*tree.root(), 5);
+		EXPECT_EQ(*tree.minimum(), 1);
+		EXPECT_EQ(*tree.maximum(), 10);
 	}
 
 	TEST_F(BinarySearchTreeStructureTest, RemoveDeletesFullNodesCorrectly) {
@@ -332,9 +332,9 @@ namespace collection_tests {
 		this->testPostOrderSequence(tree, postOrderAfter);
 		this->testLevelOrderSequence(tree, levelOrderAfter);
 
-		EXPECT_EQ(tree.root(), 4);
-		EXPECT_EQ(tree.minimum(), 1);
-		EXPECT_EQ(tree.maximum(), 10);
+		EXPECT_EQ(*tree.root(), 4);
+		EXPECT_EQ(*tree.minimum(), 1);
+		EXPECT_EQ(*tree.maximum(), 10);
 	}
 
 	TEST_F(BinarySearchTreeStructureTest, NodeHeightIsReportedCorrectly) { 
@@ -390,16 +390,16 @@ namespace collection_tests {
 		tree2.remove(it2);
 		tree3.remove(it3);
 
-		EXPECT_EQ(tree1.minimum(), 1);
-		EXPECT_EQ(tree1.maximum(), 3);
-		EXPECT_EQ(tree1.root(), 1);
+		EXPECT_EQ(*tree1.minimum(), 1);
+		EXPECT_EQ(*tree1.maximum(), 3);
+		EXPECT_EQ(*tree1.root(), 1);
 
-		EXPECT_EQ(tree2.minimum(), 0);
-		EXPECT_EQ(tree2.maximum(), 3);
-		EXPECT_EQ(tree2.root(), 0);
+		EXPECT_EQ(*tree2.minimum(), 0);
+		EXPECT_EQ(*tree2.maximum(), 3);
+		EXPECT_EQ(*tree2.root(), 0);
 
-		EXPECT_EQ(tree3.minimum(), 0);
-		EXPECT_EQ(tree3.maximum(), 2);
-		EXPECT_EQ(tree3.root(), 1);
+		EXPECT_EQ(*tree3.minimum(), 0);
+		EXPECT_EQ(*tree3.maximum(), 2);
+		EXPECT_EQ(*tree3.root(), 1);
 	}
 }
