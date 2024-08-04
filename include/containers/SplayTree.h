@@ -310,7 +310,7 @@ namespace collections {
 		iterator onSearch(const_reference key) {
 			struct base::_lookupResult result = this->search(key);
 			node* n = result.get();
-			n ? splay(n) : splay(result._lastAccessed);
+			n ? splay(n) : splay(const_cast<node*>(result._lastAccessed));
 			return iterator(this, n);
 		}
 
