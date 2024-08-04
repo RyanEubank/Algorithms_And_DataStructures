@@ -135,9 +135,9 @@ namespace collections {
 		/// </param> -----------------------------------------------------------
 		DynamicArray(DynamicArray&& other) 
 			noexcept(std::is_nothrow_move_constructible_v<allocator_type>) : 
-			_begin(other._begin),
-			_end(other._end),
-			_final(other._final),
+			_begin(std::move(other._begin)),
+			_end(std::move(other._end)),
+			_final(std::move(other._final)),
 			_allocator(std::move(other._allocator))
 		{
 			other._begin = nullptr;
@@ -823,7 +823,7 @@ namespace collections {
 		/// Rvalue reference to the element to be inserted.
 		/// </param> ----------------------------------------------------------
 		void insertFront(value_type&& element) {
-			insertAt(_begin, element);
+			insertAt(_begin, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -847,7 +847,7 @@ namespace collections {
 		/// Rvalue reference to the element to be inserted.
 		/// </param> ----------------------------------------------------------
 		void insertBack(value_type&& element) {
-			insertAt(_end, element);
+			insertAt(_end, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -889,7 +889,7 @@ namespace collections {
 		/// Returns an iterator to the inserted element.
 		/// </returns> --------------------------------------------------------
 		iterator insert(Index index, value_type&& element) {
-			return insertAt(index, element);
+			return insertAt(index, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -930,7 +930,7 @@ namespace collections {
 		/// Returns an iterator to the inserted element.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_iterator position, value_type&& element) {
-			return insertAt(const_cast<iterator>(position), element);
+			return insertAt(const_cast<iterator>(position), std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -1279,20 +1279,17 @@ namespace collections {
 			a.swap(b);
 		}
 
-		// -----------------------------------------------------------------
+		// ---------------------------------------------------------------------
 		/// <summary> 
 		/// Swaps the contents of this DynamicArray with the given array..
 		/// </summary>
 		/// 
-		/// <param name="a">
-		/// The first container to be swapped.
-		/// </param>
-		/// <param name="b">
-		/// The second container to be swapped.
-		/// </param> -------------------------------------------------------
-		void swap(DynamicArray& other) noexcept(
-			alloc_traits::is_always_equal::value
-		) {
+		/// <param name="other">
+		/// The container to be swapped with.
+		/// </param> -----------------------------------------------------------
+		void swap(DynamicArray& other) 
+			noexcept(alloc_traits::is_always_equal::value) 
+		{
 			static constexpr bool isAlwaysEqual = 
 				alloc_traits::is_always_equal::value;
 			static constexpr bool willPropagate = 
@@ -1528,7 +1525,9 @@ namespace collections {
 			}
 			else {
 				clear();
-				insert(_end, std::move_iterator(other._begin), other._end);
+				auto start = std::move_iterator(other._begin);
+				auto end = std::move_iterator(other._end);
+				insert(_end, start, end);
 			}
 		}
 
