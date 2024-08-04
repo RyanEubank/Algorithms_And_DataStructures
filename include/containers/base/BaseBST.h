@@ -95,6 +95,9 @@ namespace collections::impl {
 			}
 
 			_size = 0;
+			_root = nullptr;
+			_min = nullptr;
+			_max = nullptr;
 		}
 
 		// --------------------------------------------------------------------
@@ -972,26 +975,6 @@ namespace collections::impl {
 			other._size = 0;
 		}
 
-		void moveMembers(BaseBST&& other) noexcept {
-			_root = std::move(other._root);
-			_min = std::move(other._min);
-			_max = std::move(other._max);
-			_size = std::move(other._size);
-			other._root = nullptr;
-			other._min = nullptr;
-			other._max = nullptr;
-			other._size = 0;
-		};
-
-		void swapMembers(BaseBST& other) noexcept {
-			using std::swap;
-			swap(_root, other._root);
-			swap(_min, other._min);
-			swap(_max, other._max);
-			swap(_size, other._size);
-		};
-
-
 		derived_t& copyAssign(const derived_t& other) {
 			constexpr bool willPropagate = 
 				alloc_traits::propagate_on_container_copy_assignment::value;
@@ -1122,25 +1105,6 @@ namespace collections::impl {
 			return result;
 		}
 
-		node* rightRotation(node* pivot) {
-			node* parent = pivot->_parent;
-			node* child = pivot->_left;
-
-			if (child->_right)
-				child->_right->_parent = pivot;
-
-			pivot->_left = child->_right;
-			child->_right = pivot;	
-
-			onRotation(pivot, child);
-			return child;
-		}
-
-		node* leftRightRotation(node* pivot) {
-			leftRotation(pivot->_left);
-			return rightRotation(pivot);
-		}
-
 		node* leftRotation(node* pivot) {
 			node* parent = pivot->_parent;
 			node* child = pivot->_right;
@@ -1155,12 +1119,219 @@ namespace collections::impl {
 			return child;
 		}
 
-		node* rightLeftRotation(node* pivot) {
-			rightRotation(pivot->_right);
-			return leftRotation(pivot);
+		node* rightRotation(node* pivot) {
+			node* parent = pivot->_parent;
+			node* child = pivot->_left;
+
+			if (child->_right)
+				child->_right->_parent = pivot;
+
+			pivot->_left = child->_right;
+			child->_right = pivot;	
+
+			onRotation(pivot, child);
+			return child;
+		}
+
+		[[nodiscard]] node* inOrderSuccessorOf(const node* n) {
+			const node* result = std::as_const(*this).inOrderSuccessorOf(n);
+			return const_cast<node*>(result);
+		}
+
+		[[nodiscard]] const node* inOrderSuccessorOf(const node* n) const {
+			if (!n)
+				return nullptr;
+
+			if (n->_right)
+				return leftMostChildOf(n->_right);
+			else if (n->_parent && n->isLeftChild())
+				return n->_parent;
+			else {
+				while (n->isRightChild())
+					n = n->_parent;
+				return n->_parent;
+			}
+		}
+
+		[[nodiscard]] node* preOrderSuccessorOf(const node* n) {
+			const node* result = std::as_const(*this).preOrderSuccessorOf(n);
+			return const_cast<node*>(result);
+		}
+
+		[[nodiscard]] const node* preOrderSuccessorOf(const node* n) const {
+			if (!n)
+				return nullptr;
+
+			if (n->_left)
+				return n->_left;
+			else if (n->_right)
+				return n->_right;
+			else {
+				auto root = rightMostAncestorOf(n);
+				return root ? root->_right : nullptr;
+			}
+		}
+
+		[[nodiscard]] node* postOrderSuccessorOf(const node* n) {
+			const node* result = std::as_const(*this).postOrderSuccessorOf(n);
+			return const_cast<node*>(result);
+		}
+
+		[[nodiscard]] const node* postOrderSuccessorOf(const node* n) const {
+			if (!n)
+				return nullptr;
+
+			if (!n->_parent || n->isRightChild() || n->_parent->degree() == 1)
+				return n->_parent;
+
+			return findNextLeftSubtree(n->_parent->_right);
+		}
+
+		[[nodiscard]] node* levelOrderSuccessorOf(const node* n) {
+			const node* result = std::as_const(*this).levelOrderSuccessorOf(n);
+			return const_cast<node*>(result);
+		}
+
+		[[nodiscard]] const node* levelOrderSuccessorOf(const node* n) const {
+			if (!n)
+				return nullptr;
+
+			Queue<const node*> queue{ _root };
+			const node* next = nullptr;
+
+			while (!queue.isEmpty()) {
+				size_type count = queue.size();
+
+				while (count--) {
+					next = queue.front();
+
+					if (next->_left)
+						queue.enqueue_back(next->_left);
+					if (next->_right)
+						queue.enqueue_back(next->_right);
+
+					queue.dequeue_front();
+
+					if (next == n) 
+						return queue.isEmpty() ? nullptr : queue.front();
+				}
+			}
+
+			return n;
+		}
+
+		[[nodiscard]] node* inOrderPredecessorOf(const node* n) {
+			const node* result = std::as_const(*this).inOrderPredecessorOf(n);
+			return const_cast<node*>(result);
+		}
+
+		[[nodiscard]] const node* inOrderPredecessorOf(const node* n) const {
+			if (!n)
+				return lastNodeIn(traversal_order::IN_ORDER);
+
+			if (n->_left)
+				return rightMostChildOf(n->_left);
+			else if (n->_parent && n->isRightChild())
+				return n->_parent;
+			else {
+				while (n->isLeftChild())
+					n = n->_parent;
+				return n->_parent;
+			}
+
+		}
+
+		[[nodiscard]] node* preOrderPredecessorOf(const node* n) {
+			const node* result = std::as_const(*this).preOrderPredecessorOf(n);
+			return const_cast<node*>(result);
+		}
+
+		[[nodiscard]] const node* preOrderPredecessorOf(const node* n) const {
+			if (!n)
+				return lastNodeIn(traversal_order::PRE_ORDER);
+
+			if (n->_parent->_left && n->isRightChild())
+				return n->_parent->_left;
+			else
+				return n->_parent;
+		}
+
+		[[nodiscard]] node* postOrderPredecessorOf(const node* n) {
+			const node* result = std::as_const(*this).postOrderPredecessorOf(n);
+			return const_cast<node*>(result);
+		}
+
+		[[nodiscard]] const node* postOrderPredecessorOf(const node* n) const {
+			if (!n)
+				return lastNodeIn(traversal_order::POST_ORDER);
+
+			if (n->_right)
+				return n->_right;
+			else if (n->_left)
+				return n->_left;
+			else {
+				const node* root = leftMostAncestorOf(n);
+				return root ? root->_left : nullptr;
+			}
+		}
+
+		[[nodiscard]] node* levelOrderPredecessorOf(const node* n) {
+			const node* result = std::as_const(*this).levelOrderPredecessorOf(n);
+			return const_cast<node*>(result);
+		}
+
+		[[nodiscard]] const node* levelOrderPredecessorOf(const node* n) const {
+			if (!n)
+				return lastNodeIn(traversal_order::LEVEL_ORDER);
+			if (n == _root)
+				return nullptr;
+
+			Queue<const node*> queue{ _root };
+			Queue<const node*> reverse{};
+			const node* next = nullptr;
+
+			while (!queue.isEmpty()) {
+				size_type count = queue.size();
+
+				while (count--) {
+					next = queue.front();
+					queue.dequeue_front();
+
+					if (next == n) 
+						return reverse.back();
+
+					if (next->_left)
+						queue.enqueue_back(next->_left);
+					if (next->_right)
+						queue.enqueue_back(next->_right);
+
+					reverse.enqueue_back(next);
+				}
+			}
+
+			return n;
 		}
 
 	private:
+
+		void moveMembers(BaseBST&& other) noexcept {
+			_root = std::move(other._root);
+			_min = std::move(other._min);
+			_max = std::move(other._max);
+			_size = std::move(other._size);
+			other._root = nullptr;
+			other._min = nullptr;
+			other._max = nullptr;
+			other._size = 0;
+		};
+
+		void swapMembers(BaseBST& other) noexcept {
+			using std::swap;
+			swap(_root, other._root);
+			swap(_min, other._min);
+			swap(_max, other._max);
+			swap(_size, other._size);
+		};
 
 		// ----------------------- INSERTION HELPERS ----------------------- //
 
@@ -1455,145 +1626,6 @@ namespace collections::impl {
 			default:
 				return n;
 			}
-		}
-
-		[[nodiscard]] const node* inOrderSuccessorOf(const node* n) const {
-			if (!n)
-				return nullptr;
-
-			if (n->_right)
-				return leftMostChildOf(n->_right);
-			else if (n->_parent && n->isLeftChild())
-				return n->_parent;
-			else {
-				while (n->isRightChild())
-					n = n->_parent;
-				return n->_parent;
-			}
-		}
-
-		[[nodiscard]] const node* preOrderSuccessorOf(const node* n) const {
-			if (!n)
-				return nullptr;
-
-			if (n->_left)
-				return n->_left;
-			else if (n->_right)
-				return n->_right;
-			else {
-				auto root = rightMostAncestorOf(n);
-				return root ? root->_right : nullptr;
-			}
-		}
-
-		[[nodiscard]] const node* postOrderSuccessorOf(const node* n) const {
-			if (!n)
-				return nullptr;
-
-			if (!n->_parent || n->isRightChild() || n->_parent->degree() == 1)
-				return n->_parent;
-
-			return findNextLeftSubtree(n->_parent->_right);
-		}
-
-		[[nodiscard]] const node* levelOrderSuccessorOf(const node* n) const {
-			if (!n)
-				return nullptr;
-
-			Queue<const node*> queue{ _root };
-			const node* next = nullptr;
-
-			while (!queue.isEmpty()) {
-				size_type count = queue.size();
-
-				while (count--) {
-					next = queue.front();
-
-					if (next->_left)
-						queue.enqueue_back(next->_left);
-					if (next->_right)
-						queue.enqueue_back(next->_right);
-
-					queue.dequeue_front();
-
-					if (next == n) 
-						return queue.isEmpty() ? nullptr : queue.front();
-				}
-			}
-
-			return n;
-		}
-
-		[[nodiscard]] const node* inOrderPredecessorOf(const node* n) const {
-			if (!n)
-				return lastNodeIn(traversal_order::IN_ORDER);
-
-			if (n->_left)
-				return rightMostChildOf(n->_left);
-			else if (n->_parent && n->isRightChild())
-				return n->_parent;
-			else {
-				while (n->isLeftChild())
-					n = n->_parent;
-				return n->_parent;
-			}
-				
-		}
-
-		[[nodiscard]] const node* preOrderPredecessorOf(const node* n) const {
-			if (!n)
-				return lastNodeIn(traversal_order::PRE_ORDER);
-
-			if (n->_parent->_left && n->isRightChild())
-				return n->_parent->_left;
-			else
-				return n->_parent;
-		}
-
-		[[nodiscard]] const node* postOrderPredecessorOf(const node* n) const {
-			if (!n)
-				return lastNodeIn(traversal_order::POST_ORDER);
-
-			if (n->_right)
-				return n->_right;
-			else if (n->_left)
-				return n->_left;
-			else {
-				const node* root = leftMostAncestorOf(n);
-				return root ? root->_left : nullptr;
-			}
-		}
-
-		[[nodiscard]] const node* levelOrderPredecessorOf(const node* n) const {
-			if (!n)
-				return lastNodeIn(traversal_order::LEVEL_ORDER);
-			if (n == _root)
-				return nullptr;
-
-			Queue<const node*> queue{ _root };
-			Queue<const node*> reverse{};
-			const node* next = nullptr;
-
-			while (!queue.isEmpty()) {
-				size_type count = queue.size();
-
-				while (count--) {
-					next = queue.front();
-					queue.dequeue_front();
-
-					if (next == n) 
-						return reverse.back();
-
-					if (next->_left)
-						queue.enqueue_back(next->_left);
-					if (next->_right)
-						queue.enqueue_back(next->_right);
-				
-					reverse.enqueue_back(next);
-				}
-			}
-
-			return n;
 		}
 
 		// ----------------------------------------------------------------

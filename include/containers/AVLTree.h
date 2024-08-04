@@ -278,32 +278,18 @@ namespace collections {
 
 		node_allocator_t _allocator;
 
-		[[nodiscard]] node* allocate() {
-			return node_alloc_traits::allocate(_allocator, 1);
-		}
-
-		void deallocate(node* n) {
-			node_alloc_traits::deallocate(_allocator, n, 1);
-		}
-
 		template <class... Args>
-		void constructNode(node* n, Args&&... args) {
+		[[nodiscard]] node* createNode(Args&&... args) {
+			node* n = node_alloc_traits::allocate(_allocator, 1);
 			node_alloc_traits::construct(
-				_allocator, 
-				n, 
-				std::forward<Args>(args)...
+				_allocator, n, std::forward<Args>(args)...
 			);
+			return n;
 		}
 
 		void destroyNode(base_node* n) {
 			node_alloc_traits::destroy(_allocator, static_cast<node*>(n));
-		}
-
-		template <class... Args>
-		[[nodiscard]] node* createNode(Args&&... args) {
-			node* n = allocate();
-			constructNode(n, std::forward<Args>(args)...);
-			return n;
+			node_alloc_traits::deallocate(_allocator, static_cast<node*>(n), 1);
 		}
 
 		[[nodiscard]] size_type heightOfNode(const base_node* n) const noexcept {
@@ -379,9 +365,10 @@ namespace collections {
 			base_node* result = nullptr;
 
 			if (balanceOf(pivot->_left) == 1) {
-				result = this->leftRightRotation(pivot);
-				updateHeight(result->_right);
+				this->leftRotation(pivot->_left);
+				result = this->rightRotation(pivot);
 				updateHeight(result->_left);
+				updateHeight(result->_right);
 				updateHeight(result);
 			}
 			else {
@@ -397,9 +384,10 @@ namespace collections {
 			base_node* result = nullptr;
 
 			if (balanceOf(pivot->_right) == -1) {
-				result = this->rightLeftRotation(pivot);
-				updateHeight(result->_right);
+				this->rightRotation(pivot->_right);
+				result = this->leftRotation(pivot);
 				updateHeight(result->_left);
+				updateHeight(result->_right);
 				updateHeight(result);
 			}
 			else {

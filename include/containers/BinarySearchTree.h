@@ -260,32 +260,18 @@ namespace collections {
 		
 		node_allocator_t _allocator;
 
-		[[nodiscard]] node* allocate() {
-			return node_alloc_traits::allocate(_allocator, 1);
-		}
-
-		void deallocate(node* n) {
-			node_alloc_traits::deallocate(_allocator, n, 1);
-		}
-
 		template <class... Args>
-		void constructNode(node* n, Args&&... args) {
+		[[nodiscard]] node* createNode(Args&&... args) {
+			node* n = node_alloc_traits::allocate(_allocator, 1);
 			node_alloc_traits::construct(
-				_allocator, 
-				n, 
-				std::forward<Args>(args)...
+				_allocator, n, std::forward<Args>(args)...
 			);
+			return n;
 		}
 
 		void destroyNode(node* n) {
 			node_alloc_traits::destroy(_allocator, n);
-		}
-
-		template <class... Args>
-		[[nodiscard]] node* createNode(Args&&... args) {
-			node* n = allocate();
-			constructNode(n, std::forward<Args>(args)...);
-			return n;
+			node_alloc_traits::deallocate(_allocator, n, 1);
 		}
 
 		[[nodiscard]] size_type heightOfNode(const node* n) const noexcept {

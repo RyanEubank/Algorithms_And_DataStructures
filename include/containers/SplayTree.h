@@ -260,32 +260,18 @@ namespace collections {
 
 		node_allocator_t _allocator;
 
-		[[nodiscard]] node* allocate() {
-			return node_alloc_traits::allocate(_allocator, 1);
-		}
-
-		void deallocate(node* n) {
-			node_alloc_traits::deallocate(_allocator, n, 1);
-		}
-
 		template <class... Args>
-		void constructNode(node* n, Args&&... args) {
+		[[nodiscard]] node* createNode(Args&&... args) {
+			node* n = node_alloc_traits::allocate(_allocator, 1);
 			node_alloc_traits::construct(
-				_allocator, 
-				n, 
-				std::forward<Args>(args)...
+				_allocator, n, std::forward<Args>(args)...
 			);
+			return n;
 		}
 
 		void destroyNode(node* n) {
 			node_alloc_traits::destroy(_allocator, n);
-		}
-
-		template <class... Args>
-		[[nodiscard]] node* createNode(Args&&... args) {
-			node* n = allocate();
-			constructNode(n, std::forward<Args>(args)...);
-			return n;
+			node_alloc_traits::deallocate(_allocator, n, 1);
 		}
 
 		[[nodiscard]] size_type heightOfNode(const node* n) const noexcept {
@@ -310,8 +296,15 @@ namespace collections {
 		}
 
 		void onRemove(node* n) {
-			node* result = this->removeAt(n);
-			splay(result);
+			if (n == this->_min)
+				this->_min = this->inOrderSuccessorOf(n);
+			if (n == this->_max)
+				this->_max = this->inOrderPredecessorOf(n);
+
+			std::pair<node*, node*> subtrees = split(n);
+			join(subtrees);
+			destroyNode(n);
+			this->_size--;
 		}
 
 		iterator onSearch(const_reference key) {
@@ -334,28 +327,57 @@ namespace collections {
 		}
 
 		void rotateUp(node* n) {
-			if (n->_parent == this->_root) {
-				if (n->isLeftChild()) 
-					this->rightRotation(n->_parent);
-				else
-					this->leftRotation(n->_parent);
-			}
-			else if (n->isLeftChild()){
-				if (n->_parent->isLeftChild()) {
-					this->rightRotation(n->_parent->_parent);
-					this->rightRotation(n->_parent);
+			node* parent = n->_parent;
+			node* grandparent = parent ? parent->_parent : nullptr;
+
+			if (n->isLeftChild()) {
+				if (!grandparent)
+					this->rightRotation(parent);
+				else if (parent->isLeftChild()) {
+					this->rightRotation(grandparent);
+					this->rightRotation(parent);
 				}
-				else
-					this->rightLeftRotation(n->_parent->_parent);
+				else {
+					this->rightRotation(parent);
+					this->leftRotation(grandparent);
+				}
 			}
 			else {
-				if (n->_parent->isRightChild()) {
-					this->leftRotation(n->_parent->_parent);
-					this->leftRotation(n->_parent);
+				if (!grandparent)
+					this->leftRotation(parent);
+				else if (parent->isRightChild()) {
+					this->leftRotation(grandparent);
+					this->leftRotation(parent);
 				}
-				else
-					this->leftRightRotation(n->_parent->_parent);
+				else {
+					this->leftRotation(parent);
+					this->rightRotation(grandparent);
+				}
 			}
+		}
+
+		const std::pair<node*, node*> split(node* n) {
+			node* predecessor = this->inOrderPredecessorOf(n);
+			splay(n);
+
+			if (n->_left) 
+				n->_left->_parent = nullptr;
+			if (n->_right)
+				n->_right->_parent = nullptr;
+
+			this->_root = predecessor;
+			return { predecessor, n->_right };
+		}
+
+		void join(const std::pair<node*, node*>& subtrees) {
+			if (subtrees.first) {
+				splay(subtrees.first);
+				subtrees.first->_right = subtrees.second;
+				if (subtrees.second)
+					subtrees.second->_parent = subtrees.first;
+			}
+			else
+				this->_root = subtrees.second;
 		}
 	};
 
