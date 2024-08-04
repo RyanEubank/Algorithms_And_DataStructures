@@ -44,23 +44,28 @@ namespace collections {
 		template <bool isConst>
 		class LinkedListIterator;
 
-		using node = struct _node;
-		using alloc_traits = std::allocator_traits<allocator_t>::template rebind_traits<node>;
-		using node_allocator_type = alloc_traits::allocator_type;
+		using alloc_t		= rebind<allocator_t, element_t>;
+		using alloc_traits	= std::allocator_traits<alloc_t>;
+
+		using node			= struct _node;
+		using node_allocator_t		= rebind<allocator_t, node>;
+		using node_alloc_traits		= std::allocator_traits<node_allocator_t>;
 
 	public:
 
-		using allocator_type = allocator_t;
-		using value_type = allocator_type::value_type;
-		using size_type = size_t;
-		using reference = value_type&;
-		using const_reference = const value_type&;
-		using pointer = std::allocator_traits<allocator_t>::pointer;
-		using const_pointer = std::allocator_traits<allocator_t>::const_pointer;
-		using iterator = LinkedListIterator<false>;
-		using const_iterator = LinkedListIterator<true>;
-		using reverse_iterator = std::reverse_iterator<iterator>;
-		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+		using value_type		= element_t;
+		using allocator_type	= allocator_t;
+		using size_type			= alloc_traits::size_type;
+		using difference_type	= alloc_traits::difference_type;
+		using pointer			= alloc_traits::pointer;
+		using const_pointer		= alloc_traits::const_pointer;
+		using reference			= value_type&;
+		using const_reference	= const value_type&;
+
+		using iterator					= LinkedListIterator<false>;
+		using const_iterator			= LinkedListIterator<true>;
+		using reverse_iterator			= std::reverse_iterator<iterator>;
+		using const_reverse_iterator	= std::reverse_iterator<const_iterator>;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -69,11 +74,11 @@ namespace collections {
 		///	<para>
 		/// Constructs an empty LinkedList.
 		/// </para></summary> -------------------------------------------------
-		constexpr LinkedList() noexcept(noexcept(allocator_type{})) :
+		constexpr LinkedList()
+			noexcept(std::is_nothrow_default_constructible_v<allocator_type>) :
 			_sentinel(),
 			_size(),
-			_allocator(),
-			_node_allocator(allocator_type{})
+			_allocator(allocator_type{})
 		{
 			setSentinel(&_sentinel);
 		}
@@ -88,11 +93,11 @@ namespace collections {
 		/// <param name="alloc">
 		/// The allocator instance used by the list.
 		/// </param> ----------------------------------------------------------
-		constexpr explicit LinkedList(const allocator_type& alloc) noexcept :
+		constexpr explicit LinkedList(const allocator_type& alloc)
+			noexcept(std::is_nothrow_copy_constructible_v<allocator_type>) :
 			_sentinel(),
 			_size(),
-			_allocator(alloc),
-			_node_allocator(alloc)
+			_allocator(alloc)
 		{
 			setSentinel(&_sentinel);
 		}
@@ -128,10 +133,14 @@ namespace collections {
 		/// <param name="other">
 		/// The LinkedList to be moved into this one.
 		/// </param> ----------------------------------------------------------
-		LinkedList(LinkedList&& other) noexcept(
-			std::is_nothrow_move_constructible_v<allocator_type>
-		) : LinkedList(std::move(other._allocator)) {
-			swapData(*this, other);
+		LinkedList(LinkedList&& other) 
+			noexcept(std::is_nothrow_move_constructible_v<allocator_type>) : 
+			_sentinel(),
+			_size(std::move(other._size)),
+			_allocator(std::move(other._allocator))
+		{
+			moveSentinel(std::move(other._sentinel));
+			other._size = 0;
 		}
 
 		// --------------------------------------------------------------------
@@ -273,22 +282,16 @@ namespace collections {
 		/// Returns this LinkedList with the copied data.
 		/// </returns> --------------------------------------------------------
 		LinkedList& operator=(const LinkedList& other) {
-			constexpr bool propagate = 
-				alloc_traits::propagate_on_container_copy_assignment::value;
-			constexpr bool alwaysEqual = 
+			static constexpr bool isAlwaysEqual = 
 				alloc_traits::is_always_equal::value;
+			static constexpr bool willPropagate = 
+				alloc_traits::propagate_on_container_copy_assignment::value;
+			bool isInstanceEqual = _allocator == other._allocator;
 
-			bool equalAllocators = this->_allocator == other._allocator;
-
-			if (propagate && !equalAllocators) {
-				clear();
+			if (!isAlwaysEqual && !isInstanceEqual && willPropagate) 
 				_allocator = other._allocator;
-				_node_allocator = other._node_allocator;
-				insert(end(), other.begin(), other.end());
-			}
-			else
-				elementWiseCopyAssign(other);
-			
+
+			elementWiseCopy(other);
 			return *this;
 		}
 
@@ -310,21 +313,23 @@ namespace collections {
 		LinkedList& operator=(LinkedList&& other) 
 			noexcept(alloc_traits::is_always_equal::value) 
 		{
-			constexpr bool propagate = 
-				alloc_traits::propagate_on_container_move_assignment::value;
-			constexpr bool alwaysEqual =
+			static constexpr bool isAlwaysEqual =
 				alloc_traits::is_always_equal::value;
+			static constexpr bool willPropagate = 
+				alloc_traits::propagate_on_container_move_assignment::value;
+			bool isInstanceEqual = _allocator == other._allocator;
 
-			bool equalAllocators = this->_allocator == other._allocator;
-
-			if constexpr (alwaysEqual)
-				swapData(*this, other);
-			else if (equalAllocators)
-				swapData(*this, other);
-			else if (propagate)
-				swapAll(*this, other);
+			if (isAlwaysEqual || isInstanceEqual) {
+				clear();
+				moveMembers(std::move(other));
+			} 
+			else if (willPropagate) {
+				clear();
+				_allocator = std::move(other._allocator);
+				moveMembers(std::move(other));
+			}
 			else
-				elementwiseMoveAssign(other);
+				elementWiseCopy(std::move(other));
 
 			return *this;
 		}
@@ -460,7 +465,7 @@ namespace collections {
 		/// the last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator end() const noexcept {
-			return const_iterator(const_cast<_node_base*>(&_sentinel));
+			return const_iterator(const_cast<node_base*>(&_sentinel));
 		}
 
 		// --------------------------------------------------------------------
@@ -486,7 +491,7 @@ namespace collections {
 		/// last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cend() const noexcept {
-			return const_iterator(const_cast<_node_base*>(&_sentinel));
+			return const_iterator(const_cast<node_base*>(&_sentinel));
 		}
 
 		// --------------------------------------------------------------------
@@ -818,11 +823,11 @@ namespace collections {
 		) {
 			if (begin != end) {
 				size_type size = 1;
-				_node_base* head = createNode(*begin++);
-				_node_base* tail = head;
+				node_base* head = createNode(*begin++);
+				node_base* tail = head;
 
 				while (begin != end) {
-					_node_base* n = createNode(*begin++);
+					node_base* n = createNode(*begin++);
 					tail->_next = n;
 					n->_prev = tail;
 					tail = tail->_next;
@@ -1038,21 +1043,35 @@ namespace collections {
 		friend void swap(LinkedList& a, LinkedList& b) 
 			noexcept(alloc_traits::is_always_equal::value) 
 		{
-			constexpr bool propagate = 
-				alloc_traits::propagate_on_container_swap::value;
-			constexpr bool alwaysEqual = 
+			a.swap(b);
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary> 
+		/// Swaps the contents of this LinkedList with the given list.
+		/// </summary>
+		/// 
+		/// <param name="other">
+		/// The container to be swapped with.
+		/// </param> -----------------------------------------------------------
+		void swap(LinkedList& other) 
+			noexcept(alloc_traits::is_always_equal::value) 
+		{
+			static constexpr bool isAlwaysEqual = 
 				alloc_traits::is_always_equal::value;
+			static constexpr bool willPropagate = 
+				alloc_traits::propagate_on_container_swap::value;
+			bool isInstanceEqual = _allocator == other._allocator;
 
-			bool equalAllocators = a._allocator == b._allocator;
-
-			if constexpr (alwaysEqual)
-				swapData(a, b);
-			else if (equalAllocators)
-				swapData(a, b);
-			else if (propagate) 
-				swapAll(a, b);
-			else
-				throw std::exception("Swap on unequal, stateful allocators");
+			if (isAlwaysEqual || isInstanceEqual)
+				swapMembers(other);
+			else if (willPropagate) {
+				using std::swap;
+				swap(_allocator, other._allocator);
+				swapMembers(other);
+			}
+			else // Undefined behavior under STL specification
+				;
 		}
 
 		// --------------------------------------------------------------------
@@ -1176,57 +1195,85 @@ namespace collections {
 
 	private:
 
-		struct _node_base {
-			struct _node_base* _next = nullptr;
-			struct _node_base* _prev = nullptr;
+		struct node_base {
+			struct node_base* _next = nullptr;
+			struct node_base* _prev = nullptr;
 		};
 
-		struct _node : _node_base {
+		struct _node : node_base {
 			value_type _element;
 
 			template <class ... Args>
 			_node(Args&&... args) : _element(std::forward<Args>(args)...) {}
 		};
 
-		_node_base _sentinel;
-		allocator_type _allocator;
-		node_allocator_type _node_allocator;
+		[[no_unique_address, msvc::no_unique_address]] 
+		node_allocator_t _allocator;
+		node_base _sentinel;
 		size_type _size;
-
-		[[nodiscard]] node* allocate() {
-			return alloc_traits::allocate(_node_allocator, 1);
-		}
-
-		void deallocate(node* n) {
-			alloc_traits::deallocate(_node_allocator, n, 1);
-		}
-
-		template <class... Args>
-		void constructNode(node* n, Args&&... args) {
-			alloc_traits::construct(
-				_node_allocator, 
-				n, 
-				std::forward<Args>(args)...
-			);
-		}
-
-		void destroyNode(node* n) {
-			alloc_traits::destroy(_node_allocator, n);
-		}
 
 		template <class... Args>
 		[[nodiscard]] node* createNode(Args&&... args) {
-			node* n = allocate();
-			constructNode(n, std::forward<Args>(args)...);
+			node* n = node_alloc_traits::allocate(_allocator, 1);
+			node_alloc_traits::construct(
+				_allocator, n, std::forward<Args>(args)...
+			);
 			return n;
 		}
 
-		void setSentinel(_node_base* n) {
+		void destroyNode(node* n) {
+			node_alloc_traits::destroy(_allocator, n);
+			node_alloc_traits::deallocate(_allocator, n, 1);
+		}
+
+		void setSentinel(node_base* n) {
 			_sentinel._next = n;
 			_sentinel._prev = n;
 		}
 
-		[[nodiscard]] const _node_base* getNodeAt(size_type index) const {
+		void moveSentinel(node_base&& n) {
+			if (n._next == &n)
+				setSentinel(&_sentinel);
+			else {
+				_sentinel._next = std::move(n._next);
+				_sentinel._next->_prev = &_sentinel;
+				_sentinel._prev = std::move(n._prev);
+				_sentinel._prev->_next = &_sentinel;
+			}
+			n._next = &n;
+			n._prev = &n;
+		}
+
+		void moveMembers(LinkedList&& other) noexcept {
+			moveSentinel(std::move(other._sentinel));
+			_size = std::move(other._size);
+			other._size = 0;
+		}
+
+		void swapMembers(LinkedList& other) noexcept {
+			using std::swap;
+
+			if (isEmpty() && other.isEmpty())
+				return;
+
+			auto this_next = _sentinel._next;
+			auto this_prev = _sentinel._prev;
+			auto other_next = other._sentinel._next;
+			auto other_prev = other._sentinel._prev;
+
+			_sentinel._next = other.isEmpty() ? &_sentinel : other_next;
+			_sentinel._prev = other.isEmpty() ? &_sentinel : other_prev;
+			other._sentinel._next = isEmpty() ? &other._sentinel : this_next;
+			other._sentinel._prev = isEmpty() ? &other._sentinel : this_prev;
+			_sentinel._next->_prev = &_sentinel;
+			_sentinel._prev->_next = &_sentinel;
+			other._sentinel._next->_prev = &other._sentinel;
+			other._sentinel._prev->_next = &other._sentinel;
+
+			swap(_size, other._size);
+		};
+
+		[[nodiscard]] const node_base* getNodeAt(size_type index) const {
 			size_type half_size = _size >> 1;
 
 			if (index <= half_size)
@@ -1235,64 +1282,85 @@ namespace collections {
 				return traverseBackwardFrom(&_sentinel, _size - index);
 		}
 
-		[[nodiscard]] _node_base* getNodeAt(size_type index) {
-			const _node_base* n = std::as_const(*this).getNodeAt(index);
-			return const_cast<_node_base*>(n);
+		[[nodiscard]] node_base* getNodeAt(size_type index) {
+			const node_base* n = std::as_const(*this).getNodeAt(index);
+			return const_cast<node_base*>(n);
 		}
 
-		[[nodiscard]] _node_base* traverseForwardFrom(
-			const _node_base* n, 
+		[[nodiscard]] node_base* traverseForwardFrom(
+			const node_base* n, 
 			size_type numSteps
 		) const {
-			_node_base* result = n->_next->_prev;
+			node_base* result = n->_next->_prev;
 			for (size_type i = 0; i < numSteps; ++i)
 				result = result->_next;
 			return result;
 		}
 
-		[[nodiscard]] _node_base* traverseBackwardFrom(
-			const _node_base* n, 
+		[[nodiscard]] node_base* traverseBackwardFrom(
+			const node_base* n, 
 			size_type numSteps
 		) const {
-			_node_base* result = n->_prev->_next;
+			node_base* result = n->_prev->_next;
 			for (size_type i = 0; i < numSteps; ++i)
 				result = result->_prev;
 			return result;
 		}
 
-		void assignFrom(const_iterator begin, const_iterator end) {
+		template <
+			std::input_iterator in_iterator,
+			std::sentinel_for<in_iterator> sentinel
+		>
+		void assignFrom(in_iterator begin, sentinel end) {
 			iterator destination = this->begin();
 			while (destination != this->end()) 
 				*destination++ = *begin++;
 			insert(this->end(), begin, end);
 		}
 
-		void elementWiseCopyAssign(const LinkedList& other) {
-			if (size() < other.size()) 
-				assignFrom(other.begin(), other.end());
+		void elementWiseCopy(const LinkedList& other) {
+			if constexpr (std::is_copy_assignable_v<value_type>) {
+				if (size() < other.size())
+					assignFrom(other.begin(), other.end());
+				else {
+					auto pos = collections::copy(other, begin());
+					remove(pos, end());
+				}
+			}
 			else {
-				auto pos = collections::copy(other, begin());
-				remove(pos, end());
+				clear();
+				insert(end(), other.begin(), other.end());
+			}
+
+		}
+
+		void elementWiseCopy(LinkedList&& other) {
+			if constexpr (std::is_move_assignable_v<value_type>) {
+				if (size() < other.size()) {
+					auto start = std::move_iterator(other.begin());
+					auto end = std::move_iterator(other.end());
+					assignFrom(start, end);
+				}
+				else {
+					auto pos = collections::move(other, begin());
+					remove(pos, end());
+				}
+			}
+			else {
+				clear();
+				auto start = std::move_iterator(other.begin());
+				auto end = std::move_iterator(other.end());
+				insert(end(), start, end);
 			}
 		}
 
-		void elementwiseMoveAssign(LinkedList&& other) {
-			if (size() < other.size()) 
-				assignFrom(std::move_iterator(other.begin()), other.end());
-			else {
-				auto pos = collections::move(other, begin());
-				remove(pos, end());
-			}
-		}
-
-		size_type destroy(_node_base* begin, _node_base* end) {
+		size_type destroy(node_base* begin, node_base* end) {
 			size_type s = 0;
-			_node_base* next = nullptr;
+			node_base* next = nullptr;
 
 			while (begin != end) {
 				next = begin->_next;
 				destroyNode(static_cast<node*>(begin));
-				deallocate(static_cast<node*>(begin));
 				begin = next;
 				s++;
 			}
@@ -1301,9 +1369,9 @@ namespace collections {
 		}
 
 		template <class... Args>
-		iterator insertAt(const _node_base* location, Args&&... args) {
-			_node_base* newNode = createNode(std::forward<Args>(args)...);
-			splice(const_cast<_node_base*>(location), newNode, newNode);
+		iterator insertAt(const node_base* location, Args&&... args) {
+			node_base* newNode = createNode(std::forward<Args>(args)...);
+			splice(const_cast<node_base*>(location), newNode, newNode);
 			_size++;
 			return iterator(newNode);
 		}
@@ -1312,35 +1380,35 @@ namespace collections {
 		iterator insertAt(Index index, Args&&... args) {
 			size_type i = index.get();
 			validateIndexInRange(i);
-			_node_base* location = getNodeAt(i);
+			node_base* location = getNodeAt(i);
 			return insertAt(location, std::forward<Args>(args)...);
 		}
 
-		iterator remove(_node_base* n) {
+		iterator remove(node_base* n) {
 			return remove(n, n->_next);
 		}
 
-		iterator remove(_node_base* head, _node_base* tail) {
+		iterator remove(node_base* head, node_base* tail) {
 			snip(head, tail);
 			_size -= destroy(head, tail);
 			return iterator(tail);
 		}
 
-		void splice(_node_base* position, _node_base* head, _node_base* tail) {
+		void splice(node_base* position, node_base* head, node_base* tail) {
 			head->_prev = position->_prev;
 			position->_prev->_next = head;
 			tail->_next = position;
 			position->_prev = tail;
 		}
 
-		void snip(_node_base* head, _node_base* tail) {
+		void snip(node_base* head, node_base* tail) {
 			head->_prev->_next = tail;
 			tail->_prev = head->_prev;
 		}
 
 		iterator removeAll(size_type begin_index, size_type end_index) {
-			_node_base* n = getNodeAt(begin_index);
-			_node_base* next = nullptr;
+			node_base* n = getNodeAt(begin_index);
+			node_base* next = nullptr;
 
 			while (begin_index++ < end_index) {
 				next = n->_next;
@@ -1370,36 +1438,6 @@ namespace collections {
 			throw std::out_of_range(err.str().c_str());
 		}
 
-		friend void swapData(LinkedList& a, LinkedList& b) noexcept {
-			using std::swap;
-
-			if (a.isEmpty() && b.isEmpty())
-				return;
-
-			auto a_next = a._sentinel._next;
-			auto a_prev = a._sentinel._prev;
-			auto b_next = b._sentinel._next;
-			auto b_prev = b._sentinel._prev;
-
-			a._sentinel._next = b.isEmpty() ? &a._sentinel : b_next;
-			a._sentinel._prev = b.isEmpty() ? &a._sentinel : b_prev;
-			b._sentinel._next = a.isEmpty() ? &b._sentinel : a_next;
-			b._sentinel._prev = a.isEmpty() ? &b._sentinel : a_prev;
-			a._sentinel._next->_prev = &a._sentinel;
-			a._sentinel._prev->_next = &a._sentinel;
-			b._sentinel._next->_prev = &b._sentinel;
-			b._sentinel._prev->_next = &b._sentinel;
-
-			swap(a._size, b._size);
-		}
-
-		friend void swapAll(LinkedList& a, LinkedList& b) noexcept {
-			using std::swap;
-			swap(a._allocator, b._allocator);
-			swap(a._node_allocator, b._node_allocator);
-			swapData(a, b);
-		}
-
 		// --------------------------------------------------------------------
 		/// <summary>
 		/// LinkedListIterator is a class that implements bidirectional 
@@ -1413,9 +1451,9 @@ namespace collections {
 		class LinkedListIterator {
 		private:
 
-			using _node_base = LinkedList::_node_base;
+			using node_base = LinkedList::node_base;
 			using node = LinkedList::node;
-			_node_base* _node;
+			node_base* _node;
 
 			// ----------------------------------------------------------------
 			/// <summary>
@@ -1426,7 +1464,7 @@ namespace collections {
 			/// <param name="node">
 			/// The node the iterator will point to.
 			/// </param> ------------------------------------------------------
-			explicit LinkedListIterator(_node_base* node) : _node(node) {}
+			explicit LinkedListIterator(node_base* node) : _node(node) {}
 
 			friend class LinkedList;
 
