@@ -41,14 +41,14 @@ namespace collections {
 	class Stack {
 	public:
 
-		using container = container_t;
-		using allocator_type = typename container::allocator_type;
-		using value_type = typename container::value_type;
-		using size_type = typename container::size_type;
-		using reference = typename container::reference;
-		using const_reference = typename container::const_reference;
-		using pointer = typename container::pointer;
-		using const_pointer = typename container::const_pointer;
+		using container			= container_t;
+		using allocator_type	= typename container::allocator_type;
+		using value_type		= typename container::value_type;
+		using size_type			= typename container::size_type;
+		using reference			= typename container::reference;
+		using const_reference	= typename container::const_reference;
+		using pointer			= typename container::pointer;
+		using const_pointer		= typename container::const_pointer;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -395,6 +395,6 @@ namespace collections {
 
 	static_assert(
 		collection<Stack<int>>,
-		"Stack does not implement the adapter interface."
+		"Stack does not implement the collection interface."
 	);
 }
