@@ -19,12 +19,13 @@
 
 #include <sstream>
 
+#include "base/Node.h"
 #include "../algorithms/collection_algorithms.h"
 #include "../concepts/collection.h"
 
 namespace collections {
 
-	// ------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
 	/// <summary>
 	/// LinkedList is a collection class that maintains a doubly linked list 
 	/// for fast insertion/removal at the ends.
@@ -36,7 +37,7 @@ namespace collections {
 	/// <typeparam name="allocator_t">
 	/// The type of the allocator responsible for allocating memory to the 
 	/// linked list.
-	/// </typeparam> ----------------------------------------------------------
+	/// </typeparam> -----------------------------------------------------------
 	template <class element_t, class allocator_t = std::allocator<element_t>>
 	class LinkedList final {
 	private:
@@ -47,12 +48,9 @@ namespace collections {
 		using alloc_t		= rebind<allocator_t, element_t>;
 		using alloc_traits	= std::allocator_traits<alloc_t>;
 
-		using node			= struct _node;
-		using node_allocator_t		= rebind<allocator_t, node>;
-		using node_alloc_traits		= std::allocator_traits<node_allocator_t>;
-
 	public:
 
+		using node_type			= struct list_node;
 		using value_type		= element_t;
 		using allocator_type	= allocator_t;
 		using size_type			= alloc_traits::size_type;
@@ -67,6 +65,20 @@ namespace collections {
 		using reverse_iterator			= std::reverse_iterator<iterator>;
 		using const_reverse_iterator	= std::reverse_iterator<const_iterator>;
 
+	private:
+		using base_node_type		= struct node_base;
+		using base_allocator_type	= rebind<allocator_t, base_node_type>;
+		using base_alloc_traits		= std::allocator_traits<base_allocator_type>;
+		using node_ptr				= base_alloc_traits::pointer;
+		using const_node_ptr		= base_alloc_traits::const_pointer;
+
+		using node_allocator_type	= rebind<allocator_t, node_type>;
+		using node_alloc_traits		= std::allocator_traits<node_allocator_type>;
+		using list_node_ptr			= node_alloc_traits::pointer;
+		using const_list_node_ptr	= node_alloc_traits::const_pointer;
+
+	public:
+
 		// --------------------------------------------------------------------
 		/// <summary>
 		/// --- Default Constructor ---
@@ -80,7 +92,8 @@ namespace collections {
 			_size(),
 			_allocator(allocator_type{})
 		{
-			setSentinel(&_sentinel);
+			_sentinel._next = &_sentinel;
+			_sentinel._prev = &_sentinel;
 		}
 
 		// --------------------------------------------------------------------
@@ -99,7 +112,8 @@ namespace collections {
 			_size(),
 			_allocator(alloc)
 		{
-			setSentinel(&_sentinel);
+			_sentinel._next = &_sentinel;
+			_sentinel._prev = &_sentinel;
 		}
 
 		// --------------------------------------------------------------------
@@ -135,11 +149,10 @@ namespace collections {
 		/// </param> ----------------------------------------------------------
 		LinkedList(LinkedList&& other) 
 			noexcept(std::is_nothrow_move_constructible_v<allocator_type>) : 
-			_sentinel(),
+			_sentinel(std::move(other._sentinel)),
 			_size(std::move(other._size)),
 			_allocator(std::move(other._allocator))
 		{
-			moveSentinel(std::move(other._sentinel));
 			other._size = 0;
 		}
 
@@ -366,7 +379,7 @@ namespace collections {
 		/// in the LinkedList.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reference operator[](size_t index) const {
-			return static_cast<const node*>(getNodeAt(index))->_element;
+			return getNodeAt(index)->_element;
 		}
 
 		// --------------------------------------------------------------------
@@ -379,7 +392,7 @@ namespace collections {
 		/// container.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] allocator_type allocator() const noexcept {
-			return _allocator;
+			return static_cast<allocator_type>(_allocator);
 		}
 
 		// --------------------------------------------------------------------
@@ -465,7 +478,7 @@ namespace collections {
 		/// the last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator end() const noexcept {
-			return const_iterator(const_cast<node_base*>(&_sentinel));
+			return const_iterator(const_cast<node_ptr>(&_sentinel));
 		}
 
 		// --------------------------------------------------------------------
@@ -478,7 +491,7 @@ namespace collections {
 		/// the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cbegin() const noexcept {
-			return const_iterator(_sentinel._next);
+			return begin();
 		}
 
 		// --------------------------------------------------------------------
@@ -491,7 +504,7 @@ namespace collections {
 		/// last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cend() const noexcept {
-			return const_iterator(const_cast<node_base*>(&_sentinel));
+			return end();
 		}
 
 		// --------------------------------------------------------------------
@@ -587,7 +600,7 @@ namespace collections {
 		/// Returns a reference to the first element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reference front() {
-			return static_cast<node*>(_sentinel._next)->_element;
+			return static_cast<list_node_ptr>(_sentinel._next)->_element;
 		}
 
 		// --------------------------------------------------------------------
@@ -599,7 +612,7 @@ namespace collections {
 		/// Returns a constant reference to the first element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reference front() const {
-			return static_cast<node*>(_sentinel._next)->_element;
+			return static_cast<const_list_node_ptr>(_sentinel._next)->_element;
 		}
 
 		// --------------------------------------------------------------------
@@ -611,7 +624,7 @@ namespace collections {
 		/// Returns a reference to the last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reference back() {
-			return static_cast<node*>(_sentinel._prev)->_element;
+			return static_cast<list_node_ptr>(_sentinel._prev)->_element;
 		}
 
 		// --------------------------------------------------------------------
@@ -623,7 +636,7 @@ namespace collections {
 		/// Returns a constant reference to the last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reference back() const {
-			return static_cast<node*>(_sentinel._prev)->_element;
+			return static_cast<const_list_node_ptr>(_sentinel._prev)->_element;
 		}
 
 		// --------------------------------------------------------------------
@@ -685,7 +698,7 @@ namespace collections {
 		/// Rvalue reference to the element to be inserted.
 		/// </param> ----------------------------------------------------------
 		void insertFront(value_type&& element) {
-			insertAt(_sentinel._next, element);
+			insertAt(_sentinel._next, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -709,7 +722,7 @@ namespace collections {
 		/// Rvalue reference to the element to be inserted.
 		/// </param> ----------------------------------------------------------
 		void insertBack(value_type&& element) {
-			insertAt(&_sentinel, element);
+			insertAt(&_sentinel, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -749,7 +762,7 @@ namespace collections {
 		/// Returns an iterator to the inserted element.
 		/// </returns> --------------------------------------------------------
 		iterator insert(Index index, value_type&& element) {
-			return insertAt(index, element);
+			return insertAt(index, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -823,11 +836,11 @@ namespace collections {
 		) {
 			if (begin != end) {
 				size_type size = 1;
-				node_base* head = createNode(*begin++);
-				node_base* tail = head;
+				node_ptr head = createNode(*begin++);
+				node_ptr tail = head;
 
 				while (begin != end) {
-					node_base* n = createNode(*begin++);
+					node_ptr n = createNode(*begin++);
 					tail->_next = n;
 					n->_prev = tail;
 					tail = tail->_next;
@@ -1195,85 +1208,113 @@ namespace collections {
 
 	private:
 
+		struct list_node;
+
 		struct node_base {
-			struct node_base* _next = nullptr;
-			struct node_base* _prev = nullptr;
+			node_ptr _prev;
+			node_ptr _next;
+
+			node_base() : _prev(nullptr), _next(nullptr) {}
+
+			node_base(node_base&& other) noexcept :
+				_prev(std::move(other._prev)), 
+				_next(std::move(other._next))
+			{
+				onMove(other);
+			}
+
+			node_base& operator=(node_base&& other) {
+				assert(_next == this && _prev == this);
+				_prev = std::move(other._prev);
+				_next = std::move(other._next);
+				onMove(other);
+				return *this;
+			}
+
+			node_base(const node_base&) = delete;
+			node_base& operator=(const node_base&) = delete;
+
+			friend void swap(node_base& a, node_base& b) {
+				using std::swap;
+				swap(a._prev, b._prev);
+				swap(a._next, b._next);
+				onChangePtrs(a, b);
+				onChangePtrs(b, a);
+			}
+
+		private:
+
+			void onMove(node_base& other) {
+				other._prev = &other;
+				other._next = &other;
+				onChangePtrs(*this, other);
+			}
+
+			static void onChangePtrs(
+				node_base& lhs, 
+				const node_base& rhs
+			) noexcept {
+				if (lhs._prev != &rhs)
+					lhs._prev->_next = &lhs;
+				else
+					lhs._prev = &lhs;
+
+				if (lhs._next != &rhs)
+					lhs._next->_prev = &lhs;
+				else
+					lhs._next = &lhs;
+			}
 		};
 
-		struct _node : node_base {
-			value_type _element;
+		struct list_node : node_base {
+			union {
+				value_type _element;
+			};
 
-			template <class ... Args>
-			_node(Args&&... args) : _element(std::forward<Args>(args)...) {}
+			template <class ...Args>
+			list_node(Args&&... args) : _element(std::forward<Args>(args)...) {}
+
+			~list_node() {}
 		};
 
 		[[no_unique_address, msvc::no_unique_address]] 
-		node_allocator_t _allocator;
+		node_allocator_type _allocator;
 		node_base _sentinel;
 		size_type _size;
 
 		template <class... Args>
-		[[nodiscard]] node* createNode(Args&&... args) {
-			node* n = node_alloc_traits::allocate(_allocator, 1);
-			node_alloc_traits::construct(
-				_allocator, n, std::forward<Args>(args)...
-			);
+		[[nodiscard]] list_node_ptr createNode(Args&&... args) {
+			list_node_ptr n = node_alloc_traits::allocate(_allocator, 1);
+			node_alloc_traits::construct(_allocator, n);
+			allocator_type alloc = allocator();
+			alloc_traits::construct(
+				alloc, &n->_element, std::forward<Args>(args)...);
 			return n;
 		}
 
-		void destroyNode(node* n) {
-			node_alloc_traits::destroy(_allocator, n);
-			node_alloc_traits::deallocate(_allocator, n, 1);
-		}
-
-		void setSentinel(node_base* n) {
-			_sentinel._next = n;
-			_sentinel._prev = n;
-		}
-
-		void moveSentinel(node_base&& n) {
-			if (n._next == &n)
-				setSentinel(&_sentinel);
-			else {
-				_sentinel._next = std::move(n._next);
-				_sentinel._next->_prev = &_sentinel;
-				_sentinel._prev = std::move(n._prev);
-				_sentinel._prev->_next = &_sentinel;
-			}
-			n._next = &n;
-			n._prev = &n;
+		void destroyNode(node_ptr n) {
+			node_alloc_traits::destroy(_allocator, static_cast<list_node_ptr>(n));
+			node_alloc_traits::deallocate(_allocator, static_cast<list_node_ptr>(n), 1);
 		}
 
 		void moveMembers(LinkedList&& other) noexcept {
-			moveSentinel(std::move(other._sentinel));
+			_sentinel = std::move(other._sentinel);
 			_size = std::move(other._size);
 			other._size = 0;
 		}
 
 		void swapMembers(LinkedList& other) noexcept {
 			using std::swap;
-
-			if (isEmpty() && other.isEmpty())
-				return;
-
-			auto this_next = _sentinel._next;
-			auto this_prev = _sentinel._prev;
-			auto other_next = other._sentinel._next;
-			auto other_prev = other._sentinel._prev;
-
-			_sentinel._next = other.isEmpty() ? &_sentinel : other_next;
-			_sentinel._prev = other.isEmpty() ? &_sentinel : other_prev;
-			other._sentinel._next = isEmpty() ? &other._sentinel : this_next;
-			other._sentinel._prev = isEmpty() ? &other._sentinel : this_prev;
-			_sentinel._next->_prev = &_sentinel;
-			_sentinel._prev->_next = &_sentinel;
-			other._sentinel._next->_prev = &other._sentinel;
-			other._sentinel._prev->_next = &other._sentinel;
-
+			swap(_sentinel, other._sentinel);
 			swap(_size, other._size);
 		};
 
-		[[nodiscard]] const node_base* getNodeAt(size_type index) const {
+		[[nodiscard]] node_ptr getNodeAt(size_type index) {
+			const_node_ptr n = std::as_const(*this).getNodeAt(index);
+			return const_cast<node_ptr>(n);
+		}
+
+		[[nodiscard]] const_list_node_ptr getNodeAt(size_type index) const {
 			size_type half_size = _size >> 1;
 
 			if (index <= half_size)
@@ -1282,29 +1323,22 @@ namespace collections {
 				return traverseBackwardFrom(&_sentinel, _size - index);
 		}
 
-		[[nodiscard]] node_base* getNodeAt(size_type index) {
-			const node_base* n = std::as_const(*this).getNodeAt(index);
-			return const_cast<node_base*>(n);
-		}
-
-		[[nodiscard]] node_base* traverseForwardFrom(
-			const node_base* n, 
+		[[nodiscard]] const_list_node_ptr traverseForwardFrom(
+			const_node_ptr n, 
 			size_type numSteps
 		) const {
-			node_base* result = n->_next->_prev;
 			for (size_type i = 0; i < numSteps; ++i)
-				result = result->_next;
-			return result;
+				n = n->_next;
+			return static_cast<const_list_node_ptr>(n);
 		}
 
-		[[nodiscard]] node_base* traverseBackwardFrom(
-			const node_base* n, 
+		[[nodiscard]] const_list_node_ptr traverseBackwardFrom(
+			const_node_ptr n, 
 			size_type numSteps
 		) const {
-			node_base* result = n->_prev->_next;
 			for (size_type i = 0; i < numSteps; ++i)
-				result = result->_prev;
-			return result;
+				n = n->_prev;
+			return static_cast<const_list_node_ptr>(n);
 		}
 
 		template <
@@ -1354,13 +1388,13 @@ namespace collections {
 			}
 		}
 
-		size_type destroy(node_base* begin, node_base* end) {
+		size_type destroy(node_ptr begin, node_ptr end) {
 			size_type s = 0;
-			node_base* next = nullptr;
+			node_ptr next = nullptr;
 
 			while (begin != end) {
 				next = begin->_next;
-				destroyNode(static_cast<node*>(begin));
+				destroyNode(begin);
 				begin = next;
 				s++;
 			}
@@ -1369,9 +1403,9 @@ namespace collections {
 		}
 
 		template <class... Args>
-		iterator insertAt(const node_base* location, Args&&... args) {
-			node_base* newNode = createNode(std::forward<Args>(args)...);
-			splice(const_cast<node_base*>(location), newNode, newNode);
+		iterator insertAt(const_node_ptr location, Args&&... args) {
+			list_node_ptr newNode = createNode(std::forward<Args>(args)...);
+			splice(const_cast<node_ptr>(location), newNode, newNode);
 			_size++;
 			return iterator(newNode);
 		}
@@ -1380,35 +1414,35 @@ namespace collections {
 		iterator insertAt(Index index, Args&&... args) {
 			size_type i = index.get();
 			validateIndexInRange(i);
-			node_base* location = getNodeAt(i);
+			node_ptr location = getNodeAt(i);
 			return insertAt(location, std::forward<Args>(args)...);
 		}
 
-		iterator remove(node_base* n) {
+		iterator remove(node_ptr n) {
 			return remove(n, n->_next);
 		}
 
-		iterator remove(node_base* head, node_base* tail) {
+		iterator remove(node_ptr head, node_ptr tail) {
 			snip(head, tail);
 			_size -= destroy(head, tail);
 			return iterator(tail);
 		}
 
-		void splice(node_base* position, node_base* head, node_base* tail) {
+		void splice(node_ptr position, node_ptr head, node_ptr tail) {
 			head->_prev = position->_prev;
 			position->_prev->_next = head;
 			tail->_next = position;
 			position->_prev = tail;
 		}
 
-		void snip(node_base* head, node_base* tail) {
+		void snip(node_ptr head, node_ptr tail) {
 			head->_prev->_next = tail;
 			tail->_prev = head->_prev;
 		}
 
 		iterator removeAll(size_type begin_index, size_type end_index) {
-			node_base* n = getNodeAt(begin_index);
-			node_base* next = nullptr;
+			node_ptr n = getNodeAt(begin_index);
+			node_ptr next = nullptr;
 
 			while (begin_index++ < end_index) {
 				next = n->_next;
@@ -1450,10 +1484,7 @@ namespace collections {
 		template <bool isConst>
 		class LinkedListIterator {
 		private:
-
-			using node_base = LinkedList::node_base;
-			using node = LinkedList::node;
-			node_base* _node;
+			node_ptr _node;
 
 			// ----------------------------------------------------------------
 			/// <summary>
@@ -1464,7 +1495,7 @@ namespace collections {
 			/// <param name="node">
 			/// The node the iterator will point to.
 			/// </param> ------------------------------------------------------
-			explicit LinkedListIterator(node_base* node) : _node(node) {}
+			explicit LinkedListIterator(node_ptr node) : _node(node) {}
 
 			friend class LinkedList;
 
@@ -1551,7 +1582,7 @@ namespace collections {
 			/// in its current state.
 			///	</returns> ----------------------------------------------------
 			reference operator*() const {
-				return static_cast<node*>(_node)->_element;
+				return static_cast<list_node_ptr>(_node)->_element;
 			}
 
 			// ----------------------------------------------------------------
@@ -1593,7 +1624,8 @@ namespace collections {
 			/// iterator after updating.
 			///	</returns> ----------------------------------------------------
 			LinkedListIterator& operator--() {
-				_node = _node->_prev;
+				if (_node->_prev)
+					_node = _node->_prev;
 				return *this;
 			}
 
@@ -1608,7 +1640,8 @@ namespace collections {
 			///	</returns> ----------------------------------------------------
 			LinkedListIterator operator--(int) {
 				auto copy = *this;
-				_node = _node->_prev;
+				if (_node->_prev)
+					_node = _node->_prev;
 				return copy;
 			}
 
