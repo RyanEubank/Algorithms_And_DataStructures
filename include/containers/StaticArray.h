@@ -28,15 +28,15 @@ namespace collections {
 	class StaticArray {
 	public:
 
-		using value_type = element_t;
-		using reference = value_type&;
-		using const_reference = const value_type&;
-		using iterator = value_type*;
-		using const_iterator = const value_type*;
-		using difference_type = std::iterator_traits<iterator>::difference_type;
-		using size_type = size_t;
-		using pointer = value_type*;
-		using const_pointer = const value_type*;
+		using value_type		= element_t;
+		using reference			= value_type&;
+		using const_reference	= const value_type&;
+		using iterator			= value_type*;
+		using const_iterator	= const value_type*;
+		using difference_type	= std::iterator_traits<iterator>::difference_type;
+		using size_type			= size_t;
+		using pointer			= value_type*;
+		using const_pointer		= const value_type*;
 
 	private:
 
@@ -224,11 +224,11 @@ namespace collections {
 		/// The second array to be swapped.
 		/// </param> ----------------------------------------------------------
 		constexpr friend void swap(
-			StaticArray<value_type, N>& a,
-			StaticArray<value_type, N>& b
+			StaticArray& a,
+			StaticArray& b
 		) noexcept {
 			using std::swap;
-			swap(a_array, b_array);
+			swap(a._array, b._array);
 		}
 
 		// --------------------------------------------------------------------
@@ -247,8 +247,8 @@ namespace collections {
 		/// The array appearing on the right hand side of the comparison.
 		/// </param> ----------------------------------------------------------
 		constexpr friend auto operator<=>(
-			const StaticArray<value_type, N>& lhs,
-			const StaticArray<value_type, N>& rhs
+			const StaticArray& lhs,
+			const StaticArray& rhs
 		) noexcept = default;
 	};
 }
