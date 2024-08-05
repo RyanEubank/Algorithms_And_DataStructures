@@ -15,9 +15,11 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
+#pragma once
+
 namespace collections::impl {
 
-	template <class derived_t, template <class ...Args> class crtp_t>
+	template <class derived_t, class crtp_t>
 	class CRTP {
 	protected:
 
@@ -28,5 +30,11 @@ namespace collections::impl {
 		[[nodiscard]] const derived_t& self() const {
 			return static_cast<const derived_t&>(*this);
 		}
+
+	private:
+
+		CRTP() {}
+
+		friend crtp_t;
 	};
 }

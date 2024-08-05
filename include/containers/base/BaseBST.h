@@ -31,7 +31,10 @@ namespace collections::impl {
 		class allocator_t, 
 		class derived_t
 	> requires std::predicate<compare_t, element_t, element_t>
-	class BaseBST : public CRTP<derived_t, BaseBST> {
+	class BaseBST : public CRTP<
+		derived_t, 
+		BaseBST<element_t, compare_t, allocator_t, derived_t>
+	> {
 	protected:
 
 		template <bool isConst>
