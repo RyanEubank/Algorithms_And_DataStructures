@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace collections::impl {
+namespace collections {
 
 	template <class derived_t, class crtp_t>
 	class CRTP {

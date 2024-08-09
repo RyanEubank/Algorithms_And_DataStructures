@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "CRTP.h"
+#include "../../util/CRTP.h"
 #include "../../algorithms/collection_algorithms.h"
 #include "../../concepts/collection.h"
 #include "../../adapters/TreeTraversalAdapters.h"
