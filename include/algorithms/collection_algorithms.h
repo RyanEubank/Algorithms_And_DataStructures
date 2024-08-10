@@ -1025,9 +1025,11 @@ namespace collections {
 			std::basic_ostream<char_t>& os
 		) const {
 			os << size << " ";
-			while (begin != end) 
-				os << *begin++ << " ";
-			os.seekp(-1, std::ios_base::cur);
+			while (begin != end) {
+				os << *begin++;
+				if (begin != end)
+					os << " ";
+			}
 			os << std::endl;
 		}
 
