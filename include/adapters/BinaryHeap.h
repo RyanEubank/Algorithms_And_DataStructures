@@ -18,7 +18,6 @@
 #pragma once
 
 #include <utility>
-#include "../concepts/decrementable.h"
 #include "../containers/DynamicArray.h"
 
 namespace collections {
