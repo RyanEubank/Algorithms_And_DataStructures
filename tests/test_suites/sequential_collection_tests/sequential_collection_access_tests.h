@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "sequential_collection_test_fixture.h"
+#include "../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params>
-	class SequentialCollectionAccessTests : 
-		public SequentialCollectionTests<params> {};
+	class SequentialCollectionAccessTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(SequentialCollectionAccessTests);
 
@@ -37,9 +36,7 @@ namespace collection_tests {
 	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
-
 		const collection obj{ a, b, c };
-
 		EXPECT_EQ(obj.front(), a);
 	}
 
@@ -53,9 +50,7 @@ namespace collection_tests {
 	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
-
 		const collection obj{ a, b, c };
-
 		EXPECT_EQ(obj.back(), c);
 	}
 

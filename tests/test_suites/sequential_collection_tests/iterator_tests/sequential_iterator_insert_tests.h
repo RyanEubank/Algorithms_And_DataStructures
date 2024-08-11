@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "../sequential_collection_test_fixture.h"
+#include "../../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params> 
-	class SequentialIteratorInsertTests : 
-		public SequentialCollectionTests<params> {};
+	class SequentialIteratorInsertTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(SequentialIteratorInsertTests);
 
@@ -152,7 +151,6 @@ namespace collection_tests {
 	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
-		using iterator = typename TypeParam::collection_t::iterator;
 
 		auto method = [&](auto& obj) -> iterator {
 			auto input = { d, e, f };

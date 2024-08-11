@@ -22,8 +22,7 @@
 namespace collection_tests {
 
 	template <class params>
-	class SequentialIteratorAccessTests : 
-		public SequentialCollectionTests<params> {};
+	class SequentialIteratorAccessTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(SequentialIteratorAccessTests);
 
@@ -66,13 +65,15 @@ namespace collection_tests {
 	/// Tests that the reverse_iterator pair in the range covers the full 
 	/// range in reverse order.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(SequentialIteratorAccessTests, ReverseIteratorsCoverFullReverseRange) {
+	TYPED_TEST_P(
+		SequentialIteratorAccessTests,
+		ReverseIteratorsCoverFullReverseRange
+	) {
 		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
 		if constexpr (!bidirectional_collection<collection>)
 			GTEST_SKIP();
-
-		DECLARE_TEST_DATA();
 
 		const collection obj{ a, b, c };
 		auto it = obj.rbegin();
@@ -106,13 +107,15 @@ namespace collection_tests {
 	/// Tests that the begin/end and cbegin/cend methods cover the same 
 	/// elements.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST_P(SequentialIteratorAccessTests, ConstReverseIteratorsMatchNonConst) {
+	TYPED_TEST_P(
+		SequentialIteratorAccessTests, 
+		ConstReverseIteratorsMatchNonConst
+	) {
 		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
 
 		if constexpr (!bidirectional_collection<collection>)
 			GTEST_SKIP();
-
-		DECLARE_TEST_DATA();
 
 		const collection obj{ a, b, c };
 		auto it = obj.rbegin();

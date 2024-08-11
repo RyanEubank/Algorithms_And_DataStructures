@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "associative_collection_test_fixture.h"
+#include "../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params>
-	class AssociativeSetInsertTests : 
-		public AssociativeCollectionTests<params> {};
+	class AssociativeSetInsertTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(AssociativeSetInsertTests);
 
@@ -45,7 +44,7 @@ namespace collection_tests {
 
 		EXPECT_EQ(obj.size(), 3);
 		auto expected = { a, b, c };
-		this->testObjectContainsExpectedElements(obj, expected);
+		this->testObjectContainsAllExpectedElements(obj, expected);
 	}
 
 	// ------------------------------------------------------------------------
@@ -87,7 +86,7 @@ namespace collection_tests {
 
 		EXPECT_EQ(obj.size(), 3);
 		auto expected = { a, b, c };
-		this->testObjectContainsExpectedElements(obj, expected);
+		this->testObjectContainsAllExpectedElements(obj, expected);
 	}
 
 	// ------------------------------------------------------------------------
@@ -129,7 +128,7 @@ namespace collection_tests {
 		auto result = obj.insert(input.begin(), input.end());
 
 		auto expected = { a, b, c, d };
-		this->testObjectContainsExpectedElements(obj, expected);
+		this->testObjectContainsAllExpectedElements(obj, expected);
 	}
 
 

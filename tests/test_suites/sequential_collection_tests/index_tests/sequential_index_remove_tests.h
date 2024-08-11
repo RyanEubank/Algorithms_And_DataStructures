@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "sequential_index_test_fixture.h"
+#include "../../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params> 
 		requires indexable_collection<typename params::collection_t, size_t>
-	class SequentialIndexRemoveTests : public SequentialIndexTests<params> {};
+	class SequentialIndexRemoveTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(SequentialIndexRemoveTests);
 
@@ -111,7 +111,7 @@ namespace collection_tests {
 		auto expected = { a, d, e, f };
 		obj.remove({ .begin = 1, .end = 3 });
 
-		this->testObjectEqualsExpectedSequence(obj, expected);
+		this->testCollectionEqualsExpectedSequence(obj, expected);
 	}
 
 	// ------------------------------------------------------------------------

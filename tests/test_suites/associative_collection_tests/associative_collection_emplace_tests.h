@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "associative_collection_test_fixture.h"
+#include "../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params>
-	class AssociativeCollectionEmplaceTests : 
-		public AssociativeCollectionTests<params> {};
+	class AssociativeCollectionEmplaceTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(AssociativeCollectionEmplaceTests);
 
@@ -44,7 +43,7 @@ namespace collection_tests {
 		obj.emplace(a);
 		auto expected = { a };
 
-		this->testObjectContainsExpectedElements(obj, expected);
+		this->testObjectContainsAllExpectedElements(obj, expected);
 	}
 
 	// ------------------------------------------------------------------------
@@ -64,7 +63,7 @@ namespace collection_tests {
 		obj.emplace(d);
 		auto expected = { a, b, c, d };
 
-		this->testObjectContainsExpectedElements(obj, expected);
+		this->testObjectContainsAllExpectedElements(obj, expected);
 	}
 
 	// ------------------------------------------------------------------------

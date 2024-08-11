@@ -18,6 +18,7 @@
 #pragma once
 
 #include <concepts>
+#include <ranges>
 
 namespace collections {
 

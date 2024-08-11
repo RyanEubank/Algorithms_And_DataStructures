@@ -23,7 +23,7 @@
 namespace collection_tests {
 
 	template <class T>
-	class MockAllocator {
+	class MockAllocatorBase {
 	public:
 		MOCK_METHOD(T*, allocate, (const size_t));
 		MOCK_METHOD(void, deallocate, (T* const, const size_t));
@@ -31,15 +31,15 @@ namespace collection_tests {
 
 
 	template <class T>
-	class MockAllocatorWrapper {
+	class MockAllocator {
 	private:
-		static inline MockAllocator<T>* _allocator;
+		static inline MockAllocatorBase<T>* _allocator;
 
 	public:
 
 		using value_type = T;
 		
-		static void init(MockAllocator<T>* allocator) {
+		static void init(MockAllocatorBase<T>* allocator) {
 			_allocator = allocator;
 		}
 
@@ -57,13 +57,13 @@ namespace collection_tests {
 	template <class T>
 	class MockAllocatorTest {
 	protected:
-		MockAllocator<T> _allocator;
+		MockAllocatorBase<T> _allocator;
 
 		MockAllocatorTest() {
-			MockAllocatorWrapper<T>::init(&this->_allocator);
+			MockAllocator<T>::init(&this->_allocator);
 		}
 
-		MockAllocator<T>& allocator() {
+		MockAllocatorBase<T>& allocator() {
 			return this->_allocator;
 		}
 	};

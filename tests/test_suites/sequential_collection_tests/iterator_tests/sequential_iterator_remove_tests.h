@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "../sequential_collection_test_fixture.h"
+#include "../../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params> 
-	class SequentialIteratorRemoveTests : 
-		public SequentialCollectionTests<params> {};
+	class SequentialIteratorRemoveTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(SequentialIteratorRemoveTests);
 
@@ -88,7 +87,7 @@ namespace collection_tests {
 		auto end = std::next(begin, 2);
 		obj.remove(begin, end);
 
-		this->testObjectEqualsExpectedSequence(obj, expected);
+		this->testCollectionEqualsExpectedSequence(obj, expected);
 	}
 
 	// ------------------------------------------------------------------------
@@ -100,7 +99,7 @@ namespace collection_tests {
 		SequentialIteratorRemoveTests,
 		RemoveAllBetweenIteratorsReturnsIteratorToNextPosition
 	) {
-		using iterator = TypeParam::collection_t::iterator;
+		FORWARD_TEST_TYPES();
 
 		auto method = [](auto& obj) -> iterator {
 			auto begin = std::next(obj.begin());

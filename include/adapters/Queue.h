@@ -42,13 +42,20 @@ namespace collections {
 	public:
 
 		using container			= container_t;
-		using allocator_type	= typename container::allocator_type;
-		using value_type		= typename container::value_type;
-		using size_type			= typename container::size_type;
-		using reference			= typename container::reference;
-		using const_reference	= typename container::const_reference;
-		using pointer			= typename container::pointer;
-		using const_pointer		= typename container::const_pointer;
+		using allocator_type	= container::allocator_type;
+		using value_type		= container::value_type;
+		using size_type			= container::size_type;
+		using difference_type	= container::difference_type;
+		using reference			= container::reference;
+		using const_reference	= container::const_reference;
+		using pointer			= container::pointer;
+		using const_pointer		= container::const_pointer;
+
+		// all queue iterators are constant to preserve queue ordering
+		using iterator					= container::const_iterator;
+		using const_iterator			= container::const_iterator;
+		using reverse_iterator			= container::const_reverse_iterator;
+		using const_reverse_iterator	= container::const_reverse_iterator;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -249,6 +256,165 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
+		/// Returns an iterator pointing to the front of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant random access iterator to the first element in 
+		/// the queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] iterator begin() noexcept {
+			return _container.begin();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator pointing to the end of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant random access iterator to the location after the 
+		/// last element in the queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] iterator end() noexcept {
+			return _container.end();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a constant iterator pointing to the front of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant random access iterator to the first element in 
+		/// the queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator begin() const noexcept {
+			return _container.begin();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a constant iterator pointing to the end of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant random access iterator to the location after the 
+		/// last element in the queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator end() const noexcept {
+			return _container.end();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const_iterator pointing to the front of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant random access iterator to the first element in 
+		/// the queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator cbegin() const noexcept {
+			return begin();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const_iterator pointing to the end of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant random access iterator to the location after the 
+		/// last element in the queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_iterator cend() const noexcept {
+			return end();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const reverse iterator pointing to the last elemnent in
+		/// the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant reverse iterator to the end of the queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] reverse_iterator rbegin() noexcept {
+			return std::make_reverse_iterator(end());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const reverse iterator pointing to the element before the 
+		/// front of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant reverse iterator to the element before the front
+		/// of the queue
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] reverse_iterator rend() noexcept {
+			return std::make_reverse_iterator(begin());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const reverse iterator pointing to the last elemnent in
+		/// the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant reverse iterator to the end of the queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reverse_iterator rbegin() const noexcept {
+			return std::make_reverse_iterator(end());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const reverse iterator pointing to the element before the 
+		/// front of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant reverse iterator to the element before the front
+		/// of the queue
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reverse_iterator rend() const noexcept {
+			return std::make_reverse_iterator(begin());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const reverse iterator pointing to the last elemnent in
+		/// the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant reverse iterator to the end of the queue.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reverse_iterator crbegin() const noexcept {
+			return std::make_reverse_iterator(end());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns a const reverse iterator pointing to the element before the 
+		/// front of the queue.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a constant reverse iterator to the element before the front
+		/// of the queue
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_reverse_iterator crend() const noexcept {
+			return std::make_reverse_iterator(begin());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
 		/// Inserts the specified element at the front of the queue.
 		/// </summary>
 		/// 
@@ -337,6 +503,24 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reference back() const {
 			return _container.back();
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary> 
+		/// Swaps the contents of the given Queues.
+		/// </summary>
+		/// 
+		/// <param name="a">
+		/// The first queue to be swapped.
+		/// </param>
+		/// 
+		/// <param name="b">
+		/// The second queue to be swapped.
+		/// </param> ----------------------------------------------------------
+		friend void swap(Queue& a, Queue& b) 
+			noexcept(noexcept(swap(_container, _container)))
+		{
+			swap(a._container, b._container);
 		}
 
 		// --------------------------------------------------------------------

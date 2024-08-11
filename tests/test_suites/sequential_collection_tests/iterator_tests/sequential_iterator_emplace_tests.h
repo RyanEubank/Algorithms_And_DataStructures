@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "../sequential_collection_test_fixture.h"
+#include "../../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params> 
-	class SequentialIteratorEmplaceTests : 
-		public SequentialCollectionTests<params> {};
+	class SequentialIteratorEmplaceTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(SequentialIteratorEmplaceTests);
 

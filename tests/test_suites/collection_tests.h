@@ -19,35 +19,10 @@
 
 #include <gtest/gtest.h>
 
-#include "../test_data/test_inputs.h"
 #include "collection_test_fixture.h"
-
 #include "algorithms/collection_algorithms.h"
 
 namespace collection_tests {
-
-	// --------------------------------------------------------------------
-	/// <summary>
-	/// Tests that the given object's contents match that of the specified
-	/// input elements.
-	/// </summary>
-	/// 
-	/// <param name="input">
-	/// The input elements to match against.
-	/// </param>
-	/// 
-	/// <param name="obj">
-	/// The obj whose contents to examine.
-	/// </param> ----------------------------------------------------------
-	template<class T>
-	void testObjectContainsAllExpectedElements(const T& obj, const auto& input) {
-		EXPECT_EQ(obj.size(), input.size());
-
-		if constexpr (std::ranges::input_range<T>) {
-			for (const auto& e : input)
-				EXPECT_NE(collections::find(obj, e), obj.end());
-		}
-	}
 
 	TYPED_TEST_SUITE_P(CollectionTests);
 
@@ -75,7 +50,8 @@ namespace collection_tests {
 
 		const auto input = { a, b, c };
 		const collection obj{ a, b, c };
-		testObjectContainsAllExpectedElements(obj, input);
+
+		this->testObjectContainsAllExpectedElements(obj, input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -89,7 +65,8 @@ namespace collection_tests {
 
 		const auto input = { a, b, c };
 		const collection obj(input.begin(), input.end());
-		testObjectContainsAllExpectedElements(obj, input);
+
+		this->testObjectContainsAllExpectedElements(obj, input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -102,7 +79,8 @@ namespace collection_tests {
 
 		const auto input = { a, b, c };
 		const collection obj(collections::from_range, input);
-		testObjectContainsAllExpectedElements(obj, input);
+
+		this->testObjectContainsAllExpectedElements(obj, input);
 	}
 
 	// ------------------------------------------------------------------------

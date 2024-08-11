@@ -17,12 +17,13 @@
 
 #pragma once
 
-#include "sequential_index_test_fixture.h"
+#include "../../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params> 
-	class SequentialIndexEmplaceTests : public SequentialIndexTests<params> {};
+		requires indexable_collection<typename params::collection_t, size_t>
+	class SequentialIndexEmplaceTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(SequentialIndexEmplaceTests);
 

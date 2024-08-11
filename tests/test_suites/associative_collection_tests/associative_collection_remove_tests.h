@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "associative_collection_test_fixture.h"
+#include "../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params>
-	class AssociativeCollectionRemoveTests : 
-		public AssociativeCollectionTests<params> {};
+	class AssociativeCollectionRemoveTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(AssociativeCollectionRemoveTests);
 
@@ -45,7 +44,7 @@ namespace collection_tests {
 
 		obj.remove(std::next(obj.begin()));
 
-		this->testObjectContainsExpectedElements(obj, expected);
+		this->testObjectContainsAllExpectedElements(obj, expected);
 	}
 
 	// ------------------------------------------------------------------------
@@ -91,7 +90,7 @@ namespace collection_tests {
 
 		obj.remove(begin, end);
 
-		this->testObjectContainsExpectedElements(obj, expected);
+		this->testObjectContainsAllExpectedElements(obj, expected);
 	}
 
 	// ------------------------------------------------------------------------

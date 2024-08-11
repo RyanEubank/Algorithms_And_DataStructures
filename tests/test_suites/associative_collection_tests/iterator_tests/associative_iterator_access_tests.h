@@ -19,22 +19,20 @@
 
 #include <list>
 
-#include "../associative_collection_test_fixture.h"
+#include "../../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params>
-	class AssociativeIteratorAccessTests : 
-		public AssociativeCollectionTests<params> 
-	{
+	class AssociativeIteratorAccessTests : public CollectionTests<params> {
 	protected:
 
-		void testIteratorCoversRange(auto begin, auto end, auto& range) {
+		void testIteratorCoversFullRange(auto begin, auto end, auto& range) {
 			while (begin != end)
 				EXPECT_NE(collections::find(range, *begin++), range.end());
 		}
 
-		void testIteratorsCoverSameRange(
+		void testIteratorPairsCoverSameRange(
 			auto actual,
 			auto actual_end,
 			auto expected,
@@ -61,7 +59,7 @@ namespace collection_tests {
 		const collection obj{ a, b, c };
 		auto input = { a, b, c };
 
-		this->testIteratorCoversRange(obj.begin(), obj.end(), input);
+		this->testIteratorCoversFullRange(obj.begin(), obj.end(), input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -75,7 +73,7 @@ namespace collection_tests {
 		const collection obj{ a, b, c };
 		auto input = { a, b, c };
 
-		this->testIteratorCoversRange(obj.cbegin(), obj.cend(), input);
+		this->testIteratorCoversFullRange(obj.cbegin(), obj.cend(), input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -94,7 +92,7 @@ namespace collection_tests {
 		const collection obj{ a, b, c };
 		auto input = { a, b, c };
 
-		this->testIteratorCoversRange(obj.rbegin(), obj.rend(), input);
+		this->testIteratorCoversFullRange(obj.rbegin(), obj.rend(), input);
 	}
 
 	// ------------------------------------------------------------------------
@@ -116,7 +114,7 @@ namespace collection_tests {
 		const collection obj{ a, b, c };
 		auto list = std::list(obj.begin(), obj.end());
 
-		this->testIteratorsCoverSameRange(
+		this->testIteratorPairsCoverSameRange(
 			obj.rbegin(), obj.rend(), list.rbegin(), list.rend()
 		);
 	}
@@ -132,7 +130,7 @@ namespace collection_tests {
 
 		const collection obj{ a, b, c };
 
-		this->testIteratorsCoverSameRange(
+		this->testIteratorPairsCoverSameRange(
 			obj.cbegin(), obj.cend(), obj.begin(), obj.end()
 		);
 	}
@@ -155,7 +153,7 @@ namespace collection_tests {
 
 		const collection obj{ a, b, c };
 
-		this->testIteratorsCoverSameRange(
+		this->testIteratorPairsCoverSameRange(
 			obj.crbegin(), obj.crend(), obj.rbegin(), obj.rend()
 		);
 	}

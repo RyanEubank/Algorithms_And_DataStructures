@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "associative_collection_test_fixture.h"
+#include "../collection_test_fixture.h"
 
 namespace collection_tests {
 
 	template <class params>
-	class AssociativeCollectionAccessTests : 
-		public AssociativeCollectionTests<params> {};
+	class AssociativeCollectionAccessTests : public CollectionTests<params> {};
 
 	TYPED_TEST_SUITE_P(AssociativeCollectionAccessTests);
 
