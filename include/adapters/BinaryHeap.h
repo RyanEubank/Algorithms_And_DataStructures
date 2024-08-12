@@ -308,7 +308,7 @@ namespace collections {
 			using std::swap;
 			swap(_container.front(), _container.back());
 			_container.removeBack();
-			bubbleDown(0, size);
+			bubbleDown(0, size());
 		}
 
 		// ---------------------------------------------------------------------
