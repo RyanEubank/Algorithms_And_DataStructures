@@ -17,11 +17,19 @@
 
 #pragma once
 
-#include "../../util/CRTP.h"
-#include "../../algorithms/collection_algorithms.h"
-#include "../../concepts/collection.h"
+#include <concepts>
+#include <istream>
+#include <iterator>
+#include <memory>
+#include <ostream>
+#include <utility>
+
 #include "../../adapters/TreeTraversalAdapters.h"
 #include "../../adapters/Queue.h"
+#include "../../algorithms/compare.h"
+#include "../../algorithms/stream.h"
+#include "../../util/CRTP.h"
+
 
 namespace collections::impl {
 

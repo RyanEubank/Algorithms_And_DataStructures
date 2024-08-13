@@ -17,9 +17,27 @@
 
 #pragma once
 
+#include <cstdlib>
+#include <cstdint>
+#include <exception>
+#include <initializer_list>
+#include <istream>
+#include <iterator>
+#include <limits>
+#include <memory>
+#include <ostream>
+#include <ranges>
 #include <sstream>
+#include <type_traits>
+#include <utility>
 
-#include "../algorithms/collection_algorithms.h"
+#include "../algorithms/compare.h"
+#include "../algorithms/copy.h"
+#include "../algorithms/move.h"
+#include "../algorithms/shift.h"
+#include "../algorithms/stream.h"
+#include "../concepts/collection.h"
+#include "../util/NamedType.h"
 
 namespace collections {
 

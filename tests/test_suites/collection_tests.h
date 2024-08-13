@@ -20,7 +20,6 @@
 #include <gtest/gtest.h>
 
 #include "collection_test_fixture.h"
-#include "algorithms/collection_algorithms.h"
 
 namespace collection_tests {
 

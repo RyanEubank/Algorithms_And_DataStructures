@@ -157,6 +157,27 @@ namespace collection_tests {
 		this->testCollectionEqualsExpectedSequence(heap, expected);
 	}
 
+
+	TEST_F(
+		BinaryHeapTest, 
+		ChangePriorityReturnsIteratorToPositionOfUpdatedElement) 
+	{
+		BinaryHeap<int> heap = { 2, 5, 1, 7, 2, 8, 6, 6, 1, 0 };
+		// expected order at start 0, 1, 1, 2, 2, 8, 6, 6, 7, 5
+
+		auto it = std::next(heap.begin(), 4);
+		EXPECT_EQ(*it, 2);
+
+		auto result = heap.changePriority(it, 3);
+		EXPECT_EQ(*result, 3);
+
+		result = heap.changePriority(it, 12);
+		EXPECT_EQ(*result, 12);
+
+		result = heap.changePriority(it, -1);
+		EXPECT_EQ(*result, -1);
+	}
+
 	TEST_F(BinaryHeapTest, IteratorsCoverFullRange) {
 		BinaryHeap<int> heap = { 2, 5, 1, 7, 2, 8, 6, 6, 1, 0 };
 		auto order = { 0, 1, 1, 2, 2, 8, 6, 6, 7, 5 };

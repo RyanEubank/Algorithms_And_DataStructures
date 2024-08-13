@@ -19,9 +19,9 @@
 
 #include <gtest/gtest.h>
 
-#include "../mocks/mock_allocator.h"
+#include "algorithms/search.h"
 #include "test_inputs.h"
-#include "algorithms/collection_algorithms.h"
+#include "../mocks/mock_allocator.h"
 
 #define FORWARD_TEST_TYPES()											\
 	using base						= CollectionTests<TypeParam>;		\

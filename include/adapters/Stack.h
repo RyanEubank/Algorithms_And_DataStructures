@@ -17,6 +17,13 @@
 
 #pragma once
 
+#include <initializer_list>
+#include <istream>
+#include <iterator>
+#include <ostream>
+#include <ranges>
+#include <utility>
+
 #include "../concepts/collection.h"
 #include "../containers/DynamicArray.h"
 

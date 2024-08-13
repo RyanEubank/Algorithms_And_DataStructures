@@ -17,10 +17,22 @@
 
 #pragma once
 
+#include <exception>
+#include <initializer_list>
+#include <istream>
+#include <iterator>
+#include <memory>
+#include <ostream>
+#include <ranges>
 #include <sstream>
+#include <type_traits>
+#include <utility>
 
 #include "Node.h"
-#include "../algorithms/collection_algorithms.h"
+#include "../algorithms/copy.h"
+#include "../algorithms/compare.h"
+#include "../algorithms/move.h"
+#include "../algorithms/stream.h"
 #include "../concepts/collection.h"
 
 namespace collections {
@@ -34,6 +46,7 @@ namespace collections {
 	/// <typeparam name="element_t">
 	/// The type of the elements contained by the LinkedList.
 	/// </typeparam> 
+	/// 
 	/// <typeparam name="allocator_t">
 	/// The type of the allocator responsible for allocating memory to the 
 	/// linked list.
@@ -362,7 +375,7 @@ namespace collections {
 		/// Returns a reference to the element at the specified index in the
 		/// LinkedList.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] reference operator[](size_t index) {
+		[[nodiscard]] reference operator[](size_type index) {
 			return getNodeAt(index)->value();
 		}
 
@@ -379,7 +392,7 @@ namespace collections {
 		/// Returns a const reference to the element at the specified index 
 		/// in the LinkedList.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] const_reference operator[](size_t index) const {
+		[[nodiscard]] const_reference operator[](size_type index) const {
 			return getNodeAt(index)->value();
 		}
 
@@ -1210,7 +1223,7 @@ namespace collections {
 
 	private:
 
-		[[no_unique_address, msvc::no_unique_address]] 
+		[[no_unique_address, msvc::no_unique_address]] //TODO define macro for correct attr depending on compiler
 		node_allocator_type _allocator;
 		node_base _sentinel;
 		size_type _size;

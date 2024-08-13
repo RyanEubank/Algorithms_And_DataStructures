@@ -17,7 +17,17 @@
 
 #pragma once
 
+#include <concepts>
+#include <functional>
+#include <initializer_list>
+#include <iterator>
+#include <istream>
+#include <memory>
+#include <ostream>
+#include <ranges>
 #include <utility>
+
+#include "../concepts/collection.h"
 #include "../containers/DynamicArray.h"
 
 namespace collections {
@@ -339,7 +349,7 @@ namespace collections {
 			else
 				result = bubbleDown(i, size());
 
-			return _container.begin() + i;
+			return _container.begin() + result;
 		}
 
 		// ---------------------------------------------------------------------

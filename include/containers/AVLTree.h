@@ -17,7 +17,17 @@
 
 #pragma once
 
+#include <algorithm>
+#include <functional>
+#include <initializer_list>
+#include <iterator>
+#include <memory>
+#include <ranges>
+#include <type_traits>
+#include <utility>
+
 #include "base/BaseBST.h"
+#include "../concepts/collection.h"
 
 namespace collections {
 

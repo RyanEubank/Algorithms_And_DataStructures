@@ -17,9 +17,16 @@
 
 #pragma once
 
-#include "../concepts/collection.h"
+#include <concepts>
+#include <cstdlib>
+#include <initializer_list>
+#include <memory>
+#include <type_traits>
+#include <utility>
+
 #include "StaticArray.h"
 #include "DynamicArray.h"
+#include "../concepts/collection.h"
 #include "../util/CRTP.h"
 
 namespace collections {

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <cstdlib>
+#include <exception>
 #include <iterator>
 
 #include "../concepts/collection.h"

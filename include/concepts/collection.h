@@ -17,15 +17,17 @@
 
 #pragma once
 
+#include <cstdlib>
 #include <concepts>
 #include <functional>
 #include <iterator>
+#include <memory>
 #include <ranges>
 
-#include "../archetypes/iterator_archetypes.h"
-#include "../archetypes/range_archetypes.h"
 #include "../concepts/streamable.h"
 #include "../util/NamedType.h"
+#include "../archetypes/iterator_archetypes.h"
+#include "../archetypes/range_archetypes.h"
 
 namespace collections {
 
