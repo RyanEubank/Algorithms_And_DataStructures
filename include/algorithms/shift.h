@@ -103,7 +103,10 @@ namespace collections {
 		/// Returns an iterator to the first shifted element.
 		/// </returns> --------------------------------------------------------
 		template<std::ranges::bidirectional_range range>
-		constexpr auto operator()(range&& rg, int64_t shiftAmount) const {
+		constexpr std::ranges::borrowed_iterator_t<range> operator()(
+			range&& rg, 
+			int64_t shiftAmount
+		) const {
 			return (*this)
 				(std::ranges::begin(rg), std::ranges::end(rg), shiftAmount);
 		}

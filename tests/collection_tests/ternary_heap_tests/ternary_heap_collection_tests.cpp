@@ -15,23 +15,14 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#pragma once
-
-#include "../../test_suites/collection_test_fixture.h"
-
-#include "adapters/Heap.h"
-#include "containers/DynamicArray.h"
+#include "../../test_suites/collection_tests.h"
+#include "ternary_heap_test_fixture.h"
 
 namespace collection_tests {
 
-	using namespace collections;
-
-	template <class T>
-	struct BinaryHeapTestTypes {
-		using collection_t	= BinaryHeap<T, std::less<T>, DynamicArray<T, std::allocator<T>>>;
-		using mock_t		= BinaryHeap<T, std::less<T>, DynamicArray<T, MockAllocator<T>>>;
-	};
-
-	using heap_test_params = instantiate_with_elements<BinaryHeapTestTypes>;
-
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		TernaryHeapTest,
+		CollectionTests,
+		heap_test_params
+	);
 }

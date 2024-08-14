@@ -27,11 +27,11 @@ namespace collection_tests {
 	using namespace collections;
 
 	template <class T>
-	struct BinaryHeapTestTypes {
-		using collection_t	= BinaryHeap<T, std::less<T>, DynamicArray<T, std::allocator<T>>>;
-		using mock_t		= BinaryHeap<T, std::less<T>, DynamicArray<T, MockAllocator<T>>>;
+	struct TernaryHeapTestTypes {
+		using collection_t	= TernaryHeap<T, std::less<T>, DynamicArray<T, std::allocator<T>>>;
+		using mock_t		= TernaryHeap<T, std::less<T>, DynamicArray<T, MockAllocator<T>>>;
 	};
 
-	using heap_test_params = instantiate_with_elements<BinaryHeapTestTypes>;
+	using heap_test_params = instantiate_with_elements<TernaryHeapTestTypes>;
 
 }

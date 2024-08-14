@@ -15,7 +15,7 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#include "adapters/BinaryHeap.h"
+#include "adapters/Heap.h"
 
 #include "binary_heap_test_fixture.h"
 
@@ -201,6 +201,19 @@ namespace collection_tests {
 	}
 
 	TEST_F(BinaryHeapTest, ReverseIteratorsCoverFullRange) {
+		BinaryHeap<int> heap = { 2, 5, 1, 7, 2, 8, 6, 6, 1, 0 };
+
+		// forward order at start -> 0, 1, 1, 2, 2, 8, 6, 6, 7, 5
+		auto reverse = { 5, 7, 6, 6, 8, 2, 2, 1, 1, 0 };
+
+		auto expected = reverse.begin();
+		for (auto& current : std::ranges::reverse_view(heap))
+			EXPECT_EQ(current, *expected++);
+
+		EXPECT_EQ(expected, reverse.end());
+	}
+
+	TEST_F(BinaryHeapTest, ConstReverseIteratorsCoverFullRange) {
 		BinaryHeap<int> heap = { 2, 5, 1, 7, 2, 8, 6, 6, 1, 0 };
 
 		// forward order at start -> 0, 1, 1, 2, 2, 8, 6, 6, 7, 5

@@ -14,6 +14,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
+
 #pragma once
 
 #include <iterator>
@@ -97,7 +98,7 @@ namespace collections {
 			std::weakly_incrementable output
 		>
 		constexpr output operator()(
-			const range& rg, 
+			range&& rg, 
 			output destination
 		) const {
 			return (*this)
@@ -180,7 +181,7 @@ namespace collections {
 			std::weakly_incrementable output
 		>
 		constexpr output operator()(
-			const range& rg,
+			range&& rg,
 			size_t count,
 			output destination
 		) const {

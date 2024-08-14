@@ -18,6 +18,7 @@
 #pragma once
 
 #include <concepts>
+#include <cstdlib>
 #include <functional>
 #include <initializer_list>
 #include <iterator>
@@ -34,14 +35,18 @@ namespace collections {
 
 	// -------------------------------------------------------------------------
 	/// <summary>
-	/// Heap is a container adapter that implements heap operations maintaining
-	/// an internal dynamic array visualized as a tree. Heap elements can be 
-	/// inserted, deleted, or searched, as well as modified to change their
-	/// priority if elements implement addition/subtraction operators.
+	/// K_Ary_Heap is a container adapter that implements heap operations 
+	/// maintaining a random access container visualized as a tree. Heap elements 
+	/// can be inserted, deleted, or searched, as well as modified to change 
+	/// their priority if elements implement addition/subtraction operators.
 	/// </summary>
 	/// 
 	/// <typeparam name="element_t">
 	/// The type of elements contained by the heap.
+	/// </typeparam>
+	/// 
+	/// <typeparam name="degree">
+	/// The degree of the heap, or how many children each node has.
 	/// </typeparam>
 	/// 
 	/// <typeparam name="compare_t">
@@ -53,15 +58,19 @@ namespace collections {
 	/// </typeparam> -----------------------------------------------------------
 	template <
 		class element_t,
+		size_t degree,
 		class compare_t = std::less<element_t>,
-		class allocator_t = std::allocator<element_t>
-	> requires std::predicate<compare_t, element_t, element_t>
-	class BinaryHeap {
-	private:
-		using container = DynamicArray<element_t, allocator_t>;
-
+		class container_t = DynamicArray<element_t>
+	> requires (
+		collection<container_t> &&
+		std::ranges::random_access_range<container_t> &&
+		std::predicate<compare_t, element_t, element_t> && 
+		degree >= 2
+	)
+	class K_Ary_Heap {
 	public:
 
+		using container			= container_t;
 		using allocator_type	= container::allocator_type;
 		using value_type		= container::value_type;
 		using size_type			= container::size_type;
@@ -86,7 +95,7 @@ namespace collections {
 		/// Constructs an empty heap, and default constructs its internal
 		/// array.
 		/// </para></summary> --------------------------------------------------
-		constexpr BinaryHeap() : _container() {}
+		constexpr K_Ary_Heap() : _container() {}
 
 		// ---------------------------------------------------------------------
 		/// <summary>
@@ -99,8 +108,8 @@ namespace collections {
 		/// <param name="c">
 		/// The container to copy.
 		/// </param> -----------------------------------------------------------
-		constexpr BinaryHeap(const container& c) : _container(c) {
-			heapify();
+		constexpr K_Ary_Heap(const container& c) : _container(c) {
+			heapify(_container);
 		}
 
 		// ---------------------------------------------------------------------
@@ -114,8 +123,8 @@ namespace collections {
 		/// <param name="c">
 		/// The array to move.
 		/// </param> -----------------------------------------------------------
-		constexpr BinaryHeap(container&& c) : _container(std::move(c)) {
-			heapify();
+		constexpr K_Ary_Heap(container&& c) : _container(std::move(c)) {
+			heapify(_container);
 		}
 
 		// ---------------------------------------------------------------------
@@ -130,7 +139,7 @@ namespace collections {
 		/// <param name="alloc">
 		/// The allocator instance used by the internal array.
 		/// </param> -----------------------------------------------------------
-		constexpr BinaryHeap(const allocator_type& alloc) noexcept :
+		constexpr K_Ary_Heap(const allocator_type& alloc) noexcept :
 			_container(alloc)
 		{
 
@@ -145,8 +154,8 @@ namespace collections {
 		/// <param name="init">
 		/// The initialization list to copy elements from.
 		/// </param> -----------------------------------------------------------
-		constexpr BinaryHeap(std::initializer_list<value_type> init) :
-			BinaryHeap(init.begin(), init.end()) {}
+		constexpr K_Ary_Heap(std::initializer_list<value_type> init) :
+			K_Ary_Heap(init.begin(), init.end()) {}
 
 		// ---------------------------------------------------------------------
 		/// <summary>
@@ -178,12 +187,12 @@ namespace collections {
 			std::input_iterator iterator, 
 			std::sentinel_for<iterator> sentinel
 		>
-		constexpr BinaryHeap(
+		constexpr K_Ary_Heap(
 			iterator begin,
 			sentinel end,
 			const allocator_type& alloc = allocator_type{}
 		) : _container(begin, end, alloc) {
-			heapify();
+			heapify(_container.begin(), _container.end());
 		}
 
 		// ---------------------------------------------------------------------
@@ -210,11 +219,11 @@ namespace collections {
 		/// constructs the allocator if unspecified.
 		/// </param> -----------------------------------------------------------
 		template <std::ranges::input_range range>
-		constexpr BinaryHeap(
+		constexpr K_Ary_Heap(
 			from_range_t tag,
 			range&& rg,
 			const allocator_type& alloc = allocator_type{}
-		) : BinaryHeap(std::ranges::begin(rg), std::ranges::end(rg), alloc) {
+		) : K_Ary_Heap(std::ranges::begin(rg), std::ranges::end(rg), alloc) {
 			
 		}
 
@@ -239,7 +248,7 @@ namespace collections {
 		/// The allocator instance used by the internal container. Default 
 		/// constructs the allocator if unspecified.
 		/// </param> -----------------------------------------------------------
-		constexpr BinaryHeap(
+		constexpr K_Ary_Heap(
 			Size size,
 			const_reference value = value_type{},
 			const allocator_type& alloc = allocator_type{}
@@ -306,8 +315,7 @@ namespace collections {
 		/// </result> ----------------------------------------------------------
 		iterator push(const_reference element) {
 			_container.insertBack(element);
-			size_type i = bubbleUp(size() - 1);
-			return _container.begin() + i;
+			return percolateUp(_container.begin(), size() - 1);
 		}
 
 		// ---------------------------------------------------------------------
@@ -318,7 +326,7 @@ namespace collections {
 			using std::swap;
 			swap(_container.front(), _container.back());
 			_container.removeBack();
-			bubbleDown(0, size());
+			percolateDown(_container.begin(), _container.end(), 0);
 		}
 
 		// ---------------------------------------------------------------------
@@ -340,16 +348,17 @@ namespace collections {
 		/// </result> ----------------------------------------------------------
 		iterator changePriority(const_iterator pos, const_reference value) {
 			size_type i = pos - begin();
-			size_type result = i;
+			_container[i] = value;
 
-			*const_cast<container::iterator>(pos) = value;
+			// heap 'iterator' is const - and therefore cannot be swapped
+			// when changing heap order. Must be underlying container iterator
+			typename container::iterator begin = _container.begin();
+			typename container::iterator end = _container.end();
 
-			if (i > 0 && compare(i, parent(i)))
-				result = bubbleUp(i);
+			if (i > 0 && compare(begin + i, begin + parent(i)))
+				return percolateUp(begin, i);
 			else
-				result = bubbleDown(i, size());
-
-			return _container.begin() + result;
+				return percolateDown(begin, end, i);
 		}
 
 		// ---------------------------------------------------------------------
@@ -526,7 +535,7 @@ namespace collections {
 		/// <param name="b">
 		/// The second heap to be swapped.
 		/// </param> ----------------------------------------------------------
-		friend void swap(BinaryHeap& a, BinaryHeap& b) 
+		friend void swap(K_Ary_Heap& a, K_Ary_Heap& b) 
 			noexcept(noexcept(swap(_container, _container)))
 		{
 			swap(a._container, b._container);
@@ -548,7 +557,7 @@ namespace collections {
 		/// Returns true if the given heap's elements and ordering is equal.
 		/// Flase otherwise.
 		/// </returns> ---------------------------------------------------------
-		friend bool operator==(const BinaryHeap& lhs, const BinaryHeap& rhs) {
+		friend bool operator==(const K_Ary_Heap& lhs, const K_Ary_Heap& rhs) {
 			return lhs._container == rhs._container;
 		}
 
@@ -568,7 +577,7 @@ namespace collections {
 		/// Returns the heap's ordering based on contents. 
 		/// Always returns less than if the lhs is smaller than rhs.
 		/// </returns> ---------------------------------------------------------
-		friend auto operator<=>(const BinaryHeap& lhs, const BinaryHeap& rhs) {
+		friend auto operator<=>(const K_Ary_Heap& lhs, const K_Ary_Heap& rhs) {
 			return lhs._container <=> rhs._container;
 		}
 
@@ -594,7 +603,7 @@ namespace collections {
 		template <typename charT>
 		friend std::basic_ostream<charT>& operator<<(
 			std::basic_ostream<charT>& os,
-			const BinaryHeap& heap
+			const K_Ary_Heap& heap
 		) {
 			os << heap._container;
 			return os;
@@ -622,7 +631,7 @@ namespace collections {
 		template <typename charT>
 		friend std::basic_istream<charT>& operator>>(
 			std::basic_istream<charT>& is,
-			BinaryHeap& heap
+			K_Ary_Heap& heap
 		) {
 			is >> heap._container;
 			return is;
@@ -632,66 +641,127 @@ namespace collections {
 
 		container _container;
 
-		bool compare(size_type i, size_type j) {
-			return compare_t{}(_container[i], _container[j]);
+		template <std::random_access_iterator in_iterator>
+		static constexpr bool compare(in_iterator i1, in_iterator i2) {
+			return compare_t{}(*i1, *i2);
 		}
 
-		void heapify() {
-			for (size_type i = (size() / 2) - 1; i < size(); --i)
-				bubbleDown(i, size());
+		static constexpr size_type parent(size_type index) {
+			return (index - 1) / degree;
 		}
 
-		size_type bubbleDown(size_type i, size_type size) {
+		template <
+			std::random_access_iterator in_iterator,
+			std::sentinel_for<iterator> sentinel
+		>
+		static constexpr bool inBounds(
+			in_iterator begin, 
+			sentinel end, 
+			size_type index
+		) {
+			return end - (begin + index) > 0;
+		}
+
+		template <
+			std::random_access_iterator in_iterator,
+			std::sentinel_for<in_iterator> sentinel
+		>
+		static constexpr size_type chooseChild(
+			in_iterator begin, 
+			sentinel end,
+			size_type index
+		) {
+			size_t result = index;
+
+			for (size_type j = 1; j <= degree; ++j) {
+				size_type child = (degree * index) + j;
+
+				if (!inBounds(begin, end, child))
+					break;
+
+				if (compare(begin + child, begin + result))
+					result = child;
+			}
+
+			return result;
+		}
+
+		template <
+			std::random_access_iterator in_iterator,
+			std::sentinel_for<in_iterator> sentinel
+		>
+		static constexpr in_iterator heapify(in_iterator begin, sentinel end) {
+			size_type size = std::distance(begin, end); //TODO replace with collection implementation
+
+			for (size_type i = ((size_t) size - 2) / degree; i >= 0 && i < size; --i) 
+				percolateDown(begin, end, i);
+
+			return begin;
+		}
+
+		template <
+			std::random_access_iterator in_iterator,
+			std::sentinel_for<in_iterator> sentinel
+		>
+		static constexpr in_iterator percolateDown(
+			in_iterator begin, 
+			sentinel end, 
+			size_type index
+		) {
 			using std::swap;
-			size_type current = i;
 
-			while (i < size) {
-				current = i;
-				size_type left = leftChild(i);
-				size_type right = rightChild(i);
+			while (inBounds(begin, end, index)) {
+				size_type next = chooseChild(begin, end, index);
 
-				if (current < size && left < size && compare(left, current))
-					current = left;
-				if (current < size && right < size && compare(right, current))
-					current = right;
-
-				if (current != i) {
-					swap(_container[current], _container[i]);
-					i = current;
+				if (next != index) {
+					swap(*(begin + index), *(begin + next));
+					index = next;
 				}
 				else
 					break;
 			}
 
-			return i;
+			return begin + index;
 		}
 
-		size_type bubbleUp(size_type i) {
+		template <std::random_access_iterator in_iterator>
+		static constexpr in_iterator percolateUp(
+			in_iterator begin,
+			size_type index
+		) {
 			using std::swap;
 
-			while (i > 0 && compare(i, parent(i))) {
-				swap(_container[parent(i)], _container[i]);
-				i = parent(i);
+			while (index > 0) {
+				size_type parent_index = parent(index);
+
+				if (compare(begin + index, begin + parent_index))
+					swap(*(begin + index), *(begin + parent_index));
+				else
+					break;
+
+				index = parent_index;
 			}
 
-			return i;
-		}
-
-		size_type leftChild(size_type i) {
-			return (2 * i) + 1;
-		}
-
-		size_type rightChild(size_type i) {
-			return (2 * i) + 2;
-		}
-
-		size_type parent(size_type i) {
-			return (i - 1) / 2;
+			return begin + index;
 		}
 	};
 
 	static_assert(
-		collection<BinaryHeap<int>>,
+		collection<K_Ary_Heap<int, 2>>,
 		"Heap does not implement the collection interface."
 	);
+
+	template <
+		class element_t,
+		class compare_t = std::less<element_t>,
+		class container_t = DynamicArray<element_t>
+	>
+	using BinaryHeap = K_Ary_Heap<element_t, 2, compare_t, container_t>;
+
+	template <
+		class element_t,
+		class compare_t = std::less<element_t>,
+		class container_t = DynamicArray<element_t>
+	>
+	using TernaryHeap = K_Ary_Heap<element_t, 3, compare_t, container_t>;
 }
