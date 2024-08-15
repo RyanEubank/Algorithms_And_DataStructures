@@ -36,11 +36,32 @@ package_add_test(dynamic_array_insert_tests collection_tests/dynamic_array_tests
 package_add_test(dynamic_array_remove_tests collection_tests/dynamic_array_tests/dynamic_array_remove_tests.cpp)
 package_add_test(dynamic_array_emplace_tests collection_tests/dynamic_array_tests/dynamic_array_emplace_tests.cpp)
 
+add_custom_target(dynamic_array_tests)
+add_dependencies(
+	dynamic_array_tests
+	dynamic_array_collection_tests
+	dynamic_array_allocation_tests
+	dynamic_array_access_tests
+	dynamic_array_insert_tests
+	dynamic_array_remove_tests
+	dynamic_array_emplace_tests
+)
+
 package_add_test(linked_list_collection_tests collection_tests/linked_list_tests/linked_list_collection_tests.cpp)
 package_add_test(linked_list_access_tests collection_tests/linked_list_tests/linked_list_access_tests.cpp)
 package_add_test(linked_list_insert_tests collection_tests/linked_list_tests/linked_list_insert_tests.cpp)
 package_add_test(linked_list_remove_tests collection_tests/linked_list_tests/linked_list_remove_tests.cpp)
 package_add_test(linked_list_emplace_tests collection_tests/linked_list_tests/linked_list_emplace_tests.cpp)
+
+add_custom_target(linked_list_tests)
+add_dependencies(
+	linked_list_tests
+	linked_list_collection_tests
+	linked_list_access_tests
+	linked_list_insert_tests
+	linked_list_remove_tests
+	linked_list_emplace_tests
+)
 
 package_add_test(binary_search_tree_collection_tests collection_tests/binary_search_tree_tests/binary_search_tree_collection_tests.cpp)
 package_add_test(binary_search_tree_access_tests collection_tests/binary_search_tree_tests/binary_search_tree_access_tests.cpp)
@@ -49,12 +70,34 @@ package_add_test(binary_search_tree_insert_tests collection_tests/binary_search_
 package_add_test(binary_search_tree_remove_tests collection_tests/binary_search_tree_tests/binary_search_tree_remove_tests.cpp)
 package_add_test(binary_search_tree_structure_tests collection_tests/binary_search_tree_tests/binary_search_tree_structure_tests.cpp)
 
+add_custom_target(binary_search_tree_tests)
+add_dependencies(
+	binary_search_tree_tests
+	binary_search_tree_collection_tests
+	binary_search_tree_access_tests
+	binary_search_tree_emplace_tests
+	binary_search_tree_insert_tests
+	binary_search_tree_remove_tests
+	binary_search_tree_structure_tests
+)
+
 package_add_test(avl_tree_collection_tests collection_tests/avl_tree_tests/avl_tree_collection_tests.cpp)
 package_add_test(avl_tree_access_tests collection_tests/avl_tree_tests/avl_tree_access_tests.cpp)
 package_add_test(avl_tree_emplace_tests collection_tests/avl_tree_tests/avl_tree_emplace_tests.cpp)
 package_add_test(avl_tree_insert_tests collection_tests/avl_tree_tests/avl_tree_insert_tests.cpp)
 package_add_test(avl_tree_remove_tests collection_tests/avl_tree_tests/avl_tree_remove_tests.cpp)
 package_add_test(avl_tree_structure_tests collection_tests/avl_tree_tests/avl_tree_structure_tests.cpp)
+
+add_custom_target(avl_tree_tests)
+add_dependencies(
+	avl_tree_tests
+	avl_tree_collection_tests
+	avl_tree_access_tests
+	avl_tree_emplace_tests
+	avl_tree_insert_tests
+	avl_tree_remove_tests
+	avl_tree_structure_tests
+)
 
 package_add_test(splay_tree_collection_tests collection_tests/splay_tree_tests/splay_tree_collection_tests.cpp)
 package_add_test(splay_tree_access_tests collection_tests/splay_tree_tests/splay_tree_access_tests.cpp)
@@ -63,14 +106,53 @@ package_add_test(splay_tree_insert_tests collection_tests/splay_tree_tests/splay
 package_add_test(splay_tree_remove_tests collection_tests/splay_tree_tests/splay_tree_remove_tests.cpp)
 package_add_test(splay_tree_structure_tests collection_tests/splay_tree_tests/splay_tree_structure_tests.cpp)
 
+add_custom_target(splay_tree_tests)
+add_dependencies(
+	splay_tree_tests
+	splay_tree_collection_tests
+	splay_tree_access_tests
+	splay_tree_emplace_tests
+	splay_tree_insert_tests
+	splay_tree_remove_tests
+	splay_tree_structure_tests
+)
+
 package_add_test(stack_collection_tests collection_tests/stack_tests/stack_collection_tests.cpp)
 package_add_test(stack_interface_tests collection_tests/stack_tests/stack_interface_tests.cpp)
+
+add_custom_target(stack_tests)
+add_dependencies(
+	stack_tests
+	stack_collection_tests
+	stack_interface_tests
+)
 
 package_add_test(queue_collection_tests collection_tests/queue_tests/queue_collection_tests.cpp)
 package_add_test(queue_interface_tests collection_tests/queue_tests/queue_interface_tests.cpp)
 
+add_custom_target(queue_tests)
+add_dependencies(
+	queue_tests
+	queue_collection_tests
+	queue_interface_tests
+)
+
 package_add_test(binary_heap_collection_tests collection_tests/binary_heap_tests/binary_heap_collection_tests.cpp)
 package_add_test(binary_heap_interface_tests collection_tests/binary_heap_tests/binary_heap_interface_tests.cpp)
 
+add_custom_target(binary_heap_tests)
+add_dependencies(
+	binary_heap_tests
+	binary_heap_collection_tests
+	binary_heap_interface_tests
+)
+
 package_add_test(ternary_heap_collection_tests collection_tests/ternary_heap_tests/ternary_heap_collection_tests.cpp)
 package_add_test(ternary_heap_interface_tests collection_tests/ternary_heap_tests/ternary_heap_interface_tests.cpp)
+
+add_custom_target(ternary_heap_tests)
+add_dependencies(
+	ternary_heap_tests
+	ternary_heap_collection_tests
+	ternary_heap_interface_tests
+)
