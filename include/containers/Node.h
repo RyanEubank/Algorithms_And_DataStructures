@@ -73,6 +73,7 @@ namespace collections {
 		using reference			= value_type&;
 		using const_reference	= const value_type&; 
 
+		using size_type			= alloc_traits::size_type;
 		using pointer			= alloc_traits::pointer;
 		using const_pointer		= alloc_traits::const_pointer;
 		using node_ptr			= node_alloc_traits::pointer;
@@ -220,6 +221,34 @@ namespace collections {
 		/// </returns> ---------------------------------------------------------
 		[[nodiscard]] constexpr const node_ptr& to(size_t index) const {
 			return _edges[index];
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the degree of the node.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// The count or number of instantiated edges connected to the node.
+		/// </returns> ---------------------------------------------------------
+		[[nodiscard]] constexpr size_type degree() const {
+			size_type degree = 0;
+			for (auto& edge : _edges)
+				degree += nullptr ? 0 : 1;
+			return degree;
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the maximum degree of the node.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// The maximum count or maximum number of edges the node can have
+		/// connected.
+		/// </returns> ---------------------------------------------------------
+		[[nodiscard]] constexpr size_type max_degree() const {
+			return N;
 		}
 	};
 	
