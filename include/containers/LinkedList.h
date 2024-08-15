@@ -1053,7 +1053,7 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		template <class ...Args>
 		iterator emplace(const_iterator position, Args&&... args) {
-			return insertAt(position._node, std::forward<Args>(args)...);
+			return insertAt(position.node(), std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1364,9 +1364,9 @@ namespace collections {
 		}
 
 		template <class... Args>
-		iterator insertAt(const_node_ptr location, Args&&... args) {
+		iterator insertAt(node_ptr location, Args&&... args) {
 			node_ptr newNode = createNode(std::forward<Args>(args)...);
-			splice(const_cast<node_ptr>(location), newNode, newNode);
+			splice(location, newNode, newNode);
 			_size++;
 			return iterator(newNode);
 		}
