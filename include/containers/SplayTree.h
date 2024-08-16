@@ -42,29 +42,37 @@ namespace collections {
 		SplayTree<element_t, compare_t, allocator_t>>
 	{
 	private:
-		using tree = SplayTree<element_t, compare_t, allocator_t>;
-		using base = impl::BaseBST<element_t, compare_t, allocator_t, tree>;
+		using tree		= SplayTree<element_t, compare_t, allocator_t>;
+		using base_tree = impl::BaseBST<element_t, compare_t, allocator_t, tree>;
 
-		using node					= base::node;
-		using alloc_traits			= base::alloc_traits;
-		using node_allocator_t		= rebind<allocator_t, node>;
-		using node_alloc_traits		= std::allocator_traits<node_allocator_t>;
+		using alloc_traits			= base_tree::alloc_traits;
+		using node_allocator_type	= base_tree::node_allocator_type;
+		using node_alloc_traits		= base_tree::node_alloc_traits;
+		using base_ptr				= base_tree::base_ptr;
+		using const_base_ptr		= base_tree::const_base_ptr;
+		using node_ptr				= base_tree::node_ptr;
+		using const_node_ptr		= base_tree::const_node_ptr;
 
-		friend class base;
+		friend class base_tree;
+
+		constexpr static auto left		= base_tree::left;
+		constexpr static auto right		= base_tree::right;
+		constexpr static auto parent	= base_tree::parent;
 
 	public:
-		using allocator_type			= base::allocator_type;
-		using value_type				= base::value_type;
-		using size_type					= base::size_type;
-		using difference_type			= base::difference_type;
-		using reference					= base::reference;
-		using const_reference			= base::const_reference;
-		using pointer					= base::pointer;
-		using const_pointer				= base::const_pointer;
-		using iterator					= base::iterator;
-		using const_iterator			= base::const_iterator;
-		using reverse_iterator			= base::reverse_iterator;
-		using const_reverse_iterator	= base::const_reverse_iterator;
+		using allocator_type			= base_tree::allocator_type;
+		using value_type				= base_tree::value_type;
+		using node_type					= base_tree::node_type;
+		using size_type					= base_tree::size_type;
+		using difference_type			= base_tree::difference_type;
+		using reference					= base_tree::reference;
+		using const_reference			= base_tree::const_reference;
+		using pointer					= base_tree::pointer;
+		using const_pointer				= base_tree::const_pointer;
+		using iterator					= base_tree::iterator;
+		using const_iterator			= base_tree::const_iterator;
+		using reverse_iterator			= base_tree::reverse_iterator;
+		using const_reverse_iterator	= base_tree::const_reverse_iterator;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -74,8 +82,8 @@ namespace collections {
 		/// Constructs an empty SplayTree.
 		/// </para></summary> -------------------------------------------------
 		constexpr SplayTree() 
-			noexcept(std::is_nothrow_default_constructible_v<node_allocator_t>) :
-			base(),
+			noexcept(std::is_nothrow_default_constructible_v<node_allocator_type>) :
+			base_tree(),
 			_allocator(allocator_type{})
 		{
 
@@ -92,8 +100,8 @@ namespace collections {
 		/// The allocator instance used by the tree.
 		/// </param> ----------------------------------------------------------
 		constexpr explicit SplayTree(const allocator_type& alloc) 
-			noexcept(std::is_nothrow_copy_constructible_v<node_allocator_t>) :
-			base(), 
+			noexcept(std::is_nothrow_copy_constructible_v<node_allocator_type>) :
+			base_tree(), 
 			_allocator(alloc)
 		{
 
@@ -131,8 +139,8 @@ namespace collections {
 		/// The SplayTree to be moved into this one.
 		/// </param> ----------------------------------------------------------
 		SplayTree(SplayTree&& other)
-			noexcept(std::is_nothrow_move_constructible_v<node_allocator_t>) :
-			base(std::move(other)),
+			noexcept(std::is_nothrow_move_constructible_v<node_allocator_type>) :
+			base_tree(std::move(other)),
 			_allocator(std::move(other._allocator))
 		{
 
@@ -265,24 +273,25 @@ namespace collections {
 		}
 
 	private:
-
-		node_allocator_t _allocator;
+		
+		[[no_unique_address, msvc::no_unique_address]]
+		node_allocator_type _allocator;
 
 		template <class... Args>
-		[[nodiscard]] node* createNode(Args&&... args) {
-			node* n = node_alloc_traits::allocate(_allocator, 1);
+		[[nodiscard]] node_ptr createNode(Args&&... args) {
+			node_ptr n = node_alloc_traits::allocate(_allocator, 1);
 			node_alloc_traits::construct(
-				_allocator, n, std::forward<Args>(args)...
+				_allocator, n, std::in_place_t{}, std::forward<Args>(args)...
 			);
 			return n;
 		}
 
-		void destroyNode(node* n) {
-			node_alloc_traits::destroy(_allocator, n);
-			node_alloc_traits::deallocate(_allocator, n, 1);
+		void destroyNode(base_ptr n) {
+			node_alloc_traits::destroy(_allocator, static_cast<node_ptr>(n));
+			node_alloc_traits::deallocate(_allocator, static_cast<node_ptr>(n), 1);
 		}
 
-		[[nodiscard]] size_type heightOfNode(const node* n) const noexcept {
+		[[nodiscard]] size_type heightOfNode(const_base_ptr n) const noexcept {
 			return this->heightAt(n);
 		}
 
@@ -290,99 +299,99 @@ namespace collections {
 		// Splay tree will rotate accessed nodes to the root on all operations -
 		// insert, delete, and search (unless const to preserve contract).
 
-		iterator onInsert(node* hint, const_reference element) {
-			node* result = this->insertAt(hint, element);
+		iterator onInsert(base_ptr hint, const_reference element) {
+			base_ptr result = this->insertAt(hint, element);
 			splay(result);
 			return iterator(this, result); 
 		}
 
 		template <class... Args>
-		iterator onEmplace(node* hint, Args&&... args) {
-			node* result = this->emplaceAt(hint, std::forward<Args>(args)...);
+		iterator onEmplace(base_ptr hint, Args&&... args) {
+			base_ptr result = this->emplaceAt(hint, std::forward<Args>(args)...);
 			splay(result);
 			return iterator(this, result); 
 		}
 
-		void onRemove(node* n) {
+		void onRemove(base_ptr n) {
 			if (n == this->_min)
 				this->_min = this->inOrderSuccessorOf(n);
 			if (n == this->_max)
 				this->_max = this->inOrderPredecessorOf(n);
 
-			std::pair<node*, node*> subtrees = split(n);
+			std::pair<base_ptr, base_ptr> subtrees = split(n);
 			join(subtrees);
 			destroyNode(n);
 			this->_size--;
 		}
 
 		iterator onSearch(const_reference key) {
-			struct base::_lookupResult result = this->search(key);
-			node* n = result.get();
-			n ? splay(n) : splay(const_cast<node*>(result._lastAccessed));
+			struct base_tree::_lookupResult result = this->search(key);
+			base_ptr n = result.get();
+			n ? splay(n) : splay(const_cast<base_ptr>(result._lastAccessed));
 			return iterator(this, n);
 		}
 
-		iterator onAccessNode(node* n) {
+		iterator onAccessNode(base_ptr n) {
 			splay(n);
 			return iterator(this, n);
 		}
 
-		void splay(node* n) {
+		void splay(base_ptr n) {
 			if (n) {
-				while (n->_parent)
+				while (n->to(parent))
 					rotateUp(n);
 			}
 		}
 
-		void rotateUp(node* n) {
-			node* parent = n->_parent;
-			node* grandparent = parent ? parent->_parent : nullptr;
+		void rotateUp(base_ptr n) {
+			base_ptr parent_ptr = n->to(parent);
+			base_ptr grandparent = parent_ptr ? parent_ptr->to(parent) : nullptr;
 
-			if (n->isLeftChild()) {
+			if (this->isLeftChild(n)) {
 				if (!grandparent)
-					this->rightRotation(parent);
-				else if (parent->isLeftChild()) {
+					this->rightRotation(parent_ptr);
+				else if (this->isLeftChild(parent_ptr)) {
 					this->rightRotation(grandparent);
-					this->rightRotation(parent);
+					this->rightRotation(parent_ptr);
 				}
 				else {
-					this->rightRotation(parent);
+					this->rightRotation(parent_ptr);
 					this->leftRotation(grandparent);
 				}
 			}
 			else {
 				if (!grandparent)
-					this->leftRotation(parent);
-				else if (parent->isRightChild()) {
+					this->leftRotation(parent_ptr);
+				else if (this->isRightChild(parent_ptr)) {
 					this->leftRotation(grandparent);
-					this->leftRotation(parent);
+					this->leftRotation(parent_ptr);
 				}
 				else {
-					this->leftRotation(parent);
+					this->leftRotation(parent_ptr);
 					this->rightRotation(grandparent);
 				}
 			}
 		}
 
-		const std::pair<node*, node*> split(node* n) {
-			node* predecessor = this->inOrderPredecessorOf(n);
+		const std::pair<base_ptr, base_ptr> split(base_ptr n) {
+			base_ptr predecessor = this->inOrderPredecessorOf(n);
 			splay(n);
 
-			if (n->_left) 
-				n->_left->_parent = nullptr;
-			if (n->_right)
-				n->_right->_parent = nullptr;
+			if (n->to(left)) 
+				n->to(left)->to(parent) = nullptr;
+			if (n->to(right))
+				n->to(right)->to(parent) = nullptr;
 
 			this->_root = predecessor;
-			return { predecessor, n->_right };
+			return { predecessor, n->to(right) };
 		}
 
-		void join(const std::pair<node*, node*>& subtrees) {
+		void join(const std::pair<base_ptr, base_ptr>& subtrees) {
 			if (subtrees.first) {
 				splay(subtrees.first);
-				subtrees.first->_right = subtrees.second;
+				subtrees.first->to(right) = subtrees.second;
 				if (subtrees.second)
-					subtrees.second->_parent = subtrees.first;
+					subtrees.second->to(parent) = subtrees.first;
 			}
 			else
 				this->_root = subtrees.second;

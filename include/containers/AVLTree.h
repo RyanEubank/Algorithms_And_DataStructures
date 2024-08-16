@@ -43,31 +43,42 @@ namespace collections {
 		AVLTree<element_t, compare_t, allocator_t>>
 	{
 	private:
-		using tree	= AVLTree<element_t, compare_t, allocator_t>;
-		using base	= impl::BaseBST<element_t, compare_t, allocator_t, tree>;
 
-		using base_node		= base::node;
-		using node			= struct avl_node;
-		using alloc_traits	= base::alloc_traits;
+		using tree		= AVLTree<element_t, compare_t, allocator_t>;
+		using base_tree	= impl::BaseBST<element_t, compare_t, allocator_t, tree>;
 
-		using node_allocator_t	= rebind<allocator_t, node>;
-		using node_alloc_traits	= std::allocator_traits<node_allocator_t>;
+		using _node_type			= struct avl_node;
+		using alloc_traits			= base_tree::alloc_traits;
+		using node_allocator_type	= rebind<allocator_t, _node_type>;
+		using node_alloc_traits		= std::allocator_traits<node_allocator_type>;
+		using base_ptr				= base_tree::base_ptr;
+		using const_base_ptr		= base_tree::const_base_ptr;
+		using node_ptr				= base_tree::node_ptr;
+		using const_node_ptr		= base_tree::const_node_ptr;
+		using avl_ptr				= node_alloc_traits::pointer;
+		using const_avl_ptr			= node_alloc_traits::const_pointer;
 
-		friend class base;
+		friend class base_tree;
+
+		constexpr static auto left		= base_tree::left;
+		constexpr static auto right		= base_tree::right;
+		constexpr static auto parent	= base_tree::parent;
 
 	public:
-		using allocator_type			= base::allocator_type;
-		using value_type				= base::value_type;
-		using size_type					= base::size_type;
-		using difference_type			= base::difference_type;
-		using reference					= base::reference;
-		using const_reference			= base::const_reference;
-		using pointer					= base::pointer;
-		using const_pointer				= base::const_pointer;
-		using iterator					= base::iterator;
-		using const_iterator			= base::const_iterator;
-		using reverse_iterator			= base::reverse_iterator;
-		using const_reverse_iterator	= base::const_reverse_iterator;
+
+		using allocator_type			= base_tree::allocator_type;
+		using value_type				= base_tree::value_type;
+		using node_type					= _node_type;
+		using size_type					= base_tree::size_type;
+		using difference_type			= base_tree::difference_type;
+		using reference					= base_tree::reference;
+		using const_reference			= base_tree::const_reference;
+		using pointer					= base_tree::pointer;
+		using const_pointer				= base_tree::const_pointer;
+		using iterator					= base_tree::iterator;
+		using const_iterator			= base_tree::const_iterator;
+		using reverse_iterator			= base_tree::reverse_iterator;
+		using const_reverse_iterator	= base_tree::const_reverse_iterator;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -77,8 +88,8 @@ namespace collections {
 		/// Constructs an empty AVLTree.
 		/// </para></summary> -------------------------------------------------
 		constexpr AVLTree() 
-			noexcept(std::is_nothrow_default_constructible_v<node_allocator_t>) :
-			base(),
+			noexcept(std::is_nothrow_default_constructible_v<node_allocator_type>) :
+			base_tree(),
 			_allocator(allocator_type{})
 		{
 
@@ -95,8 +106,8 @@ namespace collections {
 		/// The allocator instance used by the tree.
 		/// </param> ----------------------------------------------------------
 		constexpr explicit AVLTree(const allocator_type& alloc)
-			noexcept(std::is_nothrow_copy_constructible_v<node_allocator_t>) :
-			base(), 
+			noexcept(std::is_nothrow_copy_constructible_v<node_allocator_type>) :
+			base_tree(), 
 			_allocator(alloc)
 		{
 
@@ -134,8 +145,8 @@ namespace collections {
 		/// The AVLTree to be moved into this one.
 		/// </param> ----------------------------------------------------------
 		AVLTree(AVLTree&& other)
-			noexcept(std::is_nothrow_move_constructible_v<node_allocator_t>) :
-			base(std::move(other)),
+			noexcept(std::is_nothrow_move_constructible_v<node_allocator_type>) :
+			base_tree(std::move(other)),
 			_allocator(std::move(other._allocator))
 		{
 
@@ -269,51 +280,51 @@ namespace collections {
 
 	private:
 
-		struct avl_node : base::_node {
+		struct avl_node : base_tree::node_type {
 
 			size_type _height = 0;
 
 			int64_t leftHeight() const {
-				return this->_left 
-					? static_cast<const node*>(this->_left)->_height 
+				return this->to(left) 
+					? static_cast<const_avl_ptr>(this->to(left))->_height 
 					: -1;
 			}
 
 			int64_t rightHeight() const {
-				return this->_right 
-					? static_cast<const node*>(this->_right)->_height 
+				return this->to(right) 
+					? static_cast<const_avl_ptr>(this->to(right))->_height 
 					: -1;
 			}
 		};
 
-		node_allocator_t _allocator;
+		[[no_unique_address, msvc::no_unique_address]]
+		node_allocator_type _allocator;
 
 		template <class... Args>
-		[[nodiscard]] node* createNode(Args&&... args) {
-			node* n = node_alloc_traits::allocate(_allocator, 1);
+		[[nodiscard]] node_ptr createNode(Args&&... args) {
+			node_ptr n = node_alloc_traits::allocate(_allocator, 1);
 			node_alloc_traits::construct(
-				_allocator, n, std::forward<Args>(args)...
-			);
+				_allocator, n, std::in_place_t{}, std::forward<Args>(args)...);
 			return n;
 		}
 
-		void destroyNode(base_node* n) {
-			node_alloc_traits::destroy(_allocator, static_cast<node*>(n));
-			node_alloc_traits::deallocate(_allocator, static_cast<node*>(n), 1);
+		void destroyNode(base_ptr n) {
+			node_alloc_traits::destroy(_allocator, static_cast<avl_ptr>(n));
+			node_alloc_traits::deallocate(_allocator, static_cast<avl_ptr>(n), 1);
 		}
 
-		[[nodiscard]] size_type heightOfNode(const base_node* n) const noexcept {
-			return static_cast<const node*>(n)->_height;
+		[[nodiscard]] size_type heightOfNode(const_base_ptr n) const noexcept {
+			return static_cast<const_avl_ptr>(n)->_height;
 		}
 
-		void updateHeight(base_node* node_) {
-			node* n = static_cast<node*>(node_);
+		void updateHeight(base_ptr node_) {
+			avl_ptr n = static_cast<avl_ptr>(node_);
 			int64_t max = std::max(n->leftHeight(), n->rightHeight());
 			n->_height = max + 1;
 		}
 
-		int64_t balanceOf(const base_node* node_) noexcept {
-			const node* n = static_cast<const node*>(node_);
+		int64_t balanceOf(const_base_ptr node_) noexcept {
+			const_avl_ptr n = static_cast<const_avl_ptr>(node_);
 			return n->rightHeight() - n->leftHeight();
 		}
 
@@ -321,44 +332,44 @@ namespace collections {
 		// AVL tree may need to rotate and rebalance the tree after insert and
 		// delete. Does not do any work on search or element access.
 
-		iterator onInsert(base_node* hint, const_reference element) {
-			base_node* result = this->insertAt(hint, element);
+		iterator onInsert(base_ptr hint, const_reference element) {
+			base_ptr result = this->insertAt(hint, element);
 			rebalanceOnInsert(result);
 			return iterator(this, result); 
 		}
 
 		template <class... Args>
-		iterator onEmplace(base_node* hint, Args&&... args) {
-			base_node* result = this->emplaceAt(hint, std::forward<Args>(args)...);
+		iterator onEmplace(base_ptr hint, Args&&... args) {
+			base_ptr result = this->emplaceAt(hint, std::forward<Args>(args)...);
 			rebalanceOnInsert(result);
 			return iterator(this, result); 
 		}
 
-		void onRemove(base_node* n) {
+		void onRemove(base_ptr n) {
 			n = this->removeAt(n);
 			while (n) // multiple rotation mays be needed on removal
-				n = rebalance(n)->_parent;
+				n = rebalance(n)->to(parent);
 		}
 
 		iterator onSearch(const_reference key) {
-			node* n = this->search(key).get();
+			base_ptr n = this->search(key).get();
 			return iterator(this, n);
 		}
 
-		iterator onAccessNode(base_node* n) {
+		iterator onAccessNode(base_ptr n) {
 			return iterator(this, n);
 		}
 
-		void rebalanceOnInsert(base_node* n) {
+		void rebalanceOnInsert(base_ptr n) {
 			while (n) {
-				base_node* root = rebalance(n);
+				base_ptr root = rebalance(n);
 				if (root != n) // 1 rotation is enough to balance on insert
 					break;
-				n = root->_parent;
+				n = root->to(parent);
 			}
 		}
 
-		base_node* rebalance(base_node* n) {
+		base_ptr rebalance(base_ptr n) {
 			int64_t balance = balanceOf(n);
 
 			if (balance < -1)
@@ -371,38 +382,38 @@ namespace collections {
 			return n;
 		}
 
-		base_node* rebalanceLeftChild(base_node* pivot) {
-			base_node* result = nullptr;
+		base_ptr rebalanceLeftChild(base_ptr pivot) {
+			base_ptr result = nullptr;
 
-			if (balanceOf(pivot->_left) == 1) {
-				this->leftRotation(pivot->_left);
+			if (balanceOf(pivot->to(left)) == 1) {
+				this->leftRotation(pivot->to(left));
 				result = this->rightRotation(pivot);
-				updateHeight(result->_left);
-				updateHeight(result->_right);
+				updateHeight(result->to(left));
+				updateHeight(result->to(right));
 				updateHeight(result);
 			}
 			else {
 				result = this->rightRotation(pivot);
-				updateHeight(result->_right);
+				updateHeight(result->to(right));
 				updateHeight(result);
 			}
 
 			return result;
 		}
 
-		base_node* rebalanceRightChild(base_node* pivot) {
-			base_node* result = nullptr;
+		base_ptr rebalanceRightChild(base_ptr pivot) {
+			base_ptr result = nullptr;
 
-			if (balanceOf(pivot->_right) == -1) {
-				this->rightRotation(pivot->_right);
+			if (balanceOf(pivot->to(right)) == -1) {
+				this->rightRotation(pivot->to(right));
 				result = this->leftRotation(pivot);
-				updateHeight(result->_left);
-				updateHeight(result->_right);
+				updateHeight(result->to(left));
+				updateHeight(result->to(right));
 				updateHeight(result);
 			}
 			else {
 				result = this->leftRotation(pivot);
-				updateHeight(result->_left);
+				updateHeight(result->to(left));
 				updateHeight(result);
 			}
 

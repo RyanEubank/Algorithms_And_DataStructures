@@ -60,14 +60,19 @@ namespace collections {
 		Node<element_t, allocator_t, N>, 
 		NodeBase<element_t, allocator_t, N>
 	> {
+	private:
+		using node_base	= NodeBase<element_t, allocator_t, N>;
+		using node		= Node<element_t, allocator_t, N>;
+
 	protected:
 		using alloc_t			= rebind<allocator_t, element_t>;
 		using alloc_traits		= std::allocator_traits<alloc_t>;
-		using node_alloc_t		= rebind<allocator_t, NodeBase>;
+		using base_alloc_t		= rebind<allocator_t, node_base>;
+		using base_alloc_traits = std::allocator_traits<base_alloc_t>;
+		using node_alloc_t		= rebind<allocator_t, node>;
 		using node_alloc_traits = std::allocator_traits<node_alloc_t>;
 
 	public:
-
 		using value_type		= element_t;
 		using allocator_type	= allocator_t;
 		using reference			= value_type&;
@@ -76,16 +81,18 @@ namespace collections {
 		using size_type			= alloc_traits::size_type;
 		using pointer			= alloc_traits::pointer;
 		using const_pointer		= alloc_traits::const_pointer;
+		using base_ptr			= base_alloc_traits::pointer;
+		using const_base_ptr	= base_alloc_traits::const_pointer;
 		using node_ptr			= node_alloc_traits::pointer;
 		using const_node_ptr	= node_alloc_traits::const_pointer;
 
 	private:
 
-		using static_array	= StaticArray<node_ptr, N>;
-		using dynamic_array	= DynamicArray<node_ptr, allocator_type>;
+		using static_array	= StaticArray<base_ptr, N>;
+		using dynamic_array	= DynamicArray<base_ptr, allocator_type>;
 		using edges = std::conditional_t<(N > 0), static_array, dynamic_array>;
 
-		edges _edges;
+		edges _edges = edges{};
 
 		static_assert(N != 0, "Number of edges N must be non-zero");
 
@@ -203,7 +210,7 @@ namespace collections {
 		/// <returns>
 		/// Returns a pointer to the node at the indexed edge.
 		/// </returns> ---------------------------------------------------------
-		[[nodiscard]] constexpr node_ptr& to(size_t index) {
+		[[nodiscard]] constexpr base_ptr& to(size_t index) {
 			return _edges[index];
 		}
 
@@ -219,7 +226,7 @@ namespace collections {
 		/// <returns>
 		/// Returns a const_pointer to the node at the indexed edge.
 		/// </returns> ---------------------------------------------------------
-		[[nodiscard]] constexpr const node_ptr& to(size_t index) const {
+		[[nodiscard]] constexpr const base_ptr& to(size_t index) const {
 			return _edges[index];
 		}
 
@@ -234,7 +241,7 @@ namespace collections {
 		[[nodiscard]] constexpr size_type degree() const {
 			size_type degree = 0;
 			for (auto& edge : _edges)
-				degree += nullptr ? 0 : 1;
+				degree += (edge == nullptr) ? 0 : 1;
 			return degree;
 		}
 
@@ -287,10 +294,13 @@ namespace collections {
 		using allocator_type	= base::allocator_type;
 		using reference			= base::reference;
 		using const_reference	= base::const_reference;
-		using pointer			= base::node_ptr;
-		using const_pointer		= base::const_node_ptr;
+		using pointer			= base::pointer;
+		using const_pointer		= base::const_pointer;
+		using base_ptr			= base::base_ptr;
+		using const_base_ptr	= base::const_base_ptr;
 		using node_ptr			= base::node_ptr;
 		using const_node_ptr	= base::const_node_ptr;
+
 
 		// ---------------------------------------------------------------------
 		/// <summary>

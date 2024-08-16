@@ -42,29 +42,39 @@ namespace collections {
 		BinarySearchTree<element_t, compare_t, allocator_t>>
 	{
 	private:
-		using tree	= BinarySearchTree<element_t, compare_t, allocator_t>;
-		using base	= impl::BaseBST<element_t, compare_t, allocator_t, tree>;
 
-		using node					= base::node;
-		using alloc_traits			= base::alloc_traits;
-		using node_allocator_t		= rebind<allocator_t, node>;
-		using node_alloc_traits		= std::allocator_traits<node_allocator_t>;
+		using tree		= BinarySearchTree<element_t, compare_t, allocator_t>;
+		using base_tree	= impl::BaseBST<element_t, compare_t, allocator_t, tree>;
 
-		friend class base;
+		using alloc_traits			= base_tree::alloc_traits;
+		using node_allocator_type	= base_tree::node_allocator_type;
+		using node_alloc_traits		= base_tree::node_alloc_traits;
+		using base_ptr				= base_tree::base_ptr;
+		using const_base_ptr		= base_tree::const_base_ptr;
+		using node_ptr				= base_tree::node_ptr;
+		using const_node_ptr		= base_tree::const_node_ptr;
+
+		friend class base_tree;
+
+		constexpr static auto left		= base_tree::left;
+		constexpr static auto right		= base_tree::right;
+		constexpr static auto parent	= base_tree::parent;
 
 	public:
-		using allocator_type			= base::allocator_type;
-		using value_type				= base::value_type;
-		using size_type					= base::size_type;
-		using difference_type			= base::difference_type;
-		using reference					= base::reference;
-		using const_reference			= base::const_reference;
-		using pointer					= base::pointer;
-		using const_pointer				= base::const_pointer;
-		using iterator					= base::iterator;
-		using const_iterator			= base::const_iterator;
-		using reverse_iterator			= base::reverse_iterator;
-		using const_reverse_iterator	= base::const_reverse_iterator;
+
+		using allocator_type			= base_tree::allocator_type;
+		using value_type				= base_tree::value_type;
+		using node_type					= base_tree::node_type;
+		using size_type					= base_tree::size_type;
+		using difference_type			= base_tree::difference_type;
+		using reference					= base_tree::reference;
+		using const_reference			= base_tree::const_reference;
+		using pointer					= base_tree::pointer;
+		using const_pointer				= base_tree::const_pointer;
+		using iterator					= base_tree::iterator;
+		using const_iterator			= base_tree::const_iterator;
+		using reverse_iterator			= base_tree::reverse_iterator;
+		using const_reverse_iterator	= base_tree::const_reverse_iterator;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -74,8 +84,8 @@ namespace collections {
 		/// Constructs an empty BinarySearchTree.
 		/// </para></summary> -------------------------------------------------
 		constexpr BinarySearchTree() 
-			noexcept(std::is_nothrow_default_constructible_v<node_allocator_t>) :
-			base(),
+			noexcept(std::is_nothrow_default_constructible_v<node_allocator_type>) :
+			base_tree(),
 			_allocator(allocator_type{})
 		{
 			
@@ -92,8 +102,8 @@ namespace collections {
 		/// The allocator instance used by the tree.
 		/// </param> ----------------------------------------------------------
 		constexpr explicit BinarySearchTree(const allocator_type& alloc) 
-			noexcept(std::is_nothrow_copy_constructible_v<node_allocator_t>) :
-			base(), 
+			noexcept(std::is_nothrow_copy_constructible_v<node_allocator_type>) :
+			base_tree(), 
 			_allocator(alloc)
 		{
 			
@@ -131,8 +141,8 @@ namespace collections {
 		/// The BinarySearchTree to be moved into this one.
 		/// </param> ----------------------------------------------------------
 		BinarySearchTree(BinarySearchTree&& other)
-			noexcept(std::is_nothrow_move_constructible_v<node_allocator_t>) :
-			base(std::move(other)),
+			noexcept(std::is_nothrow_move_constructible_v<node_allocator_type>) :
+			base_tree(std::move(other)),
 			_allocator(std::move(other._allocator))
 		{
 			
@@ -267,23 +277,23 @@ namespace collections {
 
 	private:
 		
-		node_allocator_t _allocator;
+		[[no_unique_address, msvc::no_unique_address]]
+		node_allocator_type _allocator;
 
 		template <class... Args>
-		[[nodiscard]] node* createNode(Args&&... args) {
-			node* n = node_alloc_traits::allocate(_allocator, 1);
+		[[nodiscard]] node_ptr createNode(Args&&... args) {
+			node_ptr n = node_alloc_traits::allocate(_allocator, 1);
 			node_alloc_traits::construct(
-				_allocator, n, std::forward<Args>(args)...
-			);
+				_allocator, n, std::in_place_t{}, std::forward<Args>(args)...);
 			return n;
 		}
 
-		void destroyNode(node* n) {
-			node_alloc_traits::destroy(_allocator, n);
-			node_alloc_traits::deallocate(_allocator, n, 1);
+		void destroyNode(base_ptr n) {
+			node_alloc_traits::destroy(_allocator, static_cast<node_ptr>(n));
+			node_alloc_traits::deallocate(_allocator, static_cast<node_ptr>(n), 1);
 		}
 
-		[[nodiscard]] size_type heightOfNode(const node* n) const noexcept {
+		[[nodiscard]] size_type heightOfNode(const_base_ptr n) const noexcept {
 			return this->heightAt(n);
 		}
 	
@@ -291,27 +301,27 @@ namespace collections {
 		// Basic binary search tree does no extra work after insertion, removal,
 		// or searching and accessing its elements.
 
-		iterator onInsert(node* hint, const_reference element) {
-			node* result = this->insertAt(hint, element);
+		iterator onInsert(base_ptr hint, const_reference element) {
+			base_ptr result = this->insertAt(hint, element);
 			return iterator(this, result); 
 		}
 
 		template <class... Args>
-		iterator onEmplace(node* hint, Args&&... args) {
-			node* result = this->emplaceAt(hint, std::forward<Args>(args)...);
+		iterator onEmplace(base_ptr hint, Args&&... args) {
+			base_ptr result = this->emplaceAt(hint, std::forward<Args>(args)...);
 			return iterator(this, result); 
 		}
 
-		void onRemove(node* n) {
+		void onRemove(base_ptr n) {
 			this->removeAt(n);
 		}
 
 		iterator onSearch(const_reference key) {
-			node* n = this->search(key).get();
+			base_ptr n = this->search(key).get();
 			return iterator(this, n);
 		}
 
-		iterator onAccessNode(node* n) {
+		iterator onAccessNode(base_ptr n) {
 			return iterator(this, n);
 		}
 	};

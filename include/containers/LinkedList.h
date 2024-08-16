@@ -83,8 +83,10 @@ namespace collections {
 		using node_base				= node_type::base;
 		using node_allocator_type	= rebind<allocator_t, node_type>;
 		using node_alloc_traits		= std::allocator_traits<node_allocator_type>;
-		using node_ptr				= node_type::pointer;
-		using const_node_ptr		= node_type::const_pointer;
+		using node_ptr				= node_type::base_ptr;
+		using const_node_ptr		= node_type::const_base_ptr;
+		using list_node_ptr			= node_alloc_traits::pointer;
+		using const_list_node_ptr	= node_alloc_traits::const_pointer;
 
 		constexpr static auto prev = 0u;
 		constexpr static auto next = 1u;
@@ -1237,8 +1239,10 @@ namespace collections {
 		}
 
 		void destroyNode(node_ptr n) {
-			node_alloc_traits::destroy(_allocator, static_cast<node_type*>(n));
-			node_alloc_traits::deallocate(_allocator, static_cast<node_type*>(n), 1);
+			node_alloc_traits::destroy(
+				_allocator, static_cast<list_node_ptr>(n));
+			node_alloc_traits::deallocate(
+				_allocator, static_cast<list_node_ptr>(n), 1);
 		}
 
 		void exchange(node_base& a, const node_base& b) {
@@ -1290,7 +1294,7 @@ namespace collections {
 		) const {
 			for (size_type i = 0; i < numSteps; ++i)
 				n = n->to(next);
-			return static_cast<const_node_ptr>(n);
+			return n;
 		}
 
 		[[nodiscard]] const_node_ptr traverseBackwardFrom(
@@ -1299,7 +1303,7 @@ namespace collections {
 		) const {
 			for (size_type i = 0; i < numSteps; ++i)
 				n = n->to(prev);
-			return static_cast<const_node_ptr>(n);
+			return n;
 		}
 
 		template <
