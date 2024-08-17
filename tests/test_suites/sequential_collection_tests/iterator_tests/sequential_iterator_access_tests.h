@@ -74,14 +74,15 @@ namespace collection_tests {
 
 		if constexpr (!bidirectional_collection<collection>)
 			GTEST_SKIP();
+		else {
+			const collection obj{ a, b, c };
+			auto it = obj.rbegin();
 
-		const collection obj{ a, b, c };
-		auto it = obj.rbegin();
-
-		EXPECT_EQ(*it++, c);
-		EXPECT_EQ(*it++, b);
-		EXPECT_EQ(*it++, a);
-		EXPECT_EQ(it, obj.rend());
+			EXPECT_EQ(*it++, c);
+			EXPECT_EQ(*it++, b);
+			EXPECT_EQ(*it++, a);
+			EXPECT_EQ(it, obj.rend());
+		}
 	}
 
 	// ------------------------------------------------------------------------
@@ -116,14 +117,15 @@ namespace collection_tests {
 
 		if constexpr (!bidirectional_collection<collection>)
 			GTEST_SKIP();
+		else {
+			const collection obj{ a, b, c };
+			auto it = obj.rbegin();
+			auto c_it = obj.crbegin();
 
-		const collection obj{ a, b, c };
-		auto it = obj.rbegin();
-		auto c_it = obj.crbegin();
-
-		while (it != obj.rend()) 
-			EXPECT_EQ(*it++, *c_it++);
-		EXPECT_EQ(obj.rend(), obj.crend());
+			while (it != obj.rend())
+				EXPECT_EQ(*it++, *c_it++);
+			EXPECT_EQ(obj.rend(), obj.crend());
+		}
 	}
 
 	REGISTER_TYPED_TEST_SUITE_P(
