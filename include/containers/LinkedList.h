@@ -40,7 +40,8 @@ namespace collections {
 	// -------------------------------------------------------------------------
 	/// <summary>
 	/// LinkedList is a collection class that maintains a doubly linked list 
-	/// for fast insertion/removal at the ends.
+	/// for fast insertion/removal at the ends with quick bidirectional 
+	/// iteration.
 	/// </summary>
 	///
 	/// <typeparam name="element_t">
@@ -117,6 +118,7 @@ namespace collections {
 		///	<para>
 		/// Constructs an empty LinkedList.
 		/// </para></summary>
+		/// 
 		/// <param name="alloc">
 		/// The allocator instance used by the list.
 		/// </param> ----------------------------------------------------------
@@ -167,10 +169,7 @@ namespace collections {
 			_size(std::move(other._size)),
 			_allocator(std::move(other._allocator))
 		{
-			exchange(_sentinel, other._sentinel);
-			other._sentinel.to(prev) = &other._sentinel;
-			other._sentinel.to(next) = &other._sentinel;
-			other._size = 0;
+			onMove(std::move(other));
 		}
 
 		// --------------------------------------------------------------------
@@ -375,7 +374,7 @@ namespace collections {
 		/// 
 		/// <returns>
 		/// Returns a reference to the element at the specified index in the
-		/// LinkedList.
+		/// list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reference operator[](size_type index) {
 			return getNodeAt(index)->value();
@@ -392,7 +391,7 @@ namespace collections {
 		/// 
 		/// <returns>
 		/// Returns a const reference to the element at the specified index 
-		/// in the LinkedList.
+		/// in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reference operator[](size_type index) const {
 			return getNodeAt(index)->value();
@@ -503,7 +502,7 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns a constant random access iterator to the first element in 
+		/// Returns a constant bidirectional iterator to the first element in 
 		/// the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cbegin() const noexcept {
@@ -516,7 +515,7 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <returns>
-		/// Returns a constant random access iterator to the location after the 
+		/// Returns a constant bidirectional iterator to the location after the 
 		/// last element in the list.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_iterator cend() const noexcept {
@@ -1245,7 +1244,7 @@ namespace collections {
 				_allocator, static_cast<list_node_ptr>(n), 1);
 		}
 
-		void exchange(node_base& a, const node_base& b) {
+		void fixLinkLoops(node_base& a, const node_base& b) {
 			if (a.to(next) == &b)
 				a.to(next) = &a;
 			else
@@ -1257,21 +1256,25 @@ namespace collections {
 				a.to(prev)->to(next) = &a;
 		}
 
-		void moveMembers(LinkedList&& other) noexcept {
-			_sentinel = std::move(other._sentinel);
-			_size = std::move(other._size);
-			exchange(_sentinel, other._sentinel);
+		void onMove(LinkedList&& other) noexcept {
+			fixLinkLoops(_sentinel, other._sentinel);
 			other._sentinel.to(prev) = &other._sentinel;
 			other._sentinel.to(next) = &other._sentinel;
 			other._size = 0;
 		}
 
+		void moveMembers(LinkedList&& other) noexcept {
+			_sentinel = std::move(other._sentinel);
+			_size = std::move(other._size);
+			onMove(std::move(other));
+		}
+
 		void swapMembers(LinkedList& other) noexcept {
 			using std::swap;
 			swap(_sentinel, other._sentinel);
-			exchange(_sentinel, other._sentinel);
-			exchange(other._sentinel, _sentinel);
 			swap(_size, other._size);
+			fixLinkLoops(_sentinel, other._sentinel);
+			fixLinkLoops(other._sentinel, _sentinel);
 		};
 
 		[[nodiscard]] node_ptr getNodeAt(size_type index) {
@@ -1330,7 +1333,6 @@ namespace collections {
 				clear();
 				insert(end(), other.begin(), other.end());
 			}
-
 		}
 
 		void elementWiseCopy(LinkedList&& other) {
@@ -1407,15 +1409,13 @@ namespace collections {
 
 		iterator removeAll(size_type begin_index, size_type end_index) {
 			node_ptr begin = getNodeAt(begin_index);
-			node_ptr n = nullptr;
+			node_ptr end = begin;
 
-			while (begin_index++ < end_index) {
-				n = begin->to(next);
-				remove(begin, n);
-				begin = n;
-			}
-
-			return iterator(n);
+			while (begin_index++ < end_index) 
+				end = end->to(next);
+			
+			remove(begin, end);
+			return iterator(end);
 		}
 
 		void validateIndexExists(size_type index) const {
