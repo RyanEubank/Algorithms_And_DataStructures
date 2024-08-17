@@ -201,6 +201,29 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
+		/// Requires a minimal set of methods defined for iterable collection 
+		/// types. These methods have the following signatures:
+		/// 
+		/// <list type="bullet">
+		///		<para><item><term>
+		///			const_iterator cbegin() const
+		///		</term></item></para>
+		///		<para><item><term>
+		///			const_iterator cend() const
+		///		</term></item></para>
+		/// </list>
+		/// 
+		/// </summary> --------------------------------------------------------
+		template <class T>
+		concept forward_iterable = 
+			std::ranges::forward_range<T> &&
+			requires(T & c1, const T& c2) {
+				{ c2.cbegin() } -> like<const_iter_type_of<T>>;
+				{ c2.cend() } -> std::sentinel_for<const_iter_type_of<T>>;
+		};
+
+		// --------------------------------------------------------------------
+		/// <summary>
 		/// Requires a minimal set of aliases and methods defined for ranged 
 		/// collection types. These aliases and methods have the following 
 		/// signatures:
@@ -583,13 +606,35 @@ namespace collections {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Requires common behaviour and interface for iterable collection types.
+	/// Requires common behaviour and interface for forward iterable collection 
+	/// types.
 	/// The requirements are as follows:
 	/// 
 	/// <list type="bullet">
 	///		<para><item><term>
 	///			- The type meets all requirements defined in 
+	///           <see cref="collections::collection{T}"/>.
+	///		</term></item></para>
+	///		<para><item><term>
+	///			- The type meets all requirements defined in 
 	///           <see cref="collections::internal::iterable{T}"/>.
+	///		</term></item></para>
+	/// </list>  
+	/// 
+	/// </summary> ------------------------------------------------------------
+	template <class T>
+	concept forward_collection = collection<T> && internal::forward_iterable<T>;
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Requires common behaviour and interface for bidirectionally iterable 
+	/// collection types.
+	/// The requirements are as follows:
+	/// 
+	/// <list type="bullet">
+	///		<para><item><term>
+	///			- The type meets all requirements defined in 
+	///           <see cref="collections::forward_collection{T}"/>.
 	///		</term></item></para>
 	///		<para><item><term>
 	///			- The type meets all requirements defined in 
@@ -600,7 +645,7 @@ namespace collections {
 	/// </summary> ------------------------------------------------------------
 	template <class T>
 	concept bidirectional_collection = 
-		iterable_collection<T> && 
+		forward_collection<T> && 
 		internal::bidirectionally_iterable<T>;
 
 	// ------------------------------------------------------------------------
