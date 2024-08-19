@@ -849,22 +849,11 @@ namespace collections {
 			in_iterator begin, 
 			sentinel end
 		) {
-			if (begin != end) { // TODO: exception safety, clean up if error occurs before splicing
-				size_type size = 1;
-				node_ptr head = createNode(*begin++);
-				node_ptr tail = head;
-
-				while (begin != end) {
-					node_ptr n = createNode(*begin++);
-					tail->to(next) = n;
-					n->to(prev) = tail;
-					tail = tail->to(next);
-					size++;
-				}
-
-				splice(position.node(), head, tail);
-				_size += size;
-				return iterator(head);
+			if (begin != end) {
+				node_chain result = createChain(begin, end);
+				splice(position.node(), result.head, result.tail);
+				_size += result.count;
+				return iterator(result.head);
 			}
 
 			return iterator(position.node());
@@ -1229,6 +1218,12 @@ namespace collections {
 		node_base _sentinel;
 		size_type _size;
 
+		struct node_chain {
+			size_type count = 0;
+			node_ptr head = nullptr;
+			node_ptr tail = nullptr;
+		};
+
 		template <class... Args>
 		[[nodiscard]] node_ptr createNode(Args&&... args) {
 			node_type* n = node_alloc_traits::allocate(_allocator, 1);
@@ -1242,6 +1237,39 @@ namespace collections {
 				_allocator, static_cast<list_node_ptr>(n));
 			node_alloc_traits::deallocate(
 				_allocator, static_cast<list_node_ptr>(n), 1);
+		}
+
+		template <
+			std::input_iterator in_iterator,
+			std::sentinel_for<in_iterator> sentinel
+		>
+		node_chain createChain(in_iterator begin, sentinel end) {
+			if (begin == end)
+				return { 0, nullptr, nullptr };
+			
+			size_type count = 0;
+			node_ptr head = nullptr;
+			node_ptr tail = nullptr;
+
+			try {
+				count = 1;
+				head = createNode(*begin++);
+				tail = head;
+
+				while (begin != end) {
+					node_ptr n = createNode(*begin++);
+					n->to(prev) = tail;
+					tail->to(next) = n;
+					tail = n;
+					++count;
+				}
+			}
+			catch (...) {
+				destroy(head, tail);
+				throw;
+			}
+
+			return { count, head, tail };
 		}
 
 		void fixLinkLoops(node_base& a, const node_base& b) {
