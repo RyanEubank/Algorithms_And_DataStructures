@@ -324,16 +324,8 @@ namespace collections {
 			this->_size--;
 		}
 
-		iterator onSearch(const_reference key) {
-			struct base_tree::_lookupResult result = this->search(key);
-			base_ptr n = result.get();
-			n ? splay(n) : splay(const_cast<base_ptr>(result._lastAccessed));
-			return iterator(this, n);
-		}
-
-		iterator onAccessNode(base_ptr n) {
+		void onAccessNode(base_ptr n) {
 			splay(n);
-			return iterator(this, n);
 		}
 
 		void splay(base_ptr n) {

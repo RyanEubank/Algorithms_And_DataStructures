@@ -316,14 +316,7 @@ namespace collections {
 			this->removeAt(n);
 		}
 
-		iterator onSearch(const_reference key) {
-			base_ptr n = this->search(key).get();
-			return iterator(this, n);
-		}
-
-		iterator onAccessNode(base_ptr n) {
-			return iterator(this, n);
-		}
+		void onAccessNode(base_ptr n) {}
 	};
 
 	static_assert(

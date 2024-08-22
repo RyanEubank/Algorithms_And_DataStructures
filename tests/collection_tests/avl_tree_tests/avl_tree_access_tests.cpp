@@ -16,6 +16,7 @@
 * ========================================================================= */
 
 #include "avl_tree_test_fixture.h"
+#include "../../test_suites/ordered_collection_tests.h"
 #include "../../test_suites/associative_collection_tests/associative_collection_access_tests.h"
 #include "../../test_suites/associative_collection_tests/iterator_tests/associative_iterator_access_tests.h"
 
@@ -30,6 +31,12 @@ namespace collection_tests {
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		AVLTreeTest,
 		AssociativeIteratorAccessTests,
+		avl_tree_test_params
+	);
+
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		AVLTreeTest,
+		OrderedCollectionTests,
 		avl_tree_test_params
 	);
 }

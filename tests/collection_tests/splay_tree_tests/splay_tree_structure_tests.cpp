@@ -379,4 +379,200 @@ namespace collection_tests {
 		this->testInOrderSequence(tree, expectedInOrder);
 		this->testPreOrderSequence(tree, expectedPreOrderAfter);
 	}
+
+	TEST_F(SplayTreeStructureTest, TreeMaintainsExpectedStructureOnSearchLowerBound) {
+
+		/* Search structure:
+		*
+		*       (4)                      (5)                         (9)
+		*      /   \     search 5       /  \      search 9           /    CONT.
+		*     (3)  (6)   --------->    (4) (6)    --------->       (6)    ----->
+		*     /    /  \                /     \                    /   \
+		*    (1)  (5) (7)             (3)    (7)                (5)    (8)
+		*   /  \        \            /         \                /      /
+		*  (0)  (2)      (8)        (1)        (8)            (4)    (7)
+		*                  \       /  \         \             /
+		*                  (9)	  (0) (2)       (9)         (3)
+		*                                                   / 
+		*                                                 (1) 
+		*                                                 / \
+		*                                               (0) (2)                        
+		* 
+		*               (9)                    (2)                       
+		*               /     search 2        /    \         CONT.
+		*             (6)     --------->    (1)    (6)       ----->      
+		*            /   \                  /     /    \          
+		*          (5)    (8)              (0)  (4)     (9)             
+		*          /      /                     / \     /
+		*        (4)    (7)                   (3) (5)  (8)
+		*        /                                     /
+		*      (3)                                   (7)
+		*      /                                 
+		*    (1)                                
+		*    / \
+		*   (0) (2)
+		* 
+		* 
+		*           (2)                         (3)
+		*          /    \        search 3       / \
+		*         (1)    (6)     --------->   (2) (4)   
+		*        /     /    \                 /     \
+		*       (0)  (4)     (9)            (1)     (6)
+		*            / \     /              /       / \
+		*          (3) (5)  (8)            (0)    (5) (9)
+		*                   /                         /
+		*                 (7)                        (8)
+		*                                            /
+		*                                           (7)
+		*/  
+
+		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+
+		auto searchElements = { 5, 9, 2, 3 };
+
+		auto expectedInOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+		std::vector<std::vector<int>> expectedPreOrder = {
+			{ 4, 3, 1, 0, 2, 6, 5, 7, 8, 9 },
+			{ 5, 4, 3, 1, 0, 2, 6, 7, 8, 9 },
+			{ 9, 6, 5, 4, 3, 1, 0, 2, 8, 7 },
+			{ 2, 1, 0, 6, 4, 3, 5, 9, 8, 7 },
+			{ 3, 2, 1, 0, 4, 6, 5, 9, 8, 7 }
+		};
+
+		int i = 0; 
+		for (auto& e : searchElements) {
+			this->testInOrderSequence(tree, expectedInOrder);
+			this->testPreOrderSequence(tree, expectedPreOrder[i]);
+			tree.lowerBound(e);
+			++i;
+		}
+	}
+
+	TEST_F(
+		SplayTreeStructureTest, 
+		TreeMaintainsExpectedStructureOnSearchNonExistingLowerBound
+	) {
+		/* Search structure:
+		*
+		*       (4)                               (9)     
+		*      /   \     search 10                /  
+		*     (3)  (6)   --------->             (6)
+		*     /    /  \                       /     \
+		*    (1)  (5) (7)                  (4)      (8)
+		*   /  \        \                 /   \      /
+		*  (0)  (2)      (8)             (3)  (5)  (7)
+		*                  \            /
+		*                  (9)	      (1)
+		*                            /   \
+		*                           (0)  (2)
+		*/
+	  
+		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+
+		auto expectedInOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+		auto expectedPreOrder = { 9, 6, 4, 3, 1, 0, 2, 5, 8, 7 };
+
+		auto result = tree.lowerBound(10);
+		this->testInOrderSequence(tree, expectedInOrder);
+		this->testPreOrderSequence(tree, expectedPreOrder);
+	}
+
+	TEST_F(SplayTreeStructureTest, TreeMaintainsExpectedStructureOnSearchUpperBound) {
+
+		/* Search structure:
+		*
+		*       (4)                      (5)                         (9)
+		*      /   \     search 4       /  \      search 8           /    CONT.
+		*     (3)  (6)   --------->    (4) (6)    --------->       (6)    ----->
+		*     /    /  \                /     \                    /   \
+		*    (1)  (5) (7)             (3)    (7)                (5)    (8)
+		*   /  \        \            /         \                /      /
+		*  (0)  (2)      (8)        (1)        (8)            (4)    (7)
+		*                  \       /  \         \             /
+		*                  (9)	  (0) (2)       (9)         (3)
+		*                                                   / 
+		*                                                 (1) 
+		*                                                 / \
+		*                                               (0) (2)                        
+		* 
+		*               (9)                    (2)                       
+		*               /     search 1        /    \         CONT.
+		*             (6)     --------->    (1)    (6)       ----->      
+		*            /   \                  /     /    \          
+		*          (5)    (8)              (0)  (4)     (9)             
+		*          /      /                     / \     /
+		*        (4)    (7)                   (3) (5)  (8)
+		*        /                                     /
+		*      (3)                                   (7)
+		*      /                                 
+		*    (1)                                
+		*    / \
+		*   (0) (2)
+		* 
+		* 
+		*           (2)                         (3)
+		*          /    \        search 2       / \
+		*         (1)    (6)     --------->   (2) (4)   
+		*        /     /    \                 /     \
+		*       (0)  (4)     (9)            (1)     (6)
+		*            / \     /              /       / \
+		*          (3) (5)  (8)            (0)    (5) (9)
+		*                   /                         /
+		*                 (7)                        (8)
+		*                                            /
+		*                                           (7)
+		*/  
+
+		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+
+		auto searchElements = { 4, 8, 1, 2 };
+
+		auto expectedInOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+		std::vector<std::vector<int>> expectedPreOrder = {
+			{ 4, 3, 1, 0, 2, 6, 5, 7, 8, 9 },
+			{ 5, 4, 3, 1, 0, 2, 6, 7, 8, 9 },
+			{ 9, 6, 5, 4, 3, 1, 0, 2, 8, 7 },
+			{ 2, 1, 0, 6, 4, 3, 5, 9, 8, 7 },
+			{ 3, 2, 1, 0, 4, 6, 5, 9, 8, 7 }
+		};
+
+		int i = 0; 
+		for (auto& e : searchElements) {
+			this->testInOrderSequence(tree, expectedInOrder);
+			this->testPreOrderSequence(tree, expectedPreOrder[i]);
+			tree.upperBound(e);
+			++i;
+		}
+	}
+
+	TEST_F(
+		SplayTreeStructureTest, 
+		TreeMaintainsExpectedStructureOnSearchNonExistingUpperBound
+	) {
+		/* Search structure:
+		*
+		*       (4)                               (9)     
+		*      /   \     search 10                /  
+		*     (3)  (6)   --------->             (6)
+		*     /    /  \                       /     \
+		*    (1)  (5) (7)                  (4)      (8)
+		*   /  \        \                 /   \      /
+		*  (0)  (2)      (8)             (3)  (5)  (7)
+		*                  \            /
+		*                  (9)	      (1)
+		*                            /   \
+		*                           (0)  (2)
+		*/
+
+		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+
+		auto expectedInOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+		auto expectedPreOrder = { 9, 6, 4, 3, 1, 0, 2, 5, 8, 7 };
+
+		auto result = tree.upperBound(10);
+		this->testInOrderSequence(tree, expectedInOrder);
+		this->testPreOrderSequence(tree, expectedPreOrder);
+	}
 }

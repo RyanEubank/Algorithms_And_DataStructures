@@ -37,7 +37,7 @@ namespace collections::impl {
 	template <
 		class element_t,
 		class compare_t, 
-		class allocator_t, 
+		class allocator_t,
 		class derived_t
 	> requires std::predicate<compare_t, element_t, element_t>
 	class BaseBST : public CRTP<
@@ -149,7 +149,8 @@ namespace collections::impl {
 		/// Returns an iterator to the element at the root of the tree.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] iterator root() noexcept {
-			return this->self().onAccessNode(_root);
+			this->self().onAccessNode(_root);
+			return iterator(this, _root);
 		}
 
 		// --------------------------------------------------------------------
@@ -174,7 +175,8 @@ namespace collections::impl {
 		/// the smallest node.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] iterator minimum() noexcept {
-			return this->self().onAccessNode(_min);
+			this->self().onAccessNode(_min);
+			return iterator(this, _min);
 		}
 
 		// --------------------------------------------------------------------
@@ -200,7 +202,8 @@ namespace collections::impl {
 		/// the largest node.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] iterator maximum() noexcept {
-			return this->self().onAccessNode(_max);
+			this->self().onAccessNode(_max);
+			return iterator(this, _max);
 		}
 
 		// --------------------------------------------------------------------
@@ -471,7 +474,15 @@ namespace collections::impl {
 		/// tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
 		iterator find(const_reference element) {
-			return this->self().onSearch(element);
+			TreeLookupResult lookup = lowerBound_(element);
+
+			this->self().onAccessNode(lookup.parent());
+			base_ptr bound = lookup.bound();
+
+			if (bound) 
+				return iterator(this, bound);
+			else 
+				return end();
 		}
 
 		// --------------------------------------------------------------------
@@ -504,8 +515,13 @@ namespace collections::impl {
 		/// the tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
 		const_iterator find(const_reference element) const {
-			const_base_ptr n = search(element).get();
-			return const_iterator(this, n);
+			TreeLookupResult lookup = lowerBound_(element);
+			const_base_ptr bound = lookup._bound;
+
+			if (bound) 
+				return const_iterator(this, bound);
+			else 
+				return end();
 		}
 
 		// --------------------------------------------------------------------
@@ -523,6 +539,94 @@ namespace collections::impl {
 		/// </returns> --------------------------------------------------------
 		bool contains(const_reference element) const {
 			return find(element) != end();
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator to the first element not less than the given 
+		/// key.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// The element or key to get the bound for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the requested element if it exists, otherwise
+		/// end() is returned.
+		/// </returns> ---------------------------------------------------------
+		iterator lowerBound(const_reference element) {
+			TreeLookupResult lookup = lowerBound_(element);
+			base_ptr result = lookup.bound();
+
+			if (result)
+				this->self().onAccessNode(result);
+			else
+				this->self().onAccessNode(_max);
+
+			return iterator(this, lookup.bound());
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator to the first element not less than the given 
+		/// key.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// The element or key to get the bound for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns a const_iterator to the requested element if it exists, 
+		/// otherwise end() is returned.
+		/// </returns> ---------------------------------------------------------
+		const_iterator lowerBound(const_reference element) const {
+			return const_iterator(this, lowerBound_(element)._bound);
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator to the first element greater than the given 
+		/// key.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// The element or key to get the bound for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the requested element if it exists, otherwise
+		/// end() is returned.
+		/// </returns> ---------------------------------------------------------
+		iterator upperBound(const_reference element) {
+			TreeLookupResult lookup = upperBound_(element);
+			base_ptr result = lookup.bound();
+
+			if (result)
+				this->self().onAccessNode(result);
+			else
+				this->self().onAccessNode(_max);
+
+			return iterator(this, lookup.bound());
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator to the first element greater than the given 
+		/// key.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// The element or key to get the bound for.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns a const_iterator to the requested element if it exists, 
+		/// otherwise end() is returned.
+		/// </returns> ---------------------------------------------------------
+		const_iterator upperBound(const_reference element) const {
+			return const_iterator(this, upperBound_(element)._bound);
 		}
 
 		// --------------------------------------------------------------------
@@ -869,9 +973,7 @@ namespace collections::impl {
 			std::basic_ostream<char_t>& os,
 			const BaseBST& tree
 		) {
-			auto begin = tree.begin<traversal_order::PRE_ORDER>();
-			auto end = tree.end<traversal_order::PRE_ORDER>();
-			collections::stream(begin, end, tree.size(), os);
+			collections::stream(tree.begin(), tree.end(), tree.size(), os);
 			return os;
 		}
 
@@ -921,22 +1023,23 @@ namespace collections::impl {
 			NONE
 		};
 
-		struct _lookupResult {
-			const_base_ptr _lastAccessed = nullptr;
+		struct TreeLookupResult {
+			const_base_ptr _bound = nullptr;
+			const_base_ptr _parent = nullptr;
 			Direction _direction = Direction::NONE;
 
-			base_ptr get() { //TODO figure out how to make const/non-const calls without const casting
-				switch (_direction) {
-				case (Direction::LEFT):
-					return _lastAccessed->to(left);
-				case (Direction::RIGHT):
-					return _lastAccessed->to(right);
-				case (Direction::NONE):
-					return const_cast<base_ptr>(_lastAccessed);
-				default:
-					return nullptr;
-				}
+			base_ptr bound() {
+				return const_cast<base_ptr>(_bound);
 			}
+
+			base_ptr parent() {
+				return const_cast<base_ptr>(_parent);
+			}
+		};
+
+		struct TreeInsertLocation {
+			base_ptr _parent = nullptr;
+			Direction _direction = Direction::NONE;
 		};
 
 		size_type _size;
@@ -1013,29 +1116,26 @@ namespace collections::impl {
 		template <class... Args>
 		base_ptr emplaceAt(base_ptr hint, Args&&... args) {
 			base_ptr n = this->self().createNode(std::forward<Args>(args)...);
-			_lookupResult lookup = getInsertLocation(hint, n->value());
-			base_ptr result = lookup.get();
+			TreeInsertLocation location = getInsertLocation(hint, n->value());
 
-			if (result) {
+			if (isDuplicate(location, n->value())) {
 				this->self().destroyNode(n);
-				return result;
+				return location._parent;
 			}
 			else {
-				insertNode(lookup, n);
+				insertNode(location, n);
 				return n;
 			}
-
 		}
 
 		base_ptr insertAt(base_ptr hint, const_reference element) {
-			_lookupResult lookup = getInsertLocation(hint, element);
-			base_ptr result = lookup.get();
+			TreeInsertLocation location = getInsertLocation(hint, element);
 
-			if (result)
-				return result;
+			if (isDuplicate(location, element)) 
+				return location._parent;
 			else {
 				base_ptr n = this->self().createNode(element);
-				insertNode(lookup, n);
+				insertNode(location, n);
 				return n;
 			}
 		}
@@ -1071,28 +1171,59 @@ namespace collections::impl {
 			return level - 1;
 		}
 
-		[[nodiscard]] _lookupResult search(const_reference key) {
-			return std::as_const(*this).search(key);
-		}
+		[[nodiscard]] TreeLookupResult lowerBound_(const_reference key) const {
+			const_base_ptr current = _root;
+			const_base_ptr parent = nullptr;
+			const_base_ptr bound = nullptr;
+			Direction direction = Direction::NONE;
 
-		[[nodiscard]] _lookupResult search(const_reference key) const {
-			_lookupResult result = { _root, Direction::NONE };
-			const_base_ptr child = result._lastAccessed;
+			while (current) {
+				parent = current;
 
-			while (child && child->value() != key) {
-				result._lastAccessed = child;
-
-				if (compare(key, result._lastAccessed->value())) {
-					child = result._lastAccessed->to(left);
-					result._direction = Direction::LEFT;
+				if (compare(current->value(), key)) {
+					current = current->to(right);
+					direction = Direction::RIGHT;
 				}
-				else if (compare(result._lastAccessed->value(), key)) {
-					child = result._lastAccessed->to(right);
-					result._direction = Direction::RIGHT;
+				else {
+					if (compare(key, current->value()))
+						direction = Direction::LEFT;
+					else
+						direction = Direction::NONE;
+
+					bound = current;
+					current = current->to(left);
 				}
 			}
 
-			return result;
+			return { bound, parent, direction };
+		}
+
+		[[nodiscard]] TreeLookupResult upperBound_(const_reference key) const {
+			const_base_ptr current = _root;
+			const_base_ptr parent = nullptr;
+			const_base_ptr bound = nullptr;
+			Direction direction = Direction::NONE;
+
+			while (current) {
+				parent = current;
+
+				if (compare(key, current->value())) {
+					bound = current;
+					current = current->to(left);
+					direction = Direction::LEFT;
+				}
+				else {
+					if (compare(current->value(), key))
+						direction = Direction::LEFT;
+					else
+						direction = Direction::NONE;
+
+					direction = Direction::RIGHT;
+					current = current->to(right);
+				}
+			}
+
+			return { bound, parent, direction };
 		}
 
 		base_ptr leftRotation(base_ptr pivot) {
@@ -1340,20 +1471,18 @@ namespace collections::impl {
 
 		// ----------------------- INSERTION HELPERS ----------------------- //
 
-		void insertNode(_lookupResult lookup, base_ptr n) {
-			base_ptr lastAccessed = const_cast<base_ptr>(lookup._lastAccessed);
+		void insertNode(TreeInsertLocation location, base_ptr n) {
+			if (location._parent) {
+				n->to(parent) = location._parent;
 
-			if (lastAccessed) {
-				n->to(parent) = lastAccessed;
-
-				if (lookup._direction == Direction::LEFT) {
-					lastAccessed->to(left) = n;
-					if (_min == lastAccessed)
+				if (location._direction == Direction::LEFT) {
+					location._parent->to(left) = n;
+					if (_min == location._parent)
 						_min = n;
 				}
 				else {
-					lastAccessed->to(right) = n;
-					if (_max == lastAccessed)
+					location._parent->to(right) = n;
+					if (_max == location._parent)
 						_max = n;
 				}
 			}
@@ -1366,52 +1495,74 @@ namespace collections::impl {
 			_size++;
 		}
 
-		[[nodiscard]] _lookupResult getInsertLocation(
-			const_base_ptr hint, 
+		[[nodiscard]] bool isDuplicate(
+			TreeInsertLocation location, 
+			const_reference key
+		) const {
+			switch (location._direction) {
+			case (Direction::LEFT):
+				return location._parent->to(left) != nullptr;
+			case (Direction::RIGHT):
+				return location._parent->to(right) != nullptr;
+			case (Direction::NONE):
+				return location._parent != nullptr;
+			default:
+				throw std::exception("Invalid tree insert location.");
+			}
+		}
+
+		[[nodiscard]] TreeInsertLocation getInsertLocation(
+			base_ptr hint, 
 			const_reference key
 		) {
-			if (isEmpty())
+			if (!_root)
 				return { nullptr, Direction::NONE };
 			else if (compare(key, _min->value()))
 				return { _min, Direction::LEFT };
+			else if (!compare(_min->value(), key))
+				return { _min, Direction::NONE };
 			else if (compare(_max->value(), key))
 				return { _max, Direction::RIGHT };
-			else if (!hint || hint == _root) 
-				return search(key);
+			else if (!compare(key, _max->value()))
+				return { _max, Direction::NONE };
 			else if (compare(key, hint->value()))
 				return checkInsertHintPredecessor(hint, key);
-			else if (this->compare(hint->value(), key))
+			else if (compare(hint->value(), key))
 				return checkInsertHintSuccessor(hint, key);
 			else
 				return { hint, Direction::NONE };
 		}
 
-		[[nodiscard]] _lookupResult checkInsertHintPredecessor(
-			const_base_ptr hint,
+		[[nodiscard]] TreeInsertLocation checkInsertHintPredecessor(
+			base_ptr hint,
 			const_reference key
 		) {
-			const_base_ptr prev = inOrderPredecessorOf(hint);
+			base_ptr prev = inOrderPredecessorOf(hint);
 			if (compare(prev->value(), key)) {
 				if (prev->to(right))
 					return { hint, Direction::LEFT };
 				else
 					return { prev, Direction::RIGHT };
 			}
-			return search(key);
+
+			TreeLookupResult lookup = lowerBound_(key);
+			return { lookup.parent(), lookup._direction };
 		}
 
-		[[nodiscard]] _lookupResult checkInsertHintSuccessor(
-			const_base_ptr hint,
+		[[nodiscard]] TreeInsertLocation checkInsertHintSuccessor(
+			base_ptr hint,
 			const_reference key
 		) {
-			const_base_ptr next = inOrderSuccessorOf(hint);
+			base_ptr next = inOrderSuccessorOf(hint);
 			if (!next || compare(key, next->value())) {
 				if (hint->to(right))
 					return { next, Direction::LEFT };
 				else
 					return { hint, Direction::RIGHT };
 			}
-			return search(key);
+
+			TreeLookupResult lookup = lowerBound_(key);
+			return { lookup.parent(), lookup._direction };
 		}
 
 		// ----------------------- DELETION HELPERS ------------------------ //
