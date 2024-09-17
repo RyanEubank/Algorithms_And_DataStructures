@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <algorithm>
 #include <functional>
 #include <initializer_list>
 #include <iterator>
@@ -27,25 +26,32 @@
 #include <utility>
 
 #include "base/BaseBST.h"
+#include "../concepts/associative.h"
 #include "../concepts/collection.h"
+#include "../concepts/iterable.h" 
+#include "../concepts/map.h"
+#include "../concepts/positional.h"
+#include "../util/key_value_pair.h"
 
 namespace collections {
 
 	template <
 		class element_t,
-		class compare_t = std::less<element_t>,
-		class allocator_t = std::allocator<element_t>
+		class compare_t,
+		class allocator_t,
+		bool hasDuplicates
 	> 
 	class AVLTree : public impl::BaseBST<
 		element_t, 
 		compare_t, 
 		allocator_t,
-		AVLTree<element_t, compare_t, allocator_t>>
+		hasDuplicates,
+		AVLTree<element_t, compare_t, allocator_t, hasDuplicates>>
 	{
 	private:
 
-		using tree		= AVLTree<element_t, compare_t, allocator_t>;
-		using base_tree	= impl::BaseBST<element_t, compare_t, allocator_t, tree>;
+		using tree		= AVLTree<element_t, compare_t, allocator_t, hasDuplicates>;
+		using base_tree	= impl::BaseBST<element_t, compare_t, allocator_t, hasDuplicates, tree>;
 
 		using _node_type			= struct avl_node;
 		using alloc_traits			= base_tree::alloc_traits;
@@ -68,6 +74,8 @@ namespace collections {
 
 		using allocator_type			= base_tree::allocator_type;
 		using value_type				= base_tree::value_type;
+		using mapped_type				= base_tree::mapped_type;
+		using key_type					= base_tree::key_type;
 		using node_type					= _node_type;
 		using size_type					= base_tree::size_type;
 		using difference_type			= base_tree::difference_type;
@@ -79,6 +87,8 @@ namespace collections {
 		using const_iterator			= base_tree::const_iterator;
 		using reverse_iterator			= base_tree::reverse_iterator;
 		using const_reverse_iterator	= base_tree::const_reverse_iterator;
+
+		static constexpr bool allow_duplicates = hasDuplicates;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -414,18 +424,83 @@ namespace collections {
 		}
 	};
 
+	template <
+		class element_t,
+		template <class> class compare_t = std::less,
+		template <class> class allocator_t = std::allocator
+	>
+	using SimpleAVL = AVLTree<
+		element_t, 
+		compare_t<element_t>, 
+		allocator_t<element_t>, 
+		false
+	>;
+
+	template <
+		class key_t,
+		class element_t,
+		template <class> class compare_t = std::less,
+		template <class> class allocator_t = std::allocator
+	>
+	using MapAVL = AVLTree<
+		key_value_pair<const key_t, element_t>,
+		compare_t<key_t>,
+		std::allocator<key_value_pair<key_t, element_t>>,
+		false
+	>;
+
+	template <
+		class element_t,
+		template <class> class compare_t = std::less,
+		template <class> class allocator_t = std::allocator
+	>
+	using MultiAVL = AVLTree<
+		element_t, 
+		compare_t<element_t>, 
+		allocator_t<element_t>, 
+		true
+	>;
+
+	template <
+		class key_t,
+		class element_t,
+		template <class> class compare_t = std::less,
+		template <class> class allocator_t = std::allocator
+	>
+	using MultiMapAVL = AVLTree<
+		key_value_pair<const key_t, element_t>,
+		compare_t<key_t>,
+		std::allocator<key_value_pair<key_t, element_t>>,
+		true
+	>;
+
 	static_assert(
-		associative_collection<AVLTree<int>>,
-		"AVLTree does not implement the associative collection interface."
+		collection<SimpleAVL<int>>,
+		"AVLTree does not meet the requirements for a collection."
 	);
 
 	static_assert(
-		bidirectional_collection<AVLTree<int>>,
-		"AVLTree does not meet the requirements for a bidirectional collection."
+		associative<SimpleAVL<int>>,
+		"AVLTree does not meet the requirements for sequential access."
 	);
 
 	static_assert(
-		ordered_collection<AVLTree<int>>,
-		"AVLTree does not meet the requirements for an ordered collection."
+		positional<SimpleAVL<int>>,
+		"AVLTree does not meet the requirements for positional access."
+	);
+
+	static_assert(
+		bidirectionally_iterable<SimpleAVL<int>>,
+		"AVLTree does not meet the requirements for bidirectional iteration."
+	);
+
+	static_assert(
+		map<MapAVL<int, int>>,
+		"AVLTree does not meet the requirements for a map."
+	);
+
+	static_assert(
+		multimap<MultiMapAVL<int, int >>,
+		"AVLTree does not meet the requirements for a multimap."
 	);
 }

@@ -15,25 +15,26 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#include "../../test_suites/binary_tree_test_fixture.h"
-
-#include <array>
-#include <vector>
+#include <string>
+#include <utility>
+#include <gtest/gtest.h>
 
 #include "adapters/TreeTraversalAdapters.h"
 #include "containers/SplayTree.h"
+
+#include "../../collection_test_suites/collection_test_fixture.h"
 
 namespace collection_tests {
 
 	using namespace collections;
 
-	class SplayTreeStructureTest : public BinaryTreeStructureTest {
+	class SplayTreeStructureTest : public CollectionTest<SimpleSplayTree<int>> {
 	protected:
 		std::array<int, 10> elements = { 2, 5, 1, 0, 6, 3, 9, 8, 7, 4 };     
 	};
 
 	TEST_F(SplayTreeStructureTest, InsertSplaysNewElementsToTheRoot) {
-		SplayTree<int> tree{};
+		SimpleSplayTree<int> tree{};
 
 		EXPECT_EQ(tree.root(), tree.end());
 
@@ -85,7 +86,7 @@ namespace collection_tests {
 		*  (0) (2)              (0) (2)                                    (9)
 		*/   
 
-		SplayTree<int> tree{};
+		SimpleSplayTree<int> tree{};
 
 		std::vector<std::vector<int>> expectedInOrder = {
 			{ 2 },
@@ -116,8 +117,8 @@ namespace collection_tests {
 
 		for (int i = 0; i < this->elements.size(); ++i) {
 			tree.insert(this->elements[i]);
-			this->testInOrderSequence(tree, expectedInOrder[i]);
-			this->testPreOrderSequence(tree, expectedPreOrder[i]);
+			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder[i]);
+			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder[i]);
 		}
 	}
 
@@ -166,7 +167,7 @@ namespace collection_tests {
 		*                                           (7)
 		*/  
 
-		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+		SimpleSplayTree<int> tree(this->elements.begin(), this->elements.end());
 
 		auto existingElements = { 5, 9, 2, 3 };
 
@@ -182,8 +183,8 @@ namespace collection_tests {
 
 		int i = 0; 
 		for (auto& e : existingElements) {
-			this->testInOrderSequence(tree, expectedInOrder);
-			this->testPreOrderSequence(tree, expectedPreOrder[i]);
+			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
+			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder[i]);
 			tree.insert(e);
 			++i;
 		}
@@ -223,7 +224,7 @@ namespace collection_tests {
 		*  (2)                                            (2)
 		*/             
 
-		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+		SimpleSplayTree<int> tree(this->elements.begin(), this->elements.end());
 
 		// removal order: 0, 1, 8, 6, 5, 9
 		auto positions = {
@@ -256,8 +257,8 @@ namespace collection_tests {
 		int i = 0; 
 		for (auto& pos : positions) {
 			tree.remove(pos);
-			this->testInOrderSequence(tree, expectedInOrder[i]);
-			this->testPreOrderSequence(tree, expectedPreOrder[i]);
+			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder[i]);
+			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder[i]);
 			++i;
 		}
 	}
@@ -308,7 +309,7 @@ namespace collection_tests {
 		*                                           (7)
 		*/  
 
-		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+		SimpleSplayTree<int> tree(this->elements.begin(), this->elements.end());
 
 		auto searchElements = { 5, 9, 2, 3 };
 
@@ -324,15 +325,15 @@ namespace collection_tests {
 
 		int i = 0; 
 		for (auto& e : searchElements) {
-			this->testInOrderSequence(tree, expectedInOrder);
-			this->testPreOrderSequence(tree, expectedPreOrder[i]);
+			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
+			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder[i]);
 			tree.find(e);
 			++i;
 		}
 	}
 
 	TEST_F(SplayTreeStructureTest, ConstTreeDoesNotSplayOnSearch) {
-		const SplayTree<int> tree(this->elements.begin(), this->elements.end());
+		const SimpleSplayTree<int> tree(this->elements.begin(), this->elements.end());
 
 		auto searchElements = { 5, 9, 2, 3, 15, 12, 8 };
 		auto expectedInOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -340,8 +341,8 @@ namespace collection_tests {
 
 		int i = 0; 
 		for (auto& e : searchElements) {
-			this->testInOrderSequence(tree, expectedInOrder);
-			this->testPreOrderSequence(tree, expectedPreOrder);
+			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
+			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder);
 			tree.find(e);
 			++i;
 		}
@@ -364,20 +365,20 @@ namespace collection_tests {
 		*                                              (18)
 		*/  
 
-		SplayTree<int> tree = { 4, 10, 2, 0, 12, 6, 18, 16, 14, 8 };
+		SimpleSplayTree<int> tree = { 4, 10, 2, 0, 12, 6, 18, 16, 14, 8 };
 
 		auto expectedInOrder = { 0, 2, 4, 6, 8, 10, 12, 14, 16, 18 };
 
 		auto expectedPreOrderBefore = { 8, 6, 2, 0, 4, 12, 10, 14, 16, 18 };
 		auto expectedPreOrderAfter = { 0, 8, 2, 6, 4, 12, 10, 14, 16, 18 };
 
-		this->testInOrderSequence(tree, expectedInOrder);
-		this->testPreOrderSequence(tree, expectedPreOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrderBefore);
 
 		tree.find(1);
-			
-		this->testInOrderSequence(tree, expectedInOrder);
-		this->testPreOrderSequence(tree, expectedPreOrderAfter);
+		
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrderAfter);
 	}
 
 	TEST_F(SplayTreeStructureTest, TreeMaintainsExpectedStructureOnSearchLowerBound) {
@@ -426,7 +427,7 @@ namespace collection_tests {
 		*                                           (7)
 		*/  
 
-		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+		SimpleSplayTree<int> tree(this->elements.begin(), this->elements.end());
 
 		auto searchElements = { 5, 9, 2, 3 };
 
@@ -442,8 +443,8 @@ namespace collection_tests {
 
 		int i = 0; 
 		for (auto& e : searchElements) {
-			this->testInOrderSequence(tree, expectedInOrder);
-			this->testPreOrderSequence(tree, expectedPreOrder[i]);
+			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
+			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder[i]);
 			tree.lowerBound(e);
 			++i;
 		}
@@ -468,14 +469,14 @@ namespace collection_tests {
 		*                           (0)  (2)
 		*/
 	  
-		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+		SimpleSplayTree<int> tree(this->elements.begin(), this->elements.end());
 
 		auto expectedInOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 		auto expectedPreOrder = { 9, 6, 4, 3, 1, 0, 2, 5, 8, 7 };
 
-		auto result = tree.lowerBound(10);
-		this->testInOrderSequence(tree, expectedInOrder);
-		this->testPreOrderSequence(tree, expectedPreOrder);
+		tree.lowerBound(10);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder);
 	}
 
 	TEST_F(SplayTreeStructureTest, TreeMaintainsExpectedStructureOnSearchUpperBound) {
@@ -524,7 +525,7 @@ namespace collection_tests {
 		*                                           (7)
 		*/  
 
-		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+		SimpleSplayTree<int> tree(this->elements.begin(), this->elements.end());
 
 		auto searchElements = { 4, 8, 1, 2 };
 
@@ -540,8 +541,8 @@ namespace collection_tests {
 
 		int i = 0; 
 		for (auto& e : searchElements) {
-			this->testInOrderSequence(tree, expectedInOrder);
-			this->testPreOrderSequence(tree, expectedPreOrder[i]);
+			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
+			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder[i]);
 			tree.upperBound(e);
 			++i;
 		}
@@ -566,13 +567,181 @@ namespace collection_tests {
 		*                           (0)  (2)
 		*/
 
-		SplayTree<int> tree(this->elements.begin(), this->elements.end());
+		SimpleSplayTree<int> tree(this->elements.begin(), this->elements.end());
 
 		auto expectedInOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 		auto expectedPreOrder = { 9, 6, 4, 3, 1, 0, 2, 5, 8, 7 };
 
-		auto result = tree.upperBound(10);
-		this->testInOrderSequence(tree, expectedInOrder);
-		this->testPreOrderSequence(tree, expectedPreOrder);
+		tree.upperBound(10);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder);
+	}
+
+	TEST_F(
+		SplayTreeStructureTest,
+		TreePlacesDuplicateElementsInCorrectPosition
+	) {
+		/* Expected structure (7a, 7b, and 7c have equal keys):
+		* 
+		*              (7c)
+		*            /      \
+		*          (4)       (8)
+		*         /   \     /   \
+		*       (0)  (5)  (7b)  (12)
+		*                   \
+		*                   (7a)
+		*/
+
+		MultiMapSplayTree<int, std::string> tree = { 
+			{ 4, "4"},
+			{ 7, "7a"},
+			{ 12, "12" },
+			{ 7, "7b" },
+			{ 5, "5" },
+			{ 0, "0" },
+			{ 8, "8" },
+			{ 7, "7c" }
+		};
+
+		std::initializer_list<key_value_pair<int, std::string>> preOrder = {
+			{ 7, "7c"},
+			{ 4, "4"},
+			{ 0, "0" },
+			{ 5, "5" },
+			{ 8, "8" },
+			{ 7, "7b" },
+			{ 7, "7a"},
+			{ 12, "12" }
+		};
+
+		std::initializer_list<key_value_pair<int, std::string>> inOrder = { 
+			{ 0, "0" }, 
+			{ 4, "4"}, 
+			{ 5, "5" }, 
+			{ 7, "7c" }, 
+			{ 7, "7b" }, 
+			{ 7, "7a" }, 
+			{ 8, "8" }, 
+			{ 12, "12" }
+		};
+
+		std::initializer_list<key_value_pair<int, std::string>> postOrder = {
+			{ 0, "0" }, 
+			{ 5, "5" },
+			{ 4, "4"}, 
+			{ 7, "7a"},
+			{ 7, "7b" },
+			{ 12, "12" },
+			{ 8, "8" },
+			{ 7, "7c" }
+		};
+
+		std::initializer_list<key_value_pair<int, std::string>> levelOrder = {
+			{ 7, "7c" },
+			{ 4, "4"},
+			{ 8, "8" },
+			{ 0, "0" },
+			{ 5, "5" },
+			{ 7, "7b" },
+			{ 12, "12" },
+			{ 7, "7a"}
+		};
+
+		EXPECT_EQ(tree.size(), 8);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrder);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrder);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrder);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrder);
+	}
+
+	TEST_F(
+		SplayTreeStructureTest,
+		TreeSplaysDuplicateElementsOnSearch
+	) {
+		/* Expected structure (2a and 2b have equal keys):
+		* 
+		*     (1)       search(2)      (2b)
+		*        \      --------->     /   \
+		*        (2b)                (1)   (2a)
+		*          \
+		*          (2a)
+		*/
+
+		MultiMapSplayTree<int, std::string> tree 
+			= { {2, "2a"}, {2, "2b"}, {1, "1"} };
+
+		std::initializer_list<key_value_pair<int, std::string>> preOrder = {
+			{2, "2b"}, {1, "1"}, {2, "2a"}
+		};
+
+		std::initializer_list<key_value_pair<int, std::string>> inOrder = { 
+			{1, "1"}, {2, "2b"}, {2, "2a"} 
+		};
+
+		tree.find(2);
+
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrder);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrder);
+	}
+
+	TEST_F(
+		SplayTreeStructureTest,
+		TreeSplaysDuplicateElementsOnSearchLowerBound
+	) {
+		/* Expected structure (2a and 2b have equal keys):
+		* 
+		*     (1)       lowerBound(2)      (2b)
+		*        \      --------->        /   \
+		*        (2b)                   (1)   (2a)
+		*          \
+		*          (2a)
+		*/
+
+		MultiMapSplayTree<int, std::string> tree 
+			= { {2, "2a"}, {2, "2b"}, {1, "1"} };
+
+		std::initializer_list<key_value_pair<int, std::string>> preOrder = {
+			{2, "2b"}, {1, "1"}, {2, "2a"}
+		};
+
+		std::initializer_list<key_value_pair<int, std::string>> inOrder = { 
+			{1, "1"}, {2, "2b"}, {2, "2a"} 
+		};
+
+		tree.lowerBound(2); //splays 2b
+
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrder);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrder);
+	}
+
+
+	TEST_F(
+		SplayTreeStructureTest,
+		TreeSplaysDuplicateElementsOnSearchUpperBound
+	) {
+		/* Expected structure (2a and 2b have equal keys):
+		* 
+		*     (1)       upperBound(2)      (2a)
+		*        \      --------->        / 
+		*        (2b)                   (2b)
+		*          \                    /
+		*          (2a)               (1)
+		*/
+
+		MultiMapSplayTree<int, std::string> tree 
+			= { {2, "2a"}, {2, "2b"}, {1, "1"} };
+
+		std::initializer_list<key_value_pair<int, std::string>> preOrder = {
+			{2, "2a"}, {2, "2b"}, {1, "1"}
+		};
+
+		std::initializer_list<key_value_pair<int, std::string>> inOrder = { 
+			{1, "1"}, {2, "2b"}, {2, "2a"} 
+		};
+
+		tree.upperBound(2); /// splays 2a
+
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrder);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrder);
 	}
 }

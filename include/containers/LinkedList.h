@@ -34,6 +34,10 @@
 #include "../algorithms/move.h"
 #include "../algorithms/stream.h"
 #include "../concepts/collection.h"
+#include "../concepts/indexable.h"
+#include "../concepts/iterable.h"
+#include "../concepts/positional.h"
+#include "../concepts/sequential.h"
 
 namespace collections {
 
@@ -408,6 +412,18 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] allocator_type allocator() const noexcept {
 			return static_cast<allocator_type>(_allocator);
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the theoretical maximum size for the container.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns the size limit of the container type.
+		/// </returns> ---------------------------------------------------------
+		[[nodiscard]] size_type max_size() const noexcept {
+			return node_alloc_traits::max_size(_allocator);
 		}
 
 		// --------------------------------------------------------------------
@@ -958,7 +974,7 @@ namespace collections {
 			validateIndexExists(range.begin);
 			validateIndexInRange(range.end);
 
-			if (range.begin < range.end)
+			if (range.begin <= range.end)
 				return removeAll(range.begin, range.end);
 			else
 				throw std::exception("Begin index is greater than end.");
@@ -1667,14 +1683,28 @@ namespace collections {
 		);
 	};
 
-
 	static_assert(
-		sequential_collection<LinkedList<int>>,
-		"LinkedList does not meet the requirements for a sequential_collecion."
+		collection<LinkedList<int>>,
+		"LinkedList does not meet the requirements for a collection."
 	);
 
 	static_assert(
-		bidirectional_collection<LinkedList<int>>,
-		"LinkedList does not meet the requirements for a bidirectional collection."
+		sequential<LinkedList<int>>,
+		"LinkedList does not meet the requirements for sequential access."
+	);
+
+	static_assert(
+		indexable<LinkedList<int>, size_t>,
+		"LinkedList does not meet the requirements for indexed access."
+	);
+
+	static_assert(
+		positional<LinkedList<int>>,
+		"LinkedList does not meet the requirements for positional access."
+	);
+
+	static_assert(
+		bidirectionally_iterable<LinkedList<int>>,
+		"LinkedList does not meet the requirements for bidirectional iteration."
 	);
 }

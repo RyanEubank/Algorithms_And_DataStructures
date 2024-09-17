@@ -22,6 +22,7 @@
 #include <iterator>
 #include <memory>
 #include <ostream>
+#include <type_traits>
 #include <utility>
 
 #include "../Node.h"
@@ -29,7 +30,9 @@
 #include "../../adapters/Queue.h"
 #include "../../algorithms/compare.h"
 #include "../../algorithms/stream.h"
+#include "../../concepts/map.h"
 #include "../../util/CRTP.h"
+#include "../../util/key_value_pair.h"
 
 
 namespace collections::impl {
@@ -38,11 +41,16 @@ namespace collections::impl {
 		class element_t,
 		class compare_t, 
 		class allocator_t,
+		bool hasDuplicates,
 		class derived_t
-	> requires std::predicate<compare_t, element_t, element_t>
+	> requires std::predicate<
+		compare_t, 
+		typename key_traits<element_t>::key_type, 
+		typename key_traits<element_t>::key_type
+	>
 	class BaseBST : public CRTP<
 		derived_t, 
-		BaseBST<element_t, compare_t, allocator_t, derived_t>
+		BaseBST<element_t, compare_t, allocator_t, hasDuplicates, derived_t>
 	> {
 	protected:
 
@@ -55,6 +63,9 @@ namespace collections::impl {
 	public:
 
 		using value_type		= element_t;
+		using key_type			= key_traits<element_t>::key_type;
+		using mapped_type		= key_traits<element_t>::mapped_type;
+
 		using allocator_type	= allocator_t;
 		using node_type			= Node<element_t, allocator_t, 3>;
 		using size_type			= alloc_traits::size_type;
@@ -63,11 +74,13 @@ namespace collections::impl {
 		using const_pointer		= alloc_traits::const_pointer;
 		using reference			= value_type&;
 		using const_reference	= const value_type&;
-		
+
 		using iterator					= BinaryTreeIterator<false>;
 		using const_iterator			= BinaryTreeIterator<true>;
 		using reverse_iterator			= std::reverse_iterator<iterator>;
 		using const_reverse_iterator	= std::reverse_iterator<const_iterator>;
+
+		static constexpr bool allow_duplicates = hasDuplicates;
 
 	protected:
 
@@ -84,6 +97,9 @@ namespace collections::impl {
 		constexpr static auto parent = 2u;
 
 	public:
+
+		constexpr static bool is_map
+			= std::_Is_specialization_v<element_t, key_value_pair>;
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -138,6 +154,18 @@ namespace collections::impl {
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] size_type size() const noexcept {
 			return _size;
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the theoretical maximum size for the container.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns the size limit of the container type.
+		/// </returns> ---------------------------------------------------------
+		[[nodiscard]] size_type max_size() const noexcept {
+			return derived_t::node_alloc_traits::max_size(this->self()._allocator);
 		}
 
 		// --------------------------------------------------------------------
@@ -465,7 +493,7 @@ namespace collections::impl {
 		/// Searches the tree for the given element.
 		/// </summary>
 		/// 
-		/// <param name="element">
+		/// <param name="key">
 		/// The element or key to seach for.
 		/// </param>
 		/// 
@@ -473,11 +501,11 @@ namespace collections::impl {
 		/// Returns an iterator to the requested element if it exists in the
 		/// tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
-		iterator find(const_reference element) {
-			TreeLookupResult lookup = lowerBound_(element);
+		iterator find(key_type key) {
+			TreeBoundResult lookup = lowerBound_(key);
 
-			this->self().onAccessNode(lookup.parent());
-			base_ptr bound = lookup.bound();
+			this->self().onAccessNode(lookup._location.parent());
+			base_ptr bound = lookup.limit();
 
 			if (bound) 
 				return iterator(this, bound);
@@ -490,15 +518,15 @@ namespace collections::impl {
 		/// Searches the tree for the given element.
 		/// </summary>
 		/// 
-		/// <param name="element">
+		/// <param name="key">
 		/// The element or key to seach for.
 		/// </param>
 		/// 
 		/// <returns>
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
-		bool contains(const_reference element) {
-			return find(element) != end();
+		bool contains(key_type key) {
+			return find(key) != end();
 		}
 
 		// --------------------------------------------------------------------
@@ -506,17 +534,18 @@ namespace collections::impl {
 		/// Searches the tree for the given element.
 		/// </summary>
 		/// 
-		/// <param name="element">
+		/// <param name="key">
 		/// The element to seach for.
 		/// </param>
 		/// 
 		/// <returns>
 		/// Returns a const_iterator to the requested element if it exists in
-		/// the tree, otherwise end() is returned.
+		/// the tree, otherwise end() is returned. If duplicates exists it is
+		/// undefined which will be returned.
 		/// </returns> --------------------------------------------------------
-		const_iterator find(const_reference element) const {
-			TreeLookupResult lookup = lowerBound_(element);
-			const_base_ptr bound = lookup._bound;
+		const_iterator find(key_type key) const {
+			TreeBoundResult lookup = lowerBound_(key);
+			const_base_ptr bound = lookup._limit;
 
 			if (bound) 
 				return const_iterator(this, bound);
@@ -537,8 +566,8 @@ namespace collections::impl {
 		/// <returns>
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
-		bool contains(const_reference element) const {
-			return find(element) != end();
+		bool contains(key_type key) const {
+			return find(key) != end();
 		}
 
 		// ---------------------------------------------------------------------
@@ -552,19 +581,19 @@ namespace collections::impl {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns an iterator to the requested element if it exists, otherwise
+		/// Returns an iterator to the requested bound if it exists, otherwise
 		/// end() is returned.
 		/// </returns> ---------------------------------------------------------
-		iterator lowerBound(const_reference element) {
-			TreeLookupResult lookup = lowerBound_(element);
-			base_ptr result = lookup.bound();
+		iterator lowerBound(key_type key) {
+			TreeBoundResult lookup = lowerBound_(key);
+			base_ptr result = lookup.limit();
 
 			if (result)
 				this->self().onAccessNode(result);
 			else
 				this->self().onAccessNode(_max);
 
-			return iterator(this, lookup.bound());
+			return iterator(this, result);
 		}
 
 		// ---------------------------------------------------------------------
@@ -578,11 +607,11 @@ namespace collections::impl {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns a const_iterator to the requested element if it exists, 
+		/// Returns a const_iterator to the requested bound if it exists, 
 		/// otherwise end() is returned.
 		/// </returns> ---------------------------------------------------------
-		const_iterator lowerBound(const_reference element) const {
-			return const_iterator(this, lowerBound_(element)._bound);
+		const_iterator lowerBound(key_type key) const {
+			return const_iterator(this, lowerBound_(key)._limit);
 		}
 
 		// ---------------------------------------------------------------------
@@ -596,19 +625,19 @@ namespace collections::impl {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns an iterator to the requested element if it exists, otherwise
+		/// Returns an iterator to the requested bound if it exists, otherwise
 		/// end() is returned.
 		/// </returns> ---------------------------------------------------------
-		iterator upperBound(const_reference element) {
-			TreeLookupResult lookup = upperBound_(element);
-			base_ptr result = lookup.bound();
+		iterator upperBound(key_type key) {
+			TreeBoundResult lookup = upperBound_(key);
+			base_ptr result = lookup.limit();
 
 			if (result)
 				this->self().onAccessNode(result);
 			else
 				this->self().onAccessNode(_max);
 
-			return iterator(this, lookup.bound());
+			return iterator(this, result);
 		}
 
 		// ---------------------------------------------------------------------
@@ -625,8 +654,24 @@ namespace collections::impl {
 		/// Returns a const_iterator to the requested element if it exists, 
 		/// otherwise end() is returned.
 		/// </returns> ---------------------------------------------------------
-		const_iterator upperBound(const_reference element) const {
-			return const_iterator(this, upperBound_(element)._bound);
+		const_iterator upperBound(key_type key) const {
+			return const_iterator(this, upperBound_(key)._limit);
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Counts the number of matching elements.
+		/// </summary>
+		/// 
+		/// <param name="element">
+		/// The element or key to count.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the number of occurences of the given key.
+		/// </returns> ---------------------------------------------------------
+		size_type count(key_type key) const requires allow_duplicates {
+			return std::distance(lowerBound(key), upperBound(key)); //TODO - use custom implementation of distance.
 		}
 
 		// --------------------------------------------------------------------
@@ -1023,23 +1068,27 @@ namespace collections::impl {
 			NONE
 		};
 
-		struct TreeLookupResult {
-			const_base_ptr _bound = nullptr;
+		struct TreeLookup {
 			const_base_ptr _parent = nullptr;
 			Direction _direction = Direction::NONE;
-
-			base_ptr bound() {
-				return const_cast<base_ptr>(_bound);
-			}
 
 			base_ptr parent() {
 				return const_cast<base_ptr>(_parent);
 			}
 		};
 
+		struct TreeBoundResult {
+			const_base_ptr _limit = nullptr;
+			TreeLookup _location = {};
+
+			base_ptr limit() {
+				return const_cast<base_ptr>(_limit);
+			}
+		};
+
 		struct TreeInsertLocation {
-			base_ptr _parent = nullptr;
-			Direction _direction = Direction::NONE;
+			TreeLookup _location = {};
+			bool isDuplicate = false;
 		};
 
 		size_type _size;
@@ -1115,29 +1164,48 @@ namespace collections::impl {
 
 		template <class... Args>
 		base_ptr emplaceAt(base_ptr hint, Args&&... args) {
+			TreeInsertLocation result;
 			base_ptr n = this->self().createNode(std::forward<Args>(args)...);
-			TreeInsertLocation location = getInsertLocation(hint, n->value());
 
-			if (isDuplicate(location, n->value())) {
-				this->self().destroyNode(n);
-				return location._parent;
+			if constexpr (is_map)
+				result = getInsertLocation(hint, n->value().key());
+			else
+				result = getInsertLocation(hint, n->value());
+
+			if constexpr (hasDuplicates) {
+				insertNode(result, n);
+				return n;
+			}
+			else if (!result.isDuplicate) {
+				insertNode(result, n);
+				return n;
 			}
 			else {
-				insertNode(location, n);
-				return n;
+				this->self().destroyNode(n);
+				return result._location.parent();
 			}
 		}
 
 		base_ptr insertAt(base_ptr hint, const_reference element) {
-			TreeInsertLocation location = getInsertLocation(hint, element);
+			TreeInsertLocation result;
 
-			if (isDuplicate(location, element)) 
-				return location._parent;
-			else {
+			if constexpr (is_map)
+				result = getInsertLocation(hint, element.key());
+			else
+				result = getInsertLocation(hint, element);
+
+			if constexpr (allow_duplicates) {
 				base_ptr n = this->self().createNode(element);
-				insertNode(location, n);
+				insertNode(result, n);
 				return n;
 			}
+			else if (!result.isDuplicate) {
+				base_ptr n = this->self().createNode(element);
+				insertNode(result, n);
+				return n;
+			}
+			else 
+				return result._location.parent();
 		}
 
 		base_ptr removeAt(base_ptr n) {
@@ -1171,7 +1239,7 @@ namespace collections::impl {
 			return level - 1;
 		}
 
-		[[nodiscard]] TreeLookupResult lowerBound_(const_reference key) const {
+		[[nodiscard]] TreeBoundResult lowerBound_(key_type key) const {
 			const_base_ptr current = _root;
 			const_base_ptr parent = nullptr;
 			const_base_ptr bound = nullptr;
@@ -1185,20 +1253,16 @@ namespace collections::impl {
 					direction = Direction::RIGHT;
 				}
 				else {
-					if (compare(key, current->value()))
-						direction = Direction::LEFT;
-					else
-						direction = Direction::NONE;
-
+					direction = Direction::LEFT;
 					bound = current;
 					current = current->to(left);
 				}
 			}
 
-			return { bound, parent, direction };
+			return { bound, { parent, direction } };
 		}
 
-		[[nodiscard]] TreeLookupResult upperBound_(const_reference key) const {
+		[[nodiscard]] TreeBoundResult upperBound_(key_type key) const {
 			const_base_ptr current = _root;
 			const_base_ptr parent = nullptr;
 			const_base_ptr bound = nullptr;
@@ -1213,17 +1277,12 @@ namespace collections::impl {
 					direction = Direction::LEFT;
 				}
 				else {
-					if (compare(current->value(), key))
-						direction = Direction::LEFT;
-					else
-						direction = Direction::NONE;
-
 					direction = Direction::RIGHT;
 					current = current->to(right);
 				}
 			}
 
-			return { bound, parent, direction };
+			return { bound, { parent, direction } };
 		}
 
 		base_ptr leftRotation(base_ptr pivot) {
@@ -1471,18 +1530,21 @@ namespace collections::impl {
 
 		// ----------------------- INSERTION HELPERS ----------------------- //
 
-		void insertNode(TreeInsertLocation location, base_ptr n) {
-			if (location._parent) {
-				n->to(parent) = location._parent;
+		void insertNode(TreeInsertLocation info, base_ptr n) {
+			TreeLookup location = info._location;
+			base_ptr insert_parent = location.parent();
+
+			if (insert_parent) {
+				n->to(parent) = insert_parent;
 
 				if (location._direction == Direction::LEFT) {
-					location._parent->to(left) = n;
-					if (_min == location._parent)
+					insert_parent->to(left) = n;
+					if (insert_parent == _min)
 						_min = n;
 				}
 				else {
-					location._parent->to(right) = n;
-					if (_max == location._parent)
+					insert_parent->to(right) = n;
+					if (insert_parent == _max)
 						_max = n;
 				}
 			}
@@ -1495,65 +1557,50 @@ namespace collections::impl {
 			_size++;
 		}
 
-		[[nodiscard]] bool isDuplicate(
-			TreeInsertLocation location, 
-			const_reference key
-		) const {
-			switch (location._direction) {
-			case (Direction::LEFT):
-				return location._parent->to(left) != nullptr;
-			case (Direction::RIGHT):
-				return location._parent->to(right) != nullptr;
-			case (Direction::NONE):
-				return location._parent != nullptr;
-			default:
-				throw std::exception("Invalid tree insert location.");
-			}
-		}
-
 		[[nodiscard]] TreeInsertLocation getInsertLocation(
-			base_ptr hint, 
-			const_reference key
+			base_ptr hint,
+			key_type key
 		) {
 			if (!_root)
-				return { nullptr, Direction::NONE };
+				return {{ nullptr, Direction::NONE }, false};
 			else if (compare(key, _min->value()))
-				return { _min, Direction::LEFT };
-			else if (!compare(_min->value(), key))
-				return { _min, Direction::NONE };
+				return { { _min, Direction::LEFT }, false };
+			else if (!compare(_min->value(), key)) 
+				return { { _min, Direction::LEFT }, true };
 			else if (compare(_max->value(), key))
-				return { _max, Direction::RIGHT };
+				return { { _max, Direction::RIGHT }, false };
 			else if (!compare(key, _max->value()))
-				return { _max, Direction::NONE };
+				return { lowerBound_(key)._location, true };
 			else if (compare(key, hint->value()))
 				return checkInsertHintPredecessor(hint, key);
 			else if (compare(hint->value(), key))
 				return checkInsertHintSuccessor(hint, key);
 			else
-				return { hint, Direction::NONE };
+				return { lowerBound_(key)._location, true };
 		}
 
 		[[nodiscard]] TreeInsertLocation checkInsertHintPredecessor(
 			base_ptr hint,
-			const_reference key
+			key_type key
 		) {
 			base_ptr prev = inOrderPredecessorOf(hint);
+
 			if (compare(prev->value(), key)) {
 				if (prev->to(right))
-					return { hint, Direction::LEFT };
+					return { { hint, Direction::LEFT }, false };
 				else
-					return { prev, Direction::RIGHT };
+					return { { prev, Direction::RIGHT }, false };
 			}
 
-			TreeLookupResult lookup = lowerBound_(key);
-			return { lookup.parent(), lookup._direction };
+			return findInsertBound(key);
 		}
 
 		[[nodiscard]] TreeInsertLocation checkInsertHintSuccessor(
 			base_ptr hint,
-			const_reference key
+			key_type key
 		) {
 			base_ptr next = inOrderSuccessorOf(hint);
+
 			if (!next || compare(key, next->value())) {
 				if (hint->to(right))
 					return { next, Direction::LEFT };
@@ -1561,8 +1608,18 @@ namespace collections::impl {
 					return { hint, Direction::RIGHT };
 			}
 
-			TreeLookupResult lookup = lowerBound_(key);
-			return { lookup.parent(), lookup._direction };
+			return findInsertBound(key);
+		}
+
+		[[nodiscard]] TreeInsertLocation findInsertBound(key_type key) {
+			if constexpr (allow_duplicates)
+				return { lowerBound_(key)._location, true };
+			else {
+				TreeBoundResult bound = lowerBound_(key);
+				bool isDuplicate =
+					bound._limit && !compare(key, bound._limit->value());
+				return { bound._location, isDuplicate };
+			}
 		}
 
 		// ----------------------- DELETION HELPERS ------------------------ //
@@ -1638,10 +1695,28 @@ namespace collections::impl {
 		}
 
 		[[nodiscard]] static bool compare(
-			const_reference e1,
-			const_reference e2
+			key_type e1, 
+			key_type e2
 		) {
 			return compare_t{}(e1, e2);
+		}
+
+		template <class T = const_reference> 
+			requires (!std::same_as<const_reference, key_type>)
+		[[nodiscard]] static bool compare(
+			const_reference e1, 
+			key_type e2
+		) {
+			return compare(e1.key(), e2);
+		}
+
+		template <class T = const_reference> 
+			requires (!std::same_as<const_reference, key_type>)
+		[[nodiscard]] static bool compare(
+			key_type e1, 
+			const_reference e2
+		) {
+			return compare(e1, e2.key());
 		}
 
 		// ----------------------- TRAVERSAL HELPERS ----------------------- //
@@ -1840,39 +1915,48 @@ namespace collections::impl {
 
 		public:
 
-			// must be const to preserve ordering
-			using value_type = const element_t; 
+			// set values must be const to preserve ordering
+			using value_type = std::conditional_t<
+				is_map, element_t, const element_t
+			>;
 
 			using difference_type = std::ptrdiff_t;
-			using pointer = value_type*;
-			using reference = value_type&;
+
+			using pointer = std::conditional_t<
+				isConst, const value_type*, value_type*
+			>;
+
+			using reference = std::conditional_t<
+				isConst, const value_type&, value_type&
+			>;
+
 			using iterator_category = std::bidirectional_iterator_tag;
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Default Constructor ~~~
 			///
 			///	<para>
 			/// Constructs an empty BinaryTreeIterator.
-			/// </para></summary> -----------------------------------------
+			/// </para></summary> ---------------------------------------------
 			BinaryTreeIterator() = default;
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Copy Constructor ~~~
 			///
 			///	<para>
 			/// Constructs a copy of the given BinaryTreeIterator.
-			/// </para></summary> -----------------------------------------
+			/// </para></summary> ---------------------------------------------
 			BinaryTreeIterator(const BinaryTreeIterator& copy) = default;
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// Destructs the BinaryTreeIterator.
-			///	</summary> ------------------------------------------------
+			///	</summary> ----------------------------------------------------
 			~BinaryTreeIterator() = default;
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Copy Assignment Operator ~~~
 			///
@@ -1886,11 +1970,11 @@ namespace collections::impl {
 			///
 			/// <returns>
 			/// Returns this BinaryTreeIterator with the copied data.
-			/// </returns> ------------------------------------------------
+			/// </returns> ----------------------------------------------------
 			BinaryTreeIterator& operator=(const BinaryTreeIterator& other) 
 				= default;
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Implicit Conversion Constructor ~~~
 			///
@@ -1907,7 +1991,7 @@ namespace collections::impl {
 			/// <typeparam name="wasConst">
 			/// The 'const'-ness of the provided BinaryTreeIterator to 
 			/// copy.
-			/// </typeparam> ----------------------------------------------
+			/// </typeparam> --------------------------------------------------
 			template<
 				bool wasConst, 
 				class = std::enable_if_t<isConst && !wasConst>
@@ -1918,7 +2002,7 @@ namespace collections::impl {
 
 			}
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Dereference Operator ~~~
 			/// </summary>
@@ -1926,12 +2010,25 @@ namespace collections::impl {
 			/// <returns>
 			/// Returns a reference to the element pointed to by the 
 			/// iterator in its current state.
-			///	</returns> ------------------------------------------------
+			///	</returns> ----------------------------------------------------
 			reference operator*() const {
 				return _node->value();
 			}
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Arrow Operator ~~~
+			/// </summary>
+			///
+			/// <returns>
+			/// Returns a pointer to the element pointed to by the iterator in 
+			/// its current state.
+			///	</returns> ----------------------------------------------------
+			pointer operator->() const {
+				return &_node->value();
+			}
+
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Pre-Increment Operator ~~~
 			/// </summary>
@@ -1939,13 +2036,13 @@ namespace collections::impl {
 			/// <returns>
 			/// Moves the iterator to the next element and returns the 
 			/// iterator after updating.
-			///	</returns> ------------------------------------------------
+			///	</returns> ----------------------------------------------------
 			BinaryTreeIterator& operator++() {
 				increment();
 				return *this;
 			}
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Post-Increment Operator ~~~
 			/// </summary>
@@ -1953,14 +2050,14 @@ namespace collections::impl {
 			/// <returns>
 			/// Moves the iterator to the next element and returns a copy 
 			/// of the iterator before updating.
-			///	</returns> ------------------------------------------------
+			///	</returns> ----------------------------------------------------
 			BinaryTreeIterator operator++(int) {
 				auto copy = *this;
 				increment();
 				return copy;
 			}
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Pre-Decrement Operator ~~~
 			/// </summary>
@@ -1968,13 +2065,13 @@ namespace collections::impl {
 			/// <returns>
 			/// Moves the iterator to the previous element and returns the
 			/// iterator after updating.
-			///	</returns> ------------------------------------------------
+			///	</returns> ----------------------------------------------------
 			BinaryTreeIterator& operator--() {
 				decrement();
 				return *this;
 			}
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Post-Deccrement Operator ~~~
 			/// </summary>
@@ -1982,14 +2079,14 @@ namespace collections::impl {
 			/// <returns>
 			/// Moves the iterator to the previous element and returns a 
 			/// copy of the iterator before updating.
-			///	</returns> ------------------------------------------------
+			///	</returns> ----------------------------------------------------
 			BinaryTreeIterator operator--(int) {
 				auto copy = *this;
 				decrement();
 				return copy;
 			}
 
-			// ------------------------------------------------------------
+			// ----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Equality Operator ~~~
 			/// </summary>
@@ -2006,7 +2103,7 @@ namespace collections::impl {
 			/// <returns>
 			/// Returns true if the BinaryTreeIterator are both pointing to 
 			/// the same element, false otherwise.
-			///	</returns> ------------------------------------------------
+			///	</returns> ----------------------------------------------------
 			friend bool operator==(
 				const BinaryTreeIterator& lhs,
 				const BinaryTreeIterator& rhs

@@ -15,28 +15,27 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#include "../../test_suites/sequential_collection_tests/sequential_collection_access_tests.h"
-#include "../../test_suites/sequential_collection_tests/index_tests/sequential_index_access_tests.h"
-#include "../../test_suites/sequential_collection_tests/iterator_tests/sequential_iterator_access_tests.h"
-#include "forward_list_test_fixture.h"
+#include <string>
+#include <gtest/gtest.h>
+
+#include "containers/ForwardList.h"
+
+#include "../../collection_test_suites/access_tests/sequential_access_tests.h"
+#include "../../collection_test_suites/access_tests/sequential_index_access_tests.h"
 
 namespace collection_tests {
 
+	using test_params = testing::Types<ForwardList<std::string>>;
+
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		ForwardListTest,
-		SequentialCollectionAccessTests,
-		forward_list_test_params
+		SequentialAccessTests,
+		test_params,
 	);
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		ForwardListTest,
 		SequentialIndexAccessTests,
-		forward_list_test_params
-	);
-
-	INSTANTIATE_TYPED_TEST_SUITE_P(
-		ForwardListTest,
-		SequentialIteratorAccessTests,
-		forward_list_test_params
+		test_params,
 	);
 }

@@ -25,16 +25,15 @@ namespace collections {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// The  printable concept defines an interface for template types that
-	/// provide a method to print to a given output stream in human readable 
-	/// format.
+	/// Defines the requirements for types that provide a method to print to an 
+	/// output stream in human readable format.
 	/// </summary> ------------------------------------------------------------
-	template <class collection_t, class char_t>
-	concept printable = requires(
-		const collection_t & c,
-		std::basic_ostream<uint8_t>&os,
+	template <class T, class char_t>
+	concept printable = requires (
+		const T& obj,
+		std::basic_ostream<uint8_t>& os,
 		size_t limit
 	) {
-		{ c.print(os, limit) };
+		{ obj.print(os, limit) };
 	};
 }

@@ -15,28 +15,58 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#include "splay_tree_test_fixture.h"
-#include "../../test_suites/ordered_collection_tests.h"
-#include "../../test_suites/associative_collection_tests/associative_collection_access_tests.h"
-#include "../../test_suites/associative_collection_tests/iterator_tests/associative_iterator_access_tests.h"
+#include <functional>
+#include <string>
+#include <gtest/gtest.h>
+
+#include "containers/SplayTree.h"
+
+#include "../../collection_test_suites/access_tests/associative_bound_tests.h"
+#include "../../collection_test_suites/access_tests/associative_search_tests.h"
+#include "../../collection_test_suites/access_tests/bag_tests.h"
+#include "../../collection_test_suites/access_tests/map_tests.h"
 
 namespace collection_tests {
 
+	using tree_test_params = testing::Types <
+		SimpleSplayTree<std::string>,
+		MapSplayTree<uint8_t, std::string>,
+		MultiSplayTree<std::string>,
+		MultiMapSplayTree<uint8_t, std::string>
+	>;
+
+	using bag_test_params = testing::Types<
+		MultiSplayTree<std::string>,
+		MultiMapSplayTree<uint8_t, std::string>
+	>;
+
+	using map_test_params = testing::Types<
+		MapSplayTree<uint8_t, std::string>,
+		MultiMapSplayTree<uint8_t, std::string>
+	>;
+
 	INSTANTIATE_TYPED_TEST_SUITE_P(
-		SlayTreeTest,
-		AssociativeCollectionAccessTests,
-		splay_tree_test_params
+		SplayTreeTest,
+		AssociativeSearchTests,
+		tree_test_params
+	);
+
+
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		SplayTreeTest,
+		AssociativeBoundTests,
+		tree_test_params
 	);
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		SplayTreeTest,
-		AssociativeIteratorAccessTests,
-		splay_tree_test_params
+		BagTests,
+		bag_test_params
 	);
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		SplayTreeTest,
-		OrderedCollectionTests,
-		splay_tree_test_params
+		MapTests,
+		map_test_params
 	);
 }

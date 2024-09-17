@@ -15,28 +15,58 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#include "avl_tree_test_fixture.h"
-#include "../../test_suites/ordered_collection_tests.h"
-#include "../../test_suites/associative_collection_tests/associative_collection_access_tests.h"
-#include "../../test_suites/associative_collection_tests/iterator_tests/associative_iterator_access_tests.h"
+#include <functional>
+#include <string>
+#include <gtest/gtest.h>
+
+#include "containers/AVLTree.h"
+
+#include "../../collection_test_suites/access_tests/associative_bound_tests.h"
+#include "../../collection_test_suites/access_tests/associative_search_tests.h"
+#include "../../collection_test_suites/access_tests/bag_tests.h"
+#include "../../collection_test_suites/access_tests/map_tests.h"
 
 namespace collection_tests {
 
-	INSTANTIATE_TYPED_TEST_SUITE_P(
-		AVLTreeTest,
-		AssociativeCollectionAccessTests,
-		avl_tree_test_params
-	);
+	using tree_test_params = testing::Types <
+		SimpleAVL<std::string>,
+		MapAVL<uint8_t, std::string>,
+		MultiAVL<std::string>,
+		MultiMapAVL<uint8_t, std::string>
+	>;
+
+	using bag_test_params = testing::Types<
+		MultiAVL<std::string>,
+		MultiMapAVL<uint8_t, std::string>
+	>;
+
+	using map_test_params = testing::Types<
+		MapAVL<uint8_t, std::string>,
+		MultiMapAVL<uint8_t, std::string>
+	>;
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		AVLTreeTest,
-		AssociativeIteratorAccessTests,
-		avl_tree_test_params
+		AssociativeSearchTests,
+		tree_test_params
+	);
+
+
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		SplayTreeTest,
+		AssociativeBoundTests,
+		tree_test_params
 	);
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
-		AVLTreeTest,
-		OrderedCollectionTests,
-		avl_tree_test_params
+		SplayTreeTest,
+		BagTests,
+		bag_test_params
+	);
+
+	INSTANTIATE_TYPED_TEST_SUITE_P(
+		SplayTreeTest,
+		MapTests,
+		map_test_params
 	);
 }

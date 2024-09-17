@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "../concepts/collection.h"
+#include "../concepts/sequential.h"
 #include "../containers/DynamicArray.h"
 
 namespace collections {
@@ -43,7 +44,7 @@ namespace collections {
 	/// </typeparam> ----------------------------------------------------------
 	template <
 		class element_t, 
-		sequential_collection container_t = DynamicArray<element_t>
+		sequential container_t = DynamicArray<element_t>
 	>
 	class Stack {
 	public:
@@ -242,6 +243,18 @@ namespace collections {
 			return _container.size();
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the theoretical maximum size for the container.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns the size limit of the container type.
+		/// </returns> ---------------------------------------------------------
+		[[nodiscard]] size_type max_size() const noexcept {
+			return _container.max_size();
+		}
+
 		// --------------------------------------------------------------------
 		/// <summary>
 		/// Empties and clears the stack of all elements.
@@ -350,7 +363,7 @@ namespace collections {
 		/// Returns a constant reverse iterator to the bottom of the stack.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reverse_iterator rbegin() noexcept {
-			return std::make_reverse_iterator(end());
+			return _container.begin();
 		}
 
 		// --------------------------------------------------------------------
@@ -364,7 +377,7 @@ namespace collections {
 		/// top of stack.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] reverse_iterator rend() noexcept {
-			return std::make_reverse_iterator(begin());
+			return _container.end();
 		}
 
 		// --------------------------------------------------------------------
@@ -377,7 +390,7 @@ namespace collections {
 		/// Returns a constant reverse iterator to the bottom of the stack.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reverse_iterator rbegin() const noexcept {
-			return std::make_reverse_iterator(end());
+			return _container.begin();
 		}
 
 		// --------------------------------------------------------------------
@@ -391,7 +404,7 @@ namespace collections {
 		/// top of stack.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reverse_iterator rend() const noexcept {
-			return std::make_reverse_iterator(begin());
+			return _container.end();
 		}
 
 		// --------------------------------------------------------------------
@@ -404,7 +417,7 @@ namespace collections {
 		/// Returns a constant reverse iterator to the bottom of the stack.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reverse_iterator crbegin() const noexcept {
-			return std::make_reverse_iterator(end());
+			return rbegin();
 		}
 
 		// --------------------------------------------------------------------
@@ -418,7 +431,7 @@ namespace collections {
 		/// top of stack.
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] const_reverse_iterator crend() const noexcept {
-			return std::make_reverse_iterator(begin());
+			return rend();
 		}
 
 		// --------------------------------------------------------------------

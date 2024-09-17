@@ -15,28 +15,27 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#include "../../test_suites/sequential_collection_tests/sequential_collection_access_tests.h"
-#include "../../test_suites/sequential_collection_tests/index_tests/sequential_index_access_tests.h"
-#include "../../test_suites/sequential_collection_tests/iterator_tests/sequential_iterator_access_tests.h"
-#include "dynamic_array_test_fixture.h"
+#include <string>
+#include <gtest/gtest.h>
+
+#include "containers/DynamicArray.h"
+
+#include "../../collection_test_suites/access_tests/sequential_access_tests.h"
+#include "../../collection_test_suites/access_tests/sequential_index_access_tests.h"
 
 namespace collection_tests {
 
+	using test_params = testing::Types<DynamicArray<std::string>>;
+
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		DynamicArrayTest,
-		SequentialCollectionAccessTests,
-		dynamic_array_test_params
+		SequentialAccessTests,
+		test_params,
 	);
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
 		DynamicArrayTest,
 		SequentialIndexAccessTests,
-		dynamic_array_test_params
-	);
-
-	INSTANTIATE_TYPED_TEST_SUITE_P(
-		DynamicArrayTest,
-		SequentialIteratorAccessTests,
-		dynamic_array_test_params
+		test_params,
 	);
 }

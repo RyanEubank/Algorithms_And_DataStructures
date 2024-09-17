@@ -37,14 +37,13 @@
 #include "../algorithms/shift.h"
 #include "../algorithms/stream.h"
 #include "../concepts/collection.h"
-#include "../util/NamedType.h"
+#include "../concepts/indexable.h"
+#include "../concepts/iterable.h"
+#include "../concepts/positional.h"
+#include "../concepts/sequential.h"
+#include "../util/types.h"
 
 namespace collections {
-
-	/// <summary>
-	/// Strongly typed integral to indicate an amount of memory being reserved.
-	/// </summary>
-	using Reserve = NamedType<size_t, struct ReserveType>;
 
 	// -------------------------------------------------------------------------
 	/// <summary>
@@ -534,7 +533,7 @@ namespace collections {
 		/// Returns the size limit of the container type.
 		/// </returns> ---------------------------------------------------------
 		[[nodiscard]] size_type max_size() const noexcept {
-			return std::numeric_limits<alloc_traits::difference_type>::max();
+			return alloc_traits::max_size(_allocator);
 		}
 
 		// --------------------------------------------------------------------
@@ -1181,7 +1180,7 @@ namespace collections {
 			validateIndexExists(range.begin);
 			validateIndexInRange(range.end);
 			
-			if (range.begin < range.end)
+			if (range.begin <= range.end)
 				return remove(_begin + range.begin, _begin + range.end);
 			else
 				throw std::exception("Begin index is greater than end.");
@@ -1685,12 +1684,27 @@ namespace collections {
 	};
 
 	static_assert(
-		sequential_collection<DynamicArray<int>>,
-		"DynamicArray does not meet the requirements for a sequential collection."
+		collection<DynamicArray<int>>,
+		"DynamicArray does not meet the requirements for a collection."
 	);
 
 	static_assert(
-		bidirectional_collection<DynamicArray<int>>,
-		"DynamicArray does not meet the requirements for a bidirectional collection."
+		sequential<DynamicArray<int>>,
+		"DynamicArray does not meet the requirements for sequential access."
+	);
+
+	static_assert(
+		indexable<DynamicArray<int>, size_t>,
+		"DynamicArray does not meet the requirements for indexed access."
+	);
+
+	static_assert(
+		positional<DynamicArray<int>>,
+		"DynamicArray does not meet the requirements for positional access."
+	);
+
+	static_assert(
+		random_access_iterable<DynamicArray<int>>,
+		"DynamicArray does not meet the requirements for random access iteration."
 	);
 }

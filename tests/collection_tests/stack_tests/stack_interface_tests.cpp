@@ -15,73 +15,24 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
+#include <cstdint>
+#include <gtest/gtest.h>
+
+#include "adapters/Stack.h"
 #include "containers/LinkedList.h"
 #include "containers/DynamicArray.h"
 
-#include "stack_test_fixture.h"
+#include "../../collection_test_suites/collection_test_fixture.h"
 
 namespace collection_tests {
 
-	template <class container, class mock>
-	struct TestTypes {
-		using collection_t	= Stack<typename container::value_type, container>;
-		using mock_t		= Stack<typename container::value_type, mock>;
-	};
-
 	using stack_test_types = testing::Types<
-		TestTypes<
-			DynamicArray<uint8_t, std::allocator<uint8_t>>, 
-			DynamicArray<uint8_t, MockAllocator<uint8_t>>
-		>, 
-		TestTypes<
-			LinkedList<uint8_t, std::allocator<uint8_t>>, 
-			LinkedList<uint8_t, MockAllocator<uint8_t>>
-		>,
-		TestTypes<
-			DynamicArray<uint16_t, std::allocator<uint16_t>>, 
-			DynamicArray<uint16_t, MockAllocator<uint16_t>>
-		>,
-		TestTypes<
-			LinkedList<uint16_t, std::allocator<uint16_t>>, 
-			LinkedList<uint16_t, MockAllocator<uint16_t>>
-		>,
-		TestTypes<
-			DynamicArray<uint32_t, std::allocator<uint32_t>>, 
-			DynamicArray<uint32_t, MockAllocator<uint32_t>>
-		>,
-		TestTypes<
-			LinkedList<uint32_t, std::allocator<uint32_t>>, 
-			LinkedList<uint32_t, MockAllocator<uint32_t>>
-		>,
-		TestTypes<
-			DynamicArray<uint64_t, std::allocator<uint64_t>>, 
-			DynamicArray<uint64_t, MockAllocator<uint64_t>>
-		>,
-		TestTypes<
-			LinkedList<uint64_t, std::allocator<uint64_t>>, 
-			LinkedList<uint64_t, MockAllocator<uint64_t>>
-		>,
-		TestTypes<
-			DynamicArray<void*, std::allocator<void*>>, 
-			DynamicArray<void*, MockAllocator<void*>>
-		>,
-		TestTypes<
-			LinkedList<void*, std::allocator<void*>>, 
-			LinkedList<void*, MockAllocator<void*>>
-		>,
-
-		TestTypes<
-			DynamicArray<std::string, std::allocator<std::string>>, 
-			DynamicArray<std::string, MockAllocator<std::string>>
-		>,
-		TestTypes<
-			LinkedList<std::string, std::allocator<std::string>>, 
-			LinkedList<std::string, MockAllocator<std::string>>
-		>
+		Stack<uint8_t, DynamicArray<uint8_t>>, 
+		Stack<uint8_t, LinkedList<uint8_t>>
 	>;
 
-	template <class params>
-	class StackTest :public CollectionTests<params> {};
+	template <class stack_t>
+	using StackTest = CollectionTest<stack_t>;
 
 	TYPED_TEST_SUITE(StackTest, stack_test_types);
 
@@ -96,7 +47,7 @@ namespace collection_tests {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
-		collection obj{};
+		collection_type obj{};
 
 		ASSERT_TRUE(obj.isEmpty());
 
@@ -117,7 +68,7 @@ namespace collection_tests {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
-		collection obj{ a, b, c };
+		collection_type obj{ a, b, c };
 
 		ASSERT_FALSE(obj.isEmpty());
 
@@ -138,7 +89,7 @@ namespace collection_tests {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
-		collection obj{ a, b, c };
+		collection_type obj{ a, b, c };
 
 		ASSERT_FALSE(obj.isEmpty());
 		ASSERT_EQ(obj.peek(), c);
@@ -160,7 +111,7 @@ namespace collection_tests {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
-		collection obj{ a, b, c, d };
+		collection_type obj{ a, b, c, d };
 
 		EXPECT_EQ(obj.peek(), d);
 	}

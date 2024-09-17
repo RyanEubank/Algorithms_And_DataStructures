@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "../concepts/collection.h"
+#include "../concepts/sequential.h"
 #include "../containers/LinkedList.h"
 
 namespace collections {
@@ -43,7 +44,7 @@ namespace collections {
 	/// </typeparam> ----------------------------------------------------------
 	template <
 		class element_t, 
-		sequential_collection container_t = LinkedList<element_t>
+		sequential container_t = LinkedList<element_t>
 	>
 	class Queue {
 	public:
@@ -239,6 +240,18 @@ namespace collections {
 		/// </returns>
 		[[nodiscard]] size_type size() const {
 			return _container.size();
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the theoretical maximum size for the container.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns the size limit of the container type.
+		/// </returns> ---------------------------------------------------------
+		[[nodiscard]] size_type max_size() const noexcept {
+			return _container.max_size();
 		}
 
 		// --------------------------------------------------------------------

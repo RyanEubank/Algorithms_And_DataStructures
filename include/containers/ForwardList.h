@@ -34,6 +34,10 @@
 #include "../algorithms/move.h"
 #include "../algorithms/stream.h"
 #include "../concepts/collection.h"
+#include "../concepts/indexable.h"
+#include "../concepts/iterable.h"
+#include "../concepts/positional.h"
+#include "../concepts/sequential.h"
 
 namespace collections {
 
@@ -44,7 +48,7 @@ namespace collections {
 	/// </summary>
 	///
 	/// <typeparam name="element_t">
-	/// The type of the elements contained by the LinkedList.
+	/// The type of the elements contained by the ForwardList.
 	/// </typeparam> 
 	/// 
 	/// <typeparam name="allocator_t">
@@ -407,6 +411,18 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		[[nodiscard]] allocator_type allocator() const noexcept {
 			return static_cast<allocator_type>(_allocator);
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the theoretical maximum size for the container.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns the size limit of the container type.
+		/// </returns> ---------------------------------------------------------
+		[[nodiscard]] size_type max_size() const noexcept {
+			return node_alloc_traits::max_size(_allocator);
 		}
 
 		// --------------------------------------------------------------------
@@ -876,7 +892,7 @@ namespace collections {
 			validateIndexExists(range.begin);
 			validateIndexInRange(range.end);
 
-			if (range.begin < range.end)
+			if (range.begin <= range.end)
 				return removeAll(range.begin, range.end);
 			else
 				throw std::exception("Begin index is greater than end.");
@@ -1453,7 +1469,7 @@ namespace collections {
 			///
 			/// <para>
 			/// Constructs a copy of the given ForwardListIterator for implicit 
-			/// conversion from non-const version to a const LinkedListIterator.
+			/// conversion from non-const version to a const ForwardListIterator.
 			/// </para></summary>
 			///
 			/// <param name="other">
@@ -1545,12 +1561,27 @@ namespace collections {
 	};
 
 	static_assert(
-		sequential_collection<ForwardList<int>>,
-		"ForwardList does not meet the requirements for a sequential_collecion."
+		collection<ForwardList<int>>,
+		"ForwardList does not meet the requirements for a collection."
 	);
 
 	static_assert(
-		forward_collection<ForwardList<int>>,
-		"ForwardList does not meet the requirements for a forward_collection."
+		sequential<ForwardList<int>>,
+		"ForwardList does not meet the requirements for sequential access."
+	);
+
+	static_assert(
+		indexable<ForwardList<int>, size_t>,
+		"ForwardList does not meet the requirements for indexed access."
+	);
+
+	static_assert(
+		positional<ForwardList<int>>,
+		"ForwardList does not meet the requirements for positional access."
+	);
+
+	static_assert(
+		forward_iterable<ForwardList<int>>,
+		"ForwardList does not meet the requirements for bidirectional iteration."
 	);
 }

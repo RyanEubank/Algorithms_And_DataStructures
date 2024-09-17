@@ -20,6 +20,7 @@
 #include <concepts>
 #include <istream>
 #include <ostream>
+#include <type_traits>
 
 namespace collections {
 
@@ -30,12 +31,12 @@ namespace collections {
 	/// </summary> ------------------------------------------------------------
 	template <class T, class char_t>
 	concept streamable = requires(
-		T& c1,
-		const T& c2,
+		T& obj1,
+		const T& obj2,
 		std::basic_ostream<char_t> &os,
 		std::basic_istream<char_t> &is
 	) {
-		{ os << c2 } -> std::convertible_to<std::basic_ostream<char_t>&>;
-		{ is >> c1 } -> std::convertible_to<std::basic_istream<char_t>&>;
+		{ os << obj2 } -> std::convertible_to<std::basic_ostream<char_t>&>;
+		{ is >> obj1 } -> std::convertible_to<std::basic_istream<char_t>&>;
 	};
 }

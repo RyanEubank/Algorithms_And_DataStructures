@@ -15,16 +15,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * ========================================================================= */
 
-#include "dynamic_array_test_fixture.h"
+#include <string>
+#include <gtest/gtest.h>
+
+#include "containers/DynamicArray.h"
+
+#include "../../mocks/mock_allocator.h"
+#include "../../collection_test_suites/collection_test_fixture.h"
 
 namespace collection_tests {
 
-	using collection_types = instantiate_with_elements<DynamicArrayTestTypes>;
+	using ::testing::_;
 
-	template <class params>
-	class DynamicArrayTest : public CollectionTests<params> {};
+	using test_params = 
+		testing::Types<DynamicArray<std::string, MockAllocator<std::string>>>;
 
-	TYPED_TEST_SUITE(DynamicArrayTest, collection_types);
+	template <class T>
+	class AllocationTest : 
+		public CollectionTest<T>, 
+		public MockAllocatorTest<typename T::value_type> 
+	{
+
+	};
+
+	TYPED_TEST_SUITE(AllocationTest, test_params);
 
 	// ------------------------------------------------------------------------
 	/// <summary>
@@ -32,14 +46,14 @@ namespace collection_tests {
 	/// any memory.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST(
-		DynamicArrayTest,
+		AllocationTest,
 		DefaultConstructorDoesNotAllocate
 	) {
 		FORWARD_TEST_TYPES();
 
 		EXPECT_CALL(this->allocator(), allocate(_)).Times(0);
 
-		const mocked_collection obj{};
+		const collection_type obj{};
 
 		EXPECT_EQ(obj.capacity(), 0);
 	}
@@ -50,7 +64,7 @@ namespace collection_tests {
 	/// correct amount of memory requested.
 	/// </summary> ------------------------------------------------------------
 	TYPED_TEST(
-		DynamicArrayTest,
+		AllocationTest,
 		ReserveConstructorAllocatesSpecifiedMemory
 	) {
 		FORWARD_TEST_TYPES();
@@ -58,7 +72,7 @@ namespace collection_tests {
 
 		EXPECT_CALL(this->allocator(), allocate(30)).Times(1);
 
-		const mocked_collection obj(Reserve{ size });
+		const collection_type obj(Reserve{ size });
 
 		EXPECT_EQ(obj.capacity(), size);
 		EXPECT_TRUE(obj.isEmpty());
@@ -68,47 +82,10 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
-	/// Tests that the set size constructor of a DynamicArray correctly
-	/// constructs and fills the array with the expected value.
-	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(
-		DynamicArrayTest,
-		SizeConstructorCreatesObjectFilledWithSetAmount
-	) {
-		FORWARD_TEST_TYPES();
-		DECLARE_TEST_DATA();
-
-		const collection obj(Size{ 3u }, b);
-		auto expected = { b, b, b };
-		
-		this->testCollectionEqualsExpectedSequence(obj, expected);
-	}
-
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// Tests that the reserve constructor of a DynamicArray throws an
-	/// exception when called with a negative amount.
-	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(
-		DynamicArrayTest,
-		ConstructorFailsWhenBuiltWithNegativeCapacity
-	) {
-		FORWARD_TEST_TYPES();
-
-		auto test = []() {
-			auto amount = Reserve(-1);
-			const collection obj(amount);
-		};
-
-		EXPECT_THROW(test(), std::exception);
-	}
-
-	// ------------------------------------------------------------------------
-	/// <summary>
 	/// Tests that the trim method corrctly reallocates space to match the
 	/// size of the array's actual contents.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(DynamicArrayTest, TrimResizesArrayToMatchContents) {
+	TYPED_TEST(AllocationTest, TrimResizesArrayToMatchContents) {
 		FORWARD_TEST_TYPES();
 
 		auto size = Size(30);
@@ -116,15 +93,22 @@ namespace collection_tests {
 
 		ASSERT_GT(capacity, size.get());
 
-		collection obj(size);
+		EXPECT_CALL(this->allocator(), allocate(30)).Times(1);
+		collection_type obj(size);
+
+		EXPECT_CALL(this->allocator(), allocate(50)).Times(1);
+		EXPECT_CALL(this->allocator(), deallocate(_, 30)).Times(1);
 		obj.reserve(50);
 
 		ASSERT_EQ(obj.size(), size.get());
 		ASSERT_EQ(obj.capacity(), capacity);
 
+		EXPECT_CALL(this->allocator(), allocate(30)).Times(1);
+		EXPECT_CALL(this->allocator(), deallocate(_, 50)).Times(1);
 		obj.trim();
 
 		EXPECT_EQ(obj.capacity(), size.get());
+		EXPECT_CALL(this->allocator(), deallocate(_, 30)).Times(1);
 	}
 
 	// ------------------------------------------------------------------------
@@ -132,11 +116,11 @@ namespace collection_tests {
 	/// Tests that the reserve method correctly allocates the requested memory
 	/// on empty objects.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(DynamicArrayTest, ReserveOnEmptyObjectAllocatesSpace) {
+	TYPED_TEST(AllocationTest, ReserveOnEmptyObjectAllocatesSpace) {
 		FORWARD_TEST_TYPES();
 		auto size = 10;
 
-		mocked_collection obj{};
+		collection_type obj{};
 
 		EXPECT_TRUE(obj.isEmpty());
 		EXPECT_EQ(obj.capacity(), 0);
@@ -155,14 +139,17 @@ namespace collection_tests {
 	/// Tests that the reserve method correctly reallocates the requested memory
 	/// on non-empty objects.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(DynamicArrayTest, ReserveOnNonEmptyObjectAllocatesMoreSpace) {
+	TYPED_TEST(
+		AllocationTest, 
+		ReserveOnNonEmptyObjectAllocatesMoreSpace
+	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
 		auto newSize = 10;
 
 		EXPECT_CALL(this->allocator(), allocate(3)).Times(1);
-		mocked_collection obj{ a, b, c };
+		collection_type obj{ a, b, c };
 
 		EXPECT_CALL(this->allocator(), allocate(newSize)).Times(1);
 		EXPECT_CALL(this->allocator(), deallocate(_, 3)).Times(1);
@@ -179,18 +166,17 @@ namespace collection_tests {
 	/// Tests that the resize method correctly allocates and constructs the 
 	/// requested elements on empty objects.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(DynamicArrayTest, ResizeOnEmptyAllocatesAndSetsContents) {
+	TYPED_TEST(
+		AllocationTest, 
+		ResizeOnEmptyAllocatesAndSetsContents
+	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
-		mocked_collection obj{};
-		auto expected = { a, a, a, a, a, a, a, a, a, a };
+		collection_type obj{};
 
 		EXPECT_CALL(this->allocator(), allocate(10)).Times(1);
 		obj.resize(10, a);
-
-		this->testCollectionEqualsExpectedSequence(obj, expected);
-
 		EXPECT_CALL(this->allocator(), deallocate(_, 10)).Times(1);
 	}
 
@@ -199,94 +185,22 @@ namespace collection_tests {
 	/// Tests that the resize method correctly reallocates and constructs the 
 	/// requested elements on empty objects.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(DynamicArrayTest, ResizeOnNonEmptyAllocatesAndSetsContents) {
+	TYPED_TEST(
+		AllocationTest,
+		ResizeOnNonEmptyAllocatesAndSetsContents
+	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
 		auto newSize = 10;
 
 		EXPECT_CALL(this->allocator(), allocate(3)).Times(1);
-		mocked_collection obj{ a, b, c };
+		collection_type obj{ a, b, c };
 
 		EXPECT_CALL(this->allocator(), allocate(newSize)).Times(1);
 		EXPECT_CALL(this->allocator(), deallocate(_, 3)).Times(1);
 		obj.resize(newSize, d);
-
-		auto expected = { a, b, c, d, d, d, d, d, d, d };
-		this->testCollectionEqualsExpectedSequence(obj, expected);
-
 		EXPECT_CALL(this->allocator(), deallocate(_, newSize)).Times(1);
-	}
-
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// Tests that the method insertUnstable correctly inserts the requested 
-	/// element by swapping the element at the current position to the end.
-	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(DynamicArrayTest, UnstableInsertCorrectlyInsertsElementAtIndex) {
-		FORWARD_TEST_TYPES();
-		DECLARE_TEST_DATA();
-
-		collection obj{ a, b, c };
-		obj.insertUnstable(Index(1), d);
-		auto expected = {a, d, c, b};
-
-		this->testCollectionEqualsExpectedSequence(obj, expected);
-	}
-
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// Tests that the method insertUnstable correctly inserts the requested 
-	/// element by swapping the element at the current position to the end.
-	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(
-		DynamicArrayTest,
-		UnstableInsertCorrectlyInsertsElementAtIterator
-	) {
-		FORWARD_TEST_TYPES();
-		DECLARE_TEST_DATA();
-
-		collection obj{ a, b, c };
-		auto it = std::next(obj.begin());
-		obj.insertUnstable(it, d);
-		auto expected = {a, d, c, b};
-
-		this->testCollectionEqualsExpectedSequence(obj, expected);
-	}
-
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// Tests that the method removeAtUnstable correctly removes the requested
-	/// index swapping it with the end element.
-	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(DynamicArrayTest, UnstableRemoveCorrectlyRemovesElementAtIndex) {
-		FORWARD_TEST_TYPES();
-		DECLARE_TEST_DATA();
-
-		collection obj{ a, b, c };
-		obj.removeUnstable(Index(0));
-		auto expected = { c, b };
-
-		this->testCollectionEqualsExpectedSequence(obj, expected);
-	}
-
-	// ------------------------------------------------------------------------
-	/// <summary>
-	/// Tests that the method removeAtUnstable correctly removes the requested
-	/// iterator swapping it with the end element.
-	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(
-		DynamicArrayTest, 
-		UnstableRemoveCorrectlyRemovesElementAtIterator
-	) {
-		FORWARD_TEST_TYPES();
-		DECLARE_TEST_DATA();
-
-		collection obj{ a, b, c };
-		obj.removeUnstable(obj.begin());
-		auto expected = { c, b };
-
-		this->testCollectionEqualsExpectedSequence(obj, expected);
 	}
 
 	// ------------------------------------------------------------------------
@@ -294,11 +208,14 @@ namespace collection_tests {
 	/// Tests that insertion into an empty dynamic array correctly allocates
 	/// space.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(DynamicArrayTest, InsertAllocatesMemoryWhenEmpty) {
+	TYPED_TEST(
+		AllocationTest, 
+		InsertAllocatesMemoryWhenEmpty
+	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
-		mocked_collection obj{};
+		collection_type obj{};
 
 		EXPECT_CALL(this->allocator(), allocate(_)).Times(1);
 		obj.insertBack(a);
@@ -310,7 +227,10 @@ namespace collection_tests {
 	/// Tests that the method insertAtUnstable correctly inserts element
 	/// swapping it with the a new end element.
 	/// </summary> ------------------------------------------------------------
-	TYPED_TEST(DynamicArrayTest, InsertDoublesCapacityWhenFull) {
+	TYPED_TEST(
+		AllocationTest, 
+		InsertDoublesCapacityWhenFull
+	) {
 		FORWARD_TEST_TYPES();
 		DECLARE_TEST_DATA();
 
@@ -318,7 +238,7 @@ namespace collection_tests {
 		auto newSize = size * 2;
 
 		EXPECT_CALL(this->allocator(), allocate(size)).Times(1);
-		mocked_collection obj(Size{size});
+		collection_type obj(Size{size});
 
 		EXPECT_CALL(this->allocator(), allocate(newSize)).Times(1);
 		EXPECT_CALL(this->allocator(), deallocate(_, size)).Times(1);

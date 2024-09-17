@@ -80,8 +80,9 @@ namespace collections {
 		using pointer			= container::pointer;
 		using const_pointer		= container::const_pointer;
 
-		// all heap iterators are constant to preserve heap ordering,
-		// but heap methods may change node values.
+		// all heap iterators are constant to preserve heap ordering unless
+		// specifically a key-value pair that allows modifying the node
+		// value without changing the key.
 		using iterator					= container::const_iterator;
 		using const_iterator			= container::const_iterator;
 		using reverse_iterator			= container::const_reverse_iterator;
@@ -266,6 +267,18 @@ namespace collections {
 		/// </returns>
 		[[nodiscard]] size_type size() const {
 			return _container.size();
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the theoretical maximum size for the container.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns the size limit of the container type.
+		/// </returns> ---------------------------------------------------------
+		[[nodiscard]] size_type max_size() const noexcept {
+			return _container.max_size();
 		}
 
 		// ---------------------------------------------------------------------
@@ -666,7 +679,7 @@ namespace collections {
 			std::random_access_iterator in_iterator,
 			std::sentinel_for<in_iterator> sentinel
 		>
-		static constexpr size_type chooseChild(
+		static constexpr size_type findMinChild(
 			in_iterator begin, 
 			sentinel end,
 			size_type index
@@ -711,7 +724,7 @@ namespace collections {
 			using std::swap;
 
 			while (inBounds(begin, end, index)) {
-				size_type next = chooseChild(begin, end, index);
+				size_type next = findMinChild(begin, end, index);
 
 				if (next != index) {
 					swap(*(begin + index), *(begin + next));
@@ -746,10 +759,7 @@ namespace collections {
 		}
 	};
 
-	static_assert(
-		collection<K_Ary_Heap<int, 2>>,
-		"Heap does not implement the collection interface."
-	);
+	//TODO - implement k/v paired heap aliases, map types, etc.
 
 	template <
 		class element_t,
@@ -764,4 +774,14 @@ namespace collections {
 		class container_t = DynamicArray<element_t>
 	>
 	using TernaryHeap = K_Ary_Heap<element_t, 3, compare_t, container_t>;
+
+	static_assert(
+		collection<BinaryHeap<int>>,
+		"Heap does not meet the requirements for a collection."
+	);
+
+	static_assert(
+		random_access_iterable<BinaryHeap<int>>,
+		"Heap does not meet the requirements for random access iteration."
+	);
 }

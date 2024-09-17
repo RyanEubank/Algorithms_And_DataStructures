@@ -15,18 +15,22 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
+#include <iterator>
+#include <ranges>
+#include <gtest/gtest.h>
+
 #include "adapters/Heap.h"
 
-#include "binary_heap_test_fixture.h"
+#include "../../collection_test_suites/collection_test_fixture.h"
 
 namespace collection_tests {
 
-	class BinaryHeapTest : public CollectionTests<BinaryHeapTestTypes<int>> {};
+	using BinaryHeapTest = CollectionTest<BinaryHeap<int>>;
 
 	TEST_F(BinaryHeapTest, BuildHeapOrdersElementsCorrectly) {
 		BinaryHeap<int> heap = { 2, 5, 1, 7, 2, 8, 6, 6, 1, 0 };
 		auto expected = { 0, 1, 1, 2, 2, 8, 6, 6, 7, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 	}
 
 	TEST_F(BinaryHeapTest, TopReturnsRootOfTheHeap) {
@@ -39,43 +43,43 @@ namespace collection_tests {
 		
 		heap.push(2);
 		auto expected = { 2 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(5);
 		expected = { 2, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(1);
 		expected = { 1, 5, 2 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(7);
 		expected = { 1, 5, 2, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(2);
 		expected = { 1, 2, 2, 7, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(8);
 		expected = { 1, 2, 2, 7, 5, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 		
 		heap.push(6);
 		expected = { 1, 2, 2, 7, 5, 8, 6 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(6);
 		expected = { 1, 2, 2, 6, 5, 8, 6, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(1);
 		expected = { 1, 1, 2, 2, 5, 8, 6, 7, 6 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(0);
 		expected = { 0, 1, 2, 2, 1, 8, 6, 7, 6, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 	}
 
 	TEST_F(BinaryHeapTest, PopFromHeapMaintainsStructure) {
@@ -84,39 +88,39 @@ namespace collection_tests {
 
 		heap.pop();
 		auto expected = { 1, 2, 1, 5, 2, 8, 6, 6, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 1, 2, 6, 5, 2, 8, 7, 6 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 2, 2, 6, 5, 6, 8, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 2, 5, 6, 7, 6, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 5, 6, 6, 7, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 6, 7, 6, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 6, 7, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 7, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		EXPECT_TRUE(heap.isEmpty());
@@ -135,7 +139,7 @@ namespace collection_tests {
 		heap.changePriority(it, 3);
 		EXPECT_EQ(*it, 3);
 		auto expected = { 0, 1, 1, 2, 3, 8, 6, 6, 7, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 
 		// This change will push this node down, and the iterator should point 
@@ -143,7 +147,7 @@ namespace collection_tests {
 		heap.changePriority(it, 12);
 		EXPECT_EQ(*it, 5);
 		expected = { 0, 1, 1, 2, 5, 8, 6, 6, 7, 12 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		// go to last element in heap
 		it = std::prev(heap.end());
@@ -154,7 +158,7 @@ namespace collection_tests {
 		EXPECT_EQ(*it, 5);
 		EXPECT_EQ(heap.top(), -1);
 		expected = { -1, 0, 1, 2, 1, 8, 6, 6, 7, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 	}
 
 

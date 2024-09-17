@@ -15,13 +15,17 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
+#include <iterator>
+#include <ranges>
+#include <gtest/gtest.h>
+
 #include "adapters/Heap.h"
 
-#include "ternary_heap_test_fixture.h"
+#include "../../collection_test_suites/collection_test_fixture.h"
 
 namespace collection_tests {
 
-	class TernaryHeapTest : public CollectionTests<TernaryHeapTestTypes<int>> {};
+	using TernaryHeapTest = CollectionTest<TernaryHeap<int>>;
 
 	TEST_F(TernaryHeapTest, BuildHeapOrdersElementsCorrectly) {
 		TernaryHeap<int> heap 
@@ -29,7 +33,7 @@ namespace collection_tests {
 		auto expected 
 			= { 0, 1, 1, 0, 2, 3, 6, 6, 2, 1, 2, 5, 7, 5, 7, 9, 8 };
 
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 	}
 
 	TEST_F(TernaryHeapTest, TopReturnsRootOfTheHeap) {
@@ -42,71 +46,71 @@ namespace collection_tests {
 		
 		heap.push(2);
 		auto expected = { 2 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(5);
 		expected = { 2, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(1);
 		expected = { 1, 5, 2 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(7);
 		expected = { 1, 5, 2, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(2);
 		expected = { 1, 2, 2, 7, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(8);
 		expected = { 1, 2, 2, 7, 5, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 		
 		heap.push(6);
 		expected = { 1, 2, 2, 7, 5, 8, 6 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(6);
 		expected = { 1, 2, 2, 7, 5, 8, 6, 6 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(1);
 		expected = { 1, 2, 1, 7, 5, 8, 6, 6, 2 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(0);
 		expected = { 0, 2, 1, 7, 5, 8, 6, 6, 2, 1 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(2);
 		expected = { 0, 2, 1, 2, 5, 8, 6, 6, 2, 1, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(5);
 		expected = { 0, 2, 1, 2, 5, 8, 6, 6, 2, 1, 7, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(0);
 		expected = { 0, 2, 1, 0, 5, 8, 6, 6, 2, 1, 7, 5, 2 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(1);
 		expected = { 0, 1, 1, 0, 2, 8, 6, 6, 2, 1, 7, 5, 2, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(7);
 		expected = { 0, 1, 1, 0, 2, 8, 6, 6, 2, 1, 7, 5, 2, 5, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(9);
 		expected = { 0, 1, 1, 0, 2, 8, 6, 6, 2, 1, 7, 5, 2, 5, 7, 9 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.push(3);
 		expected = { 0, 1, 1, 0, 2, 3, 6, 6, 2, 1, 7, 5, 2, 5, 7, 9, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 	}
 
 	TEST_F(TernaryHeapTest, PopFromHeapMaintainsStructure) {
@@ -117,67 +121,67 @@ namespace collection_tests {
 		// 0, 1, 1, 0, 2, 3, 6, 6, 2, 1, 2, 5, 7, 5, 7, 9, 8 
 		heap.pop();
 		auto expected = { 0, 1, 1, 2, 2, 3, 6, 6, 2, 1, 8, 5, 7, 5, 7, 9 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 1, 2, 1, 2, 5, 3, 6, 6, 2, 1, 8, 5, 7, 9, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 1, 2, 1, 2, 5, 3, 6, 6, 2, 7, 8, 5, 7, 9 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 1, 2, 2, 2, 5, 3, 6, 6, 9, 7, 8, 5, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 2, 3, 2, 2, 5, 7, 6, 6, 9, 7, 8, 5 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 2, 3, 5, 2, 5, 7, 6, 6, 9, 7, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 2, 3, 5, 8, 5, 7, 6, 6, 9, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 3, 5, 5, 8, 7, 7, 6, 6, 9 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 5, 6, 5, 8, 7, 7, 9, 6 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 5, 6, 6, 8, 7, 7, 9 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 6, 7, 6, 8, 9, 7 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 6, 7, 7, 8, 9 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 7, 9, 7, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 7, 9, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 8, 9 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		expected = { 9 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		heap.pop();
 		EXPECT_TRUE(heap.isEmpty());
@@ -198,15 +202,14 @@ namespace collection_tests {
 		heap.changePriority(it, 1);
 		EXPECT_EQ(*it, 1);
 		auto expected = { 0, 1, 1, 0, 2, 1, 6, 6, 2, 1, 2, 5, 7, 5, 7, 9, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
-
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		// This change will push this node down, and the iterator should point 
 		// to its replacement 8
 		heap.changePriority(it, 12);
 		EXPECT_EQ(*it, 8);
 		expected = { 0, 1, 1, 0, 2, 8, 6, 6, 2, 1, 2, 5, 7, 5, 7, 9, 12 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 
 		// go to last element in heap
 		it = std::prev(heap.end());
@@ -218,7 +221,7 @@ namespace collection_tests {
 		EXPECT_EQ(*it, 8);
 		EXPECT_EQ(heap.top(), -1);
 		expected = { -1, 0, 1, 0, 2, 1, 6, 6, 2, 1, 2, 5, 7, 5, 7, 9, 8 };
-		this->testCollectionEqualsExpectedSequence(heap, expected);
+		this->expectSequence(heap.begin(), heap.end(), expected);
 	}
 
 

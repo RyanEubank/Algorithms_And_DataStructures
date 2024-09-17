@@ -15,17 +15,22 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * ========================================================================= */
 
-#include "../../test_suites/binary_tree_test_fixture.h"
+#include <string>
+#include <utility>
+#include <gtest/gtest.h>
+
 #include "adapters/TreeTraversalAdapters.h"
 #include "containers/AVLTree.h"
+
+#include "../../collection_test_suites/collection_test_fixture.h"
 
 namespace collection_tests {
 
 	using namespace collections;
 
-	class AVLTreeStructureTest : public BinaryTreeStructureTest {
+	class AVLTreeStructureTest : public CollectionTest<SimpleAVL<int>> {
 	protected:
-		void testNodeHeightsInOrder(const auto& tree, const auto& expected) {
+		void expectInOrderNodeHeights(const auto& tree, const auto& expected) {
 			ASSERT_EQ(tree.size(), expected.size());
 
 			auto heights = expected.begin();
@@ -40,7 +45,7 @@ namespace collection_tests {
 
 	TEST_F(AVLTreeStructureTest, LeftRotationAfterInsertionRebalancesTree) {
 		
-		AVLTree<int> tree{ 0, 1 };
+		SimpleAVL<int> tree{ 0, 1 };
 
 		// Before insert
 		//
@@ -60,11 +65,11 @@ namespace collection_tests {
 		auto levelOrderBefore = { 0, 1 };
 		auto inOrderHeightsBefore = { 1, 0 };
 		
-		this->testInOrderSequence(tree, inOrderBefore);
-		this->testPreOrderSequence(tree, preOrderBefore);
-		this->testPostOrderSequence(tree, postOrderBefore);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
-		this->testLevelOrderSequence(tree, levelOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderBefore);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsBefore);
 
 		// Expected tree after insert and rotation
 		//
@@ -84,16 +89,16 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(AVLTreeStructureTest, RightRotationAfterInsertionRebalancesTree) {
 
-		AVLTree<int> tree{ 2, 1 };
+		SimpleAVL<int> tree{ 2, 1 };
 
 		// Before insert
 		//
@@ -113,11 +118,11 @@ namespace collection_tests {
 		auto levelOrderBefore = { 2, 1 };
 		auto inOrderHeightsBefore = { 0, 1 };
 
-		this->testInOrderSequence(tree, inOrderBefore);
-		this->testPreOrderSequence(tree, preOrderBefore);
-		this->testPostOrderSequence(tree, postOrderBefore);
-		this->testLevelOrderSequence(tree, levelOrderBefore);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderBefore);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsBefore);
 
 		// Expected tree after insert and rotation
 		//
@@ -137,18 +142,18 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
 		AVLTreeStructureTest, 
 		DoubleLeftRightRotationAfterInsertionRebalancesTree
 	) {
-		AVLTree<int> tree{ 2, 0 };
+		SimpleAVL<int> tree{ 2, 0 };
 
 		// Before insert
 		//
@@ -168,11 +173,11 @@ namespace collection_tests {
 		auto levelOrderBefore = { 2, 0 };
 		auto inOrderHeightsBefore = { 0, 1 };
 
-		this->testInOrderSequence(tree, inOrderBefore);
-		this->testPreOrderSequence(tree, preOrderBefore);
-		this->testPostOrderSequence(tree, postOrderBefore);
-		this->testLevelOrderSequence(tree, levelOrderBefore);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderBefore);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsBefore);
 
 		// Expected tree after insert and rotation
 		//
@@ -192,18 +197,18 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
 		AVLTreeStructureTest, 
 		DoubleRightLeftRotationAfterInsertionRebalancesTree
 	) {
-		AVLTree<int> tree{ 0, 2 };
+		SimpleAVL<int> tree{ 0, 2 };
 
 		// Before insert
 		//
@@ -223,11 +228,11 @@ namespace collection_tests {
 		auto levelOrderBefore = { 0, 2 };
 		auto inOrderHeightsBefore = { 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderBefore);
-		this->testPreOrderSequence(tree, preOrderBefore);
-		this->testPostOrderSequence(tree, postOrderBefore);
-		this->testLevelOrderSequence(tree, levelOrderBefore);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderBefore);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsBefore);
 
 		// Expected tree after insert and rotation
 		//
@@ -247,18 +252,18 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
 		AVLTreeStructureTest, 
 		LeftRotationAfterDeletionRebalancesTree
 	) {
-		AVLTree<int> tree{ 0, -1, 1, 2 };
+		SimpleAVL<int> tree{ 0, -1, 1, 2 };
 
 		// Before delete
 		//
@@ -280,11 +285,11 @@ namespace collection_tests {
 		auto levelOrderBefore = { 0, -1, 1, 2 };
 		auto inOrderHeightsBefore = { 0, 2, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderBefore);
-		this->testPreOrderSequence(tree, preOrderBefore);
-		this->testPostOrderSequence(tree, postOrderBefore);
-		this->testLevelOrderSequence(tree, levelOrderBefore);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderBefore);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsBefore);
 
 		// Expected tree after delete and rotation
 		//
@@ -306,18 +311,18 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
 		AVLTreeStructureTest, 
 		LeftRotationRebalancesAfterRemovingNonLeafNodes
 	) {
-		AVLTree<int> tree{ 0, -1, 1, 2 };
+		SimpleAVL<int> tree{ 0, -1, 1, 2 };
 
 		// Before delete
 		//
@@ -347,18 +352,18 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, -1, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
 		AVLTreeStructureTest, 
 		RightRotationAfterDeletionRebalancesTree
 	) {
-		AVLTree<int> tree{ 2, 1, 3, 0 };
+		SimpleAVL<int> tree{ 2, 1, 3, 0 };
 
 		// Before delete
 		//
@@ -378,11 +383,11 @@ namespace collection_tests {
 		auto levelOrderBefore = { 2, 1, 3, 0 };
 		auto inOrderHeightsBefore = { 0, 1, 2, 0 };
 
-		this->testInOrderSequence(tree, inOrderBefore);
-		this->testPreOrderSequence(tree, preOrderBefore);
-		this->testPostOrderSequence(tree, postOrderBefore);
-		this->testLevelOrderSequence(tree, levelOrderBefore);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderBefore);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsBefore);
 
 		// Expected tree after delete and rotation
 		//
@@ -404,18 +409,18 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
 		AVLTreeStructureTest,
 		RightRotationRebalancesAfterRemovingNonLeafNodes
 	) {
-		AVLTree<int> tree{ 2, 1, 3, 0 };
+		SimpleAVL<int> tree{ 2, 1, 3, 0 };
 
 		// Before delete
 		//
@@ -445,18 +450,18 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, 0, 3 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
 		AVLTreeStructureTest, 
 		DoubleRightLeftRotationAfterDeletionRebalancesTree
 	) {
-		AVLTree<int> tree{ 0, -1, 2, 1 };
+		SimpleAVL<int> tree{ 0, -1, 2, 1 };
 
 		// Before delete
 		//
@@ -478,11 +483,11 @@ namespace collection_tests {
 		auto levelOrderBefore = { 0, -1, 2, 1 };
 		auto inOrderHeightsBefore = { 0, 2, 0, 1 };
 
-		this->testInOrderSequence(tree, inOrderBefore);
-		this->testPreOrderSequence(tree, preOrderBefore);
-		this->testPostOrderSequence(tree, postOrderBefore);
-		this->testLevelOrderSequence(tree, levelOrderBefore);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderBefore);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsBefore);
 
 		// Expected tree after delete and rotation
 		//
@@ -504,18 +509,18 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
 		AVLTreeStructureTest, 
 		DoubleRightLeftRebalancesAfterRemovingNonLeafNodes
 	) {
-		AVLTree<int> tree{ 0, -1, 2, 1 };
+		SimpleAVL<int> tree{ 0, -1, 2, 1 };
 
 		// Before delete
 		//
@@ -546,18 +551,18 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, -1, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
 		AVLTreeStructureTest, 
 		DoubleLeftRightRotationAfterDeletionRebalancesTree
 	) {
-		AVLTree<int> tree{ 2, 0, 3, 1 };
+		SimpleAVL<int> tree{ 2, 0, 3, 1 };
 
 		// Before delete
 		//
@@ -577,11 +582,11 @@ namespace collection_tests {
 		auto levelOrderBefore = { 2, 0, 3, 1 };
 		auto inOrderHeightsBefore = { 1, 0, 2, 0 };
 
-		this->testInOrderSequence(tree, inOrderBefore);
-		this->testPreOrderSequence(tree, preOrderBefore);
-		this->testPostOrderSequence(tree, postOrderBefore);
-		this->testLevelOrderSequence(tree, levelOrderBefore);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderBefore);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsBefore);
 
 		// Expected tree after delete and rotation
 		//
@@ -603,18 +608,18 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, 0, 2 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(
 		AVLTreeStructureTest, 
 		DoubleLeftRightRebalancesAfterRemovingNonLeafNodes
 	) {
-		AVLTree<int> tree{ 2, 0, 3, 1 };
+		SimpleAVL<int> tree{ 2, 0, 3, 1 };
 
 		// Before delete
 		//
@@ -645,15 +650,15 @@ namespace collection_tests {
 		auto levelOrderAfter = { 1, 0, 3 };
 		auto inOrderHeightsAfter = { 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
 
 	TEST_F(AVLTreeStructureTest, MutlipleRotationsOnRemoveRebalancesTree) {
-		AVLTree<int> tree{ 8, 5, 11, 3, 7, 10, 12, 2, 4, 6, 9, 1 };
+		SimpleAVL<int> tree{ 8, 5, 11, 3, 7, 10, 12, 2, 4, 6, 9, 1 };
 
 		// Before delete
 		//				    (8)	 
@@ -676,11 +681,11 @@ namespace collection_tests {
 		auto levelOrderBefore = { 8, 5, 11, 3, 7, 10, 12, 2, 4, 6, 9, 1 };
 		auto inOrderHeightsBefore = { 0, 1, 2, 0, 3, 0, 1, 4, 0, 1, 2, 0 };
 
-		this->testInOrderSequence(tree, inOrderBefore);
-		this->testPreOrderSequence(tree, preOrderBefore);
-		this->testPostOrderSequence(tree, postOrderBefore);
-		this->testLevelOrderSequence(tree, levelOrderBefore);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsBefore);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderBefore);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderBefore);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsBefore);
 
 		auto it = std::prev(tree.end());
 		ASSERT_EQ(*it, 12);
@@ -716,10 +721,35 @@ namespace collection_tests {
 		auto levelOrderAfter = { 5, 3, 8, 2, 4, 7, 10, 1, 6, 9, 11 };
 		auto inOrderHeightsAfter = { 0, 1, 2, 0, 3, 0, 1, 2, 0, 1, 0 };
 
-		this->testInOrderSequence(tree, inOrderAfter);
-		this->testPreOrderSequence(tree, preOrderAfter);
-		this->testPostOrderSequence(tree, postOrderAfter);
-		this->testLevelOrderSequence(tree, levelOrderAfter);
-		this->testNodeHeightsInOrder(tree, inOrderHeightsAfter);
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::POST_ORDER>(), tree.end(), postOrderAfter);
+		this->expectSequence(tree.begin<traversal_order::LEVEL_ORDER>(), tree.end(), levelOrderAfter);
+		this->expectInOrderNodeHeights(tree, inOrderHeightsAfter);
 	}
+
+	TEST_F(AVLTreeStructureTest, TreeRotatesDuplicateElements) {
+
+		/* Expected Structure (all elements have the same key 1):
+		*       
+		*        (1a)                                                   (1b)
+		*        /        Rotate after unbalanced insertion of 1c       /  \
+		*      (1b)      ---------------------------------------->    (1c) (1a)
+		*      /
+		*    (1c)
+		*/
+
+		using tree_type = MultiMapAVL<int, std::string>;
+		tree_type tree{ {1, "1a"}, {1, "1b"}, {1, "1c"} };
+
+		std::initializer_list<tree_type::value_type> preOrder 
+			= { {1, "1c"}, {1, "1b"}, {1, "1a"} };
+
+		std::initializer_list<tree_type::value_type> inOrder 
+			= { {1, "1b"}, {1, "1a"}, {1, "1c"} };
+
+		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrder);
+		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrder);
+	}
+
 }
