@@ -43,6 +43,26 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
+	/// Tests that the insertFront method returns an iterator to the newly
+	/// inserted element at the front of the collection.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialInsertionTests, 
+		InsertFrontReturnsIteratorToFirstElement
+	) {
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
+
+		collection_type obj { a, b, c };
+
+		auto result = obj.insertFront(d);
+		auto expected = d;
+
+		EXPECT_EQ(*result, expected);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
 	/// Tests that the insertBack method inserts the given element at the last 
 	/// position.
 	/// </summary> -----------------------------------------------------------
@@ -52,6 +72,26 @@ namespace collection_tests {
 	) {
 		auto method = [](auto& obj, auto& value) { obj.insertBack(value); };
 		this->expectMethodInsertsAtEndOfSequence(method);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that the insertBack method returns an iterator to the newly
+	/// inserted element at the front of the collection.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialInsertionTests, 
+		InsertBackReturnsIteratorToLastElement
+	) {
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
+
+		collection_type obj { a, b, c };
+
+		auto result = obj.insertBack(d);
+		auto expected = d;
+
+		EXPECT_EQ(*result, expected);
 	}
 
 	// ------------------------------------------------------------------------
@@ -69,6 +109,26 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
+	/// Tests that the emplaceFront method returns an iterator to the newly
+	/// inserted element at the front of the collection.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialInsertionTests, 
+		EmplaceFrontReturnsIteratorToFirstElement
+	) {
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
+
+		collection_type obj { a, b, c };
+
+		auto result = obj.emplaceFront(d);
+		auto expected = d;
+
+		EXPECT_EQ(*result, expected);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
 	/// Tests that the emplaceBack method inserts the given element at the 
 	/// last position.
 	/// </summary> -----------------------------------------------------------
@@ -80,11 +140,35 @@ namespace collection_tests {
 		this->expectMethodInsertsAtEndOfSequence(method);
 	}
 
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that the emplaceBack method returns an iterator to the newly
+	/// inserted element at the front of the collection.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST_P(
+		SequentialInsertionTests, 
+		EmplaceBackReturnsIteratorToLastElement
+	) {
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
+
+		collection_type obj { a, b, c };
+
+		auto result = obj.emplaceBack(d);
+		auto expected = d;
+
+		EXPECT_EQ(*result, expected);
+	}
+
 	REGISTER_TYPED_TEST_SUITE_P(
 		SequentialInsertionTests,
 		InsertFrontPlacesElementFirstInTheSequence,
+		InsertFrontReturnsIteratorToFirstElement,
 		InsertBackPlacesElementLastInTheSequence,
+		InsertBackReturnsIteratorToLastElement,
 		EmplaceFrontPlacesElementFirstInTheSequence,
-		EmplaceBackPlacesElementLastInTheSequence
+		EmplaceFrontReturnsIteratorToFirstElement,
+		EmplaceBackPlacesElementLastInTheSequence,
+		EmplaceBackReturnsIteratorToLastElement
 	);
 }

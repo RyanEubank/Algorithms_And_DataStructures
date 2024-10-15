@@ -79,8 +79,6 @@ namespace collections {
 
 		using iterator					= ForwardListIterator<false>;
 		using const_iterator			= ForwardListIterator<true>;
-		using reverse_iterator			= std::reverse_iterator<iterator>;
-		using const_reverse_iterator	= std::reverse_iterator<const_iterator>;
 
 	private:
 
@@ -630,9 +628,13 @@ namespace collections {
 		/// 
 		/// <param name="element">
 		/// Const lvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertFront(const_reference element) {
-			insertAt(&_sentinel, element);
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
+		iterator insertFront(const_reference element) {
+			return insertAt(&_sentinel, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -642,9 +644,13 @@ namespace collections {
 		/// 
 		/// <param name="element">
 		/// Rvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertFront(value_type&& element) {
-			insertAt(&_sentinel, std::move(element));
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
+		iterator insertFront(value_type&& element) {
+			return insertAt(&_sentinel, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -654,9 +660,13 @@ namespace collections {
 		/// 
 		/// <param name="element">
 		/// Const lvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertBack(const_reference element) {
-			insertAt(_tail, element);
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
+		iterator insertBack(const_reference element) {
+			return insertAt(_tail, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -666,9 +676,13 @@ namespace collections {
 		/// 
 		/// <param name="element">
 		/// Rvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertBack(value_type&& element) {
-			insertAt(_tail, std::move(element));
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
+		iterator insertBack(value_type&& element) {
+			return insertAt(_tail, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -918,10 +932,14 @@ namespace collections {
 		/// 
 		/// <param name="args">
 		/// The arguments to construct the new element with.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
 		template <class ...Args>
-		void emplaceFront(Args&&... args) {
-			insertAt(&_sentinel, std::forward<Args>(args)...);
+		iterator emplaceFront(Args&&... args) {
+			return insertAt(&_sentinel, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -932,10 +950,14 @@ namespace collections {
 		/// 
 		/// <param name="args">
 		/// The arguments to construct the new element with.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
 		template <class ...Args>
-		void emplaceBack(Args&&... args) {
-			insertAt(_tail, std::forward<Args>(args)...);
+		iterator emplaceBack(Args&&... args) {
+			return insertAt(_tail, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------

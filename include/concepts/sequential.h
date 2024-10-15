@@ -46,16 +46,16 @@ namespace collections {
 	///			const_reference back() const
 	///		</term></item></para>
 	///		<para><item><term>
-	///			void insertFront(const lvalue reference)
+	///			iterator insertFront(const lvalue reference)
 	///		</term></item></para>
 	///		<para><item><term>
-	///			void insertFront(rvalue reference)
+	///			iterator insertFront(rvalue reference)
 	///		</term></item></para>
 	///		<para><item><term>
-	///			void insertBack(const lvalue reference)
+	///			iterator insertBack(const lvalue reference)
 	///		</term></item></para>
 	///		<para><item><term>
-	///			void insertBack(rvalue reference)
+	///			iterator insertBack(rvalue reference)
 	///		</term></item></para>
 	///		<para><item><term>
 	///			void removeFront()
@@ -64,10 +64,10 @@ namespace collections {
 	///			void removeBack()
 	///		</term></item></para>
 	///		<para><item><term>
-	///			void emplaceFront(Args&lt;T&gt;...)
+	///			iterator emplaceFront(Args&lt;T&gt;...)
 	///		</term></item></para>
 	///		<para><item><term>
-	///			void emplaceBack(Args&lt;T&gt;...)
+	///			iterator emplaceBack(Args&lt;T&gt;...)
 	///		</term></item></para>
 	/// </list>
 	/// 
@@ -81,17 +81,17 @@ namespace collections {
 		typename T::value_type&& rval,
 		Args&&... args
 	) {
-		{ obj1.front() }	-> std::convertible_to<typename T::reference>;
-		{ obj2.front() }	-> std::convertible_to<typename T::const_reference>;
-		{ obj1.back() }		-> std::convertible_to<typename T::reference>;
-		{ obj2.back() }		-> std::convertible_to<typename T::const_reference>;
-		{ obj1.insertFront(lval) };
-		{ obj1.insertFront(rval) };
-		{ obj1.insertBack(lval) };
-		{ obj1.insertBack(rval) };
+		{ obj1.front() }			-> std::convertible_to<typename T::reference>;
+		{ obj2.front() }			-> std::convertible_to<typename T::const_reference>;
+		{ obj1.back() }				-> std::convertible_to<typename T::reference>;
+		{ obj2.back() }				-> std::convertible_to<typename T::const_reference>;
+		{ obj1.insertFront(lval) }	-> std::convertible_to<typename T::iterator>;
+		{ obj1.insertFront(rval) }	-> std::convertible_to<typename T::iterator>;
+		{ obj1.insertBack(lval) }	-> std::convertible_to<typename T::iterator>;
+		{ obj1.insertBack(rval) }	-> std::convertible_to<typename T::iterator>;
 		{ obj1.removeFront() };
 		{ obj1.removeBack() };
-		{ obj1.emplaceFront(args...) };
-		{ obj1.emplaceBack(args...) };
+		{ obj1.emplaceFront(args...) }	-> std::convertible_to<typename T::iterator>;
+		{ obj1.emplaceBack(args...) }	-> std::convertible_to<typename T::iterator>;
 	};
 }

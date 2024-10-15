@@ -495,7 +495,7 @@ namespace collections {
 		/// Returns the capacity of the internal array, or total reserved 
 		/// space in number of elements it can hold.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] size_t capacity() const noexcept {
+		[[nodiscard]] size_type capacity() const noexcept {
 			return _final - _begin;
 		}
 
@@ -826,9 +826,13 @@ namespace collections {
 		/// 
 		/// <param name="element">
 		/// Const lvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertFront(const_reference element) {
-			insertAt(_begin, element);
+		/// </param> 
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
+		iterator insertFront(const_reference element) {
+			return insertAt(_begin, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -838,9 +842,13 @@ namespace collections {
 		/// 
 		/// <param name="element">
 		/// Rvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertFront(value_type&& element) {
-			insertAt(_begin, std::move(element));
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
+		iterator insertFront(value_type&& element) {
+			return insertAt(_begin, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -850,9 +858,13 @@ namespace collections {
 		/// 
 		/// <param name="element">
 		/// Const lvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertBack(const_reference element) {
-			insertAt(_end, element);
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
+		iterator insertBack(const_reference element) {
+			return insertAt(_end, element);
 		}
 
 		// --------------------------------------------------------------------
@@ -862,9 +874,13 @@ namespace collections {
 		/// 
 		/// <param name="element">
 		/// Rvalue reference to the element to be inserted.
-		/// </param> ----------------------------------------------------------
-		void insertBack(value_type&& element) {
-			insertAt(_end, std::move(element));
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
+		iterator insertBack(value_type&& element) {
+			return insertAt(_end, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -1211,10 +1227,14 @@ namespace collections {
 		/// 
 		/// <param name="args">
 		/// The arguments to construct the new element with.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
 		template <class ...Args>
-		void emplaceFront(Args&&... args) {
-			insertAt(_begin, std::forward<Args>(args)...);
+		iterator emplaceFront(Args&&... args) {
+			return insertAt(_begin, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1225,10 +1245,14 @@ namespace collections {
 		/// 
 		/// <param name="args">
 		/// The arguments to construct the new element with.
-		/// </param> ----------------------------------------------------------
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> ---------------------------------------------------------
 		template <class ...Args>
-		void emplaceBack(Args&&... args) {
-			insertAt(_end, std::forward<Args>(args)...);
+		iterator emplaceBack(Args&&... args) {
+			return insertAt(_end, std::forward<Args>(args)...);
 		}
 
 		// --------------------------------------------------------------------
@@ -1575,7 +1599,14 @@ namespace collections {
 			else {
 				constructElement(_end, *(_end - 1));
 				collections::shift(pos, _end++ - 1, 1);
-				*pos = std::forward<T>(element);
+
+				if constexpr (std::assignable_from<value_type, T>)
+					*pos = std::forward<T>(element);
+				else {
+					value_type temp;
+					constructElement(&temp, std::forward<T>(element));
+					*pos = std::move(temp);
+				}
 			}
 			return pos;
 		}
