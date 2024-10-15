@@ -501,7 +501,7 @@ namespace collections::impl {
 		/// Returns an iterator to the requested element if it exists in the
 		/// tree, otherwise end() is returned.
 		/// </returns> --------------------------------------------------------
-		iterator find(key_type key) {
+		[[nodiscard]] iterator find(key_type key) {
 			TreeBoundResult lookup = lowerBound_(key);
 
 			this->self().onAccessNode(lookup._location.parent());
@@ -525,7 +525,7 @@ namespace collections::impl {
 		/// <returns>
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
-		bool contains(key_type key) {
+		[[nodiscard]] bool contains(key_type key) {
 			return find(key) != end();
 		}
 
@@ -543,7 +543,7 @@ namespace collections::impl {
 		/// the tree, otherwise end() is returned. If duplicates exists it is
 		/// undefined which will be returned.
 		/// </returns> --------------------------------------------------------
-		const_iterator find(key_type key) const {
+		[[nodiscard]] const_iterator find(key_type key) const {
 			TreeBoundResult lookup = lowerBound_(key);
 			const_base_ptr bound = lookup._limit;
 
@@ -566,7 +566,7 @@ namespace collections::impl {
 		/// <returns>
 		/// Returns true if an element matching the requested key is found.
 		/// </returns> --------------------------------------------------------
-		bool contains(key_type key) const {
+		[[nodiscard]] bool contains(key_type key) const {
 			return find(key) != end();
 		}
 
@@ -584,7 +584,7 @@ namespace collections::impl {
 		/// Returns an iterator to the requested bound if it exists, otherwise
 		/// end() is returned.
 		/// </returns> ---------------------------------------------------------
-		iterator lowerBound(key_type key) {
+		[[nodiscard]] iterator lowerBound(key_type key) {
 			TreeBoundResult lookup = lowerBound_(key);
 			base_ptr result = lookup.limit();
 
@@ -610,7 +610,7 @@ namespace collections::impl {
 		/// Returns a const_iterator to the requested bound if it exists, 
 		/// otherwise end() is returned.
 		/// </returns> ---------------------------------------------------------
-		const_iterator lowerBound(key_type key) const {
+		[[nodiscard]] const_iterator lowerBound(key_type key) const {
 			return const_iterator(this, lowerBound_(key)._limit);
 		}
 
@@ -628,7 +628,7 @@ namespace collections::impl {
 		/// Returns an iterator to the requested bound if it exists, otherwise
 		/// end() is returned.
 		/// </returns> ---------------------------------------------------------
-		iterator upperBound(key_type key) {
+		[[nodiscard]] iterator upperBound(key_type key) {
 			TreeBoundResult lookup = upperBound_(key);
 			base_ptr result = lookup.limit();
 
@@ -654,7 +654,7 @@ namespace collections::impl {
 		/// Returns a const_iterator to the requested element if it exists, 
 		/// otherwise end() is returned.
 		/// </returns> ---------------------------------------------------------
-		const_iterator upperBound(key_type key) const {
+		[[nodiscard]] const_iterator upperBound(key_type key) const {
 			return const_iterator(this, upperBound_(key)._limit);
 		}
 
@@ -670,7 +670,9 @@ namespace collections::impl {
 		/// <returns>
 		/// Returns the number of occurences of the given key.
 		/// </returns> ---------------------------------------------------------
-		size_type count(key_type key) const requires allow_duplicates {
+		[[nodiscard]] size_type count(key_type key) 
+			const requires allow_duplicates 
+		{
 			return std::distance(lowerBound(key), upperBound(key)); //TODO - use custom implementation of distance.
 		}
 
@@ -705,7 +707,7 @@ namespace collections::impl {
 		/// preventing insertion if unsuccessful.
 		/// </returns> --------------------------------------------------------
 		iterator insert(value_type&& element) {
-			return this->self().onInsert(_root, element);
+			return this->self().onInsert(_root, std::move(element));
 		}
 
 		// --------------------------------------------------------------------
@@ -831,6 +833,8 @@ namespace collections::impl {
 			return remove(begin, position);
 		}
 
+		//TODO - implement remove by key and tests
+
 		// --------------------------------------------------------------------
 		/// <summary>
 		/// Removes all elements in the given iterator range [begin, end).
@@ -910,15 +914,11 @@ namespace collections::impl {
 
 		// --------------------------------------------------------------------
 		/// <summary> 
-		/// Swaps the contents of the given binary trees.
+		/// Swaps the contents of the given binary tree with this tree.
 		/// </summary>
 		/// 
-		/// <param name="a">
-		/// The first tree to be swapped.
-		/// </param>
-		/// 
-		/// <param name="b">
-		/// The second tree to be swapped.
+		/// <param name="other">
+		/// The tree to swap the current one with.
 		/// </param> ----------------------------------------------------------
 		void swap(BaseBST& other) 
 			noexcept(alloc_traits::is_always_equal::value) 
@@ -1035,7 +1035,7 @@ namespace collections::impl {
 		/// The stream being read from.
 		/// </param>
 		/// <param name="arr">
-		/// The linked list being written to.
+		/// The tree being written to.
 		/// </param>
 		/// 
 		/// <returns>
@@ -1091,6 +1091,11 @@ namespace collections::impl {
 			bool isDuplicate = false;
 		};
 
+		// TODO make compare_t an empty member like allocator
+
+		// TODO add constructors for tree types that take the comparison
+		// function as an argument.
+
 		size_type _size;
 		base_ptr _root;
 		base_ptr _min;
@@ -1106,10 +1111,10 @@ namespace collections::impl {
 		}
 
 		BaseBST(BaseBST&& other) :
-			_root(other._root),
-			_min(other._min),
-			_max(other._max),
-			_size(other._size)
+			_root(std::move(other._root)),
+			_min(std::move(other._min)),
+			_max(std::move(other._max)),
+			_size(std::move(other._size))
 		{
 			other._root = nullptr;
 			other._min = nullptr;
@@ -1884,7 +1889,7 @@ namespace collections::impl {
 
 			using pNode = std::conditional_t<isConst, const_base_ptr, base_ptr>;
 
-			const BaseBST* _tree;
+			const BaseBST* _tree; // TODO make tree a const reference instead of a pointer.
 			pNode _node;
 			traversal_order _order;
 
