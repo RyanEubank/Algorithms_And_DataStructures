@@ -1615,6 +1615,19 @@ namespace collections {
 				return _node->value();
 			}
 
+			// ----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Arrow Operator ~~~
+			/// </summary>
+			///
+			/// <returns>
+			/// Returns a pointer to the element pointed to by the iterator in 
+			/// its current state.
+			///	</returns> ----------------------------------------------------
+			pointer operator->() const {
+				return &_node->value();
+			}
+
 			// -----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Pre-Increment Operator ~~~
