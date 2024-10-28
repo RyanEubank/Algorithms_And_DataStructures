@@ -35,7 +35,7 @@ namespace collections { //TODO fix comments in class and move class to container
 
 	private:
 	
-		std::pair<key_t, value_t> _pair; //TODO replace std pair memeber with just k and v
+		std::pair<key_t, value_t> _pair; //TODO replace std pair member with just k and v
 
 	public:
 
@@ -47,23 +47,23 @@ namespace collections { //TODO fix comments in class and move class to container
 
 		// ---------------------------------------------------------------------
 		/// <summary>
-		/// 
+		/// Constructs a pair from the specified arguments.
 		/// </summary>
 		/// 
 		/// <typeparam name="K">
-		/// 
+		/// The key type or type keys are constructible from.
 		/// </typeparam>
 		/// 
 		/// <typeparam name="V">
-		/// 
+		/// The value type or type values are constructible from.
 		/// </typeparam>
 		/// 
 		/// <param name="k">
-		/// 
+		/// The object used to construct the key.
 		/// </param>
 		/// 
 		/// <param name="v">
-		/// 
+		/// The object used to construct the mapped value.
 		/// </param> -----------------------------------------------------------
 		template <class K, class V> requires 
 			std::constructible_from<key_type, K> && 
@@ -73,23 +73,23 @@ namespace collections { //TODO fix comments in class and move class to container
 
 		// ---------------------------------------------------------------------
 		/// <summary>
-		/// 
+		/// Copy assigns the key and value type from the provided pair.
 		/// </summary>
 		/// 
 		/// <typeparam name="V">
-		/// 
+		/// The key type or a type keys are constructible from.
 		/// </typeparam>
 		/// 
 		/// <typeparam name="K">
-		/// 
+		/// The value type or a type values are constructible from.
 		/// </typeparam>
 		/// 
 		/// <param name="other">
-		/// 
+		/// The key/value pair to copy from.
 		/// </param>
 		/// 
 		/// <returns>
-		/// 
+		/// Returns a reference to this pair with the copied data.
 		/// </returns> ---------------------------------------------------------
 		template <class K, class V> requires 
 			std::assignable_from<key_type, K> && 
@@ -102,23 +102,23 @@ namespace collections { //TODO fix comments in class and move class to container
 
 		// ---------------------------------------------------------------------
 		/// <summary>
-		/// 
+		/// Move assigns the key and value type from the provided pair.
 		/// </summary>
 		/// 
-		/// <typeparam name="K">
-		/// 
+		/// <typeparam name="V">
+		/// The key type or a type keys are constructible from.
 		/// </typeparam>
 		/// 
-		/// <typeparam name="V">
-		/// 
+		/// <typeparam name="K">
+		/// The value type or a type values are constructible from.
 		/// </typeparam>
 		/// 
 		/// <param name="other">
-		/// 
+		/// The key/value pair to copy from.
 		/// </param>
 		/// 
 		/// <returns>
-		/// 
+		/// Returns a reference to this pair with the moved data.
 		/// </returns> ---------------------------------------------------------
 		template <class K, class V> requires 
 			std::assignable_from<key_type, K> && 
@@ -129,18 +129,66 @@ namespace collections { //TODO fix comments in class and move class to container
 			return *this;
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the key.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const reference to the pair's key.
+		/// </returns> ---------------------------------------------------------
 		[[nodiscard]] const key_type& key() const {
 			return _pair.first;
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the mapped value.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a reference to the pair's mapped value.
+		/// </returns> ---------------------------------------------------------
 		[[nodiscard]] value_type& value() {
 			return _pair.second;
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the mapped value.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const reference to the pair's mapped value.
+		/// </returns> ---------------------------------------------------------
 		[[nodiscard]] const value_type& value() const {
 			return _pair.second;
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the comparison of the keys in the specified pairs.
+		/// </summary>
+		/// 
+		/// <typeparam name="K">
+		/// The key type or a type keys are comparable to.
+		/// </typeparam>
+		/// 
+		/// <typeparam name="V">
+		/// The value type or a type values are comparable to.
+		/// </typeparam>
+		/// 
+		/// <param name="lhs">
+		/// The pair on the left of the operator.
+		/// </param>
+		/// 
+		/// <param name="rhs">
+		/// The pair on the right of the operator.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the comparison of the keys.
+		/// </returns> ---------------------------------------------------------
 		template <class K, class V> 
 			requires std::three_way_comparable_with<key_type, K>
 		[[nodiscard]] friend auto operator<=>(
@@ -150,6 +198,31 @@ namespace collections { //TODO fix comments in class and move class to container
 			return lhs.key() <=> rhs.key();
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns if the left key is less than the right key.
+		/// </summary>
+		/// 
+		/// <typeparam name="K">
+		/// The key type or a type keys are less than comparable to.
+		/// </typeparam>
+		/// 
+		/// <typeparam name="V">
+		/// The value type or a type values are less than comparable to.
+		/// </typeparam>
+		/// 
+		/// <param name="lhs">
+		/// The pair on the left of the operator.
+		/// </param>
+		/// 
+		/// <param name="rhs">
+		/// The pair on the right of the operator.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns true if the key from the left pair is less than the key from
+		/// the right pair.
+		/// </returns> ---------------------------------------------------------
 		template <class K, class V> 
 			requires std::totally_ordered_with<key_type, K>
 		[[nodiscard]] friend bool operator<(
@@ -159,6 +232,31 @@ namespace collections { //TODO fix comments in class and move class to container
 			return lhs.key() < rhs.key();
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns if the left key is greater than the right key.
+		/// </summary>
+		/// 
+		/// <typeparam name="K">
+		/// The key type or a type keys are greater than comparable to.
+		/// </typeparam>
+		/// 
+		/// <typeparam name="V">
+		/// The value type or a type values are greater than comparable to.
+		/// </typeparam>
+		/// 
+		/// <param name="lhs">
+		/// The pair on the left of the operator.
+		/// </param>
+		/// 
+		/// <param name="rhs">
+		/// The pair on the right of the operator.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns true if the key from the left pair is greater than the key 
+		/// from the right pair.
+		/// </returns> ---------------------------------------------------------
 		template <class K, class V> 
 			requires std::totally_ordered_with<key_type, K>
 		[[nodiscard]] friend bool operator>(
@@ -168,6 +266,31 @@ namespace collections { //TODO fix comments in class and move class to container
 			return lhs.key() > rhs.key();
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns if the left key is equal to the right key.
+		/// </summary>
+		/// 
+		/// <typeparam name="K">
+		/// The key type or a type keys are equality comparable to.
+		/// </typeparam>
+		/// 
+		/// <typeparam name="V">
+		/// The value type or a type values are equality comparable to.
+		/// </typeparam>
+		/// 
+		/// <param name="lhs">
+		/// The pair on the left of the operator.
+		/// </param>
+		/// 
+		/// <param name="rhs">
+		/// The pair on the right of the operator.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns true if the key from the left pair is greater than the key 
+		/// from the right pair.
+		/// </returns> ---------------------------------------------------------
 		template <class K, class V>
 			requires std::equality_comparable_with<key_type, K>
 		[[nodiscard]] friend bool operator==(
@@ -177,6 +300,26 @@ namespace collections { //TODO fix comments in class and move class to container
 			return lhs.key() == rhs.key();
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Write the specified pair to the given output stream.
+		/// </summary>
+		/// 
+		/// <typeparam name="char_t">
+		/// The character type of the output stream.
+		/// </typeparam>
+		/// 
+		/// <param name="os">
+		/// The stream being written to.
+		/// </param>
+		/// 
+		/// <param name="pair">
+		/// The pair being written out.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Return the stream object after writing.
+		/// </returns> ---------------------------------------------------------
 		template <typename char_t> //TODO - optimize/clean up stream operators?
 		friend std::basic_ostream<char_t>& operator<<(
 			std::basic_ostream<char_t>& os,
@@ -186,6 +329,26 @@ namespace collections { //TODO fix comments in class and move class to container
 			return os;
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Reads a key/value from the specified input stream into the pair.
+		/// </summary>
+		/// 
+		/// <typeparam name="char_t">
+		/// The character type of the input stream.
+		/// </typeparam>
+		/// 
+		/// <param name="is">
+		/// The stream being read from.
+		/// </param>
+		/// 
+		/// <param name="pair">
+		/// The pair being read into.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Return the stream object after reading.
+		/// </returns> ---------------------------------------------------------
 		template <typename char_t>
 		friend std::basic_istream<char_t>& operator>>(
 			std::basic_istream<char_t>& is,
