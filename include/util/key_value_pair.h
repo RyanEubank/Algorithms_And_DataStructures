@@ -221,12 +221,15 @@ namespace collections { //TODO fix comments in class and move class to container
 	};
 
 	template <class T>
+	concept pair_type = std::_Is_specialization_v<T, key_value_pair>;
+
+	template <class T>
 	struct key_traits {
 		using key_type = T;
 		using mapped_type = T;
 	};
 
-	template <class T> requires std::_Is_specialization_v<T, key_value_pair>
+	template <pair_type T>
 	struct key_traits<T> {
 		using key_type = typename T::key_type;
 		using mapped_type = typename T::value_type;

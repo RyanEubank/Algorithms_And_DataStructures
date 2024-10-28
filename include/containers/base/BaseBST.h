@@ -48,10 +48,12 @@ namespace collections::impl {
 		typename key_traits<element_t>::key_type, 
 		typename key_traits<element_t>::key_type
 	>
-	class BaseBST : public CRTP<
-		derived_t, 
-		BaseBST<element_t, compare_t, allocator_t, hasDuplicates, derived_t>
-	> {
+	class BaseBST : 
+		public CRTP<
+			derived_t, 
+			BaseBST<element_t, compare_t, allocator_t, hasDuplicates, derived_t>
+		> 
+	{
 	protected:
 
 		template <bool isConst>
@@ -80,7 +82,8 @@ namespace collections::impl {
 		using reverse_iterator			= std::reverse_iterator<iterator>;
 		using const_reverse_iterator	= std::reverse_iterator<const_iterator>;
 
-		static constexpr bool allow_duplicates = hasDuplicates;
+		static constexpr bool allow_duplicates	= hasDuplicates;
+		static constexpr bool is_map			= pair_type<element_t>;
 
 	protected:
 
@@ -97,9 +100,6 @@ namespace collections::impl {
 		constexpr static auto parent = 2u;
 
 	public:
-
-		constexpr static bool is_map
-			= std::_Is_specialization_v<element_t, key_value_pair>;
 
 		// --------------------------------------------------------------------
 		/// <summary>
