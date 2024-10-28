@@ -19,7 +19,7 @@
 
 namespace collections {
 
-	template <class derived_t, class crtp_t>
+	template <class derived_t, class base_t>
 	class CRTP {
 	protected:
 
@@ -35,6 +35,6 @@ namespace collections {
 
 		CRTP() {}
 
-		friend crtp_t;
+		friend base_t;
 	};
 }
