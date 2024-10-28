@@ -327,7 +327,7 @@ namespace collection_tests {
 		for (auto& e : searchElements) {
 			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
 			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder[i]);
-			tree.find(e);
+			auto result = tree.find(e);
 			++i;
 		}
 	}
@@ -343,7 +343,7 @@ namespace collection_tests {
 		for (auto& e : searchElements) {
 			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
 			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder);
-			tree.find(e);
+			auto result = tree.find(e);
 			++i;
 		}
 	}
@@ -375,7 +375,7 @@ namespace collection_tests {
 		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
 		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrderBefore);
 
-		tree.find(1);
+		auto result = tree.find(1);
 		
 		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
 		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrderAfter);
@@ -445,7 +445,7 @@ namespace collection_tests {
 		for (auto& e : searchElements) {
 			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
 			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder[i]);
-			tree.lowerBound(e);
+			auto result = tree.lowerBound(e);
 			++i;
 		}
 	}
@@ -474,7 +474,7 @@ namespace collection_tests {
 		auto expectedInOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 		auto expectedPreOrder = { 9, 6, 4, 3, 1, 0, 2, 5, 8, 7 };
 
-		tree.lowerBound(10);
+		auto result = tree.lowerBound(10);
 		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
 		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder);
 	}
@@ -543,7 +543,7 @@ namespace collection_tests {
 		for (auto& e : searchElements) {
 			this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
 			this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder[i]);
-			tree.upperBound(e);
+			auto result = tree.upperBound(e);
 			++i;
 		}
 	}
@@ -572,7 +572,7 @@ namespace collection_tests {
 		auto expectedInOrder = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 		auto expectedPreOrder = { 9, 6, 4, 3, 1, 0, 2, 5, 8, 7 };
 
-		tree.upperBound(10);
+		auto result = tree.upperBound(10);
 		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), expectedInOrder);
 		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), expectedPreOrder);
 	}
@@ -678,7 +678,7 @@ namespace collection_tests {
 			{1, "1"}, {2, "2b"}, {2, "2a"} 
 		};
 
-		tree.find(2);
+		auto result = tree.find(2);
 
 		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrder);
 		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrder);
@@ -708,7 +708,7 @@ namespace collection_tests {
 			{1, "1"}, {2, "2b"}, {2, "2a"} 
 		};
 
-		tree.lowerBound(2); //splays 2b
+		auto result = tree.lowerBound(2); //splays 2b
 
 		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrder);
 		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrder);
@@ -739,7 +739,7 @@ namespace collection_tests {
 			{1, "1"}, {2, "2b"}, {2, "2a"} 
 		};
 
-		tree.upperBound(2); /// splays 2a
+		auto result = tree.upperBound(2); /// splays 2a
 
 		this->expectSequence(tree.begin<traversal_order::PRE_ORDER>(), tree.end(), preOrder);
 		this->expectSequence(tree.begin<traversal_order::IN_ORDER>(), tree.end(), inOrder);
