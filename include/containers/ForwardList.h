@@ -62,6 +62,9 @@ namespace collections {
 		template <bool isConst>
 		class ForwardListIterator;
 
+		template <bool isConst>
+		class StableForwardListIterator;
+
 		using alloc_t		= rebind<allocator_t, element_t>;
 		using alloc_traits	= std::allocator_traits<alloc_t>;
 
@@ -79,6 +82,8 @@ namespace collections {
 
 		using iterator					= ForwardListIterator<false>;
 		using const_iterator			= ForwardListIterator<true>;
+		using stable_iterator			= StableForwardListIterator<false>;
+		using const_stable_iterator		= StableForwardListIterator<true>;
 
 	private:
 
@@ -537,6 +542,58 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
+		/// Returns an iterator pointing to the beginning of the list.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a stable forward iterator to the first element in the 
+		/// list.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] stable_iterator stable_begin() noexcept {
+			return stable_iterator(_sentinel.to(next));
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator pointing to the end of the list.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a stable forward iterator to the location after the last 
+		/// element in the list.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] stable_iterator stable_end() noexcept {
+			return stable_iterator(&_sentinel);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator pointing to the beginning of the list.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const stable forward iterator to the first element in the 
+		/// list.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_stable_iterator stable_begin() const noexcept {
+			return const_stable_iterator(_sentinel.to(next));
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Returns an iterator pointing to the end of the list.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a const stable forward iterator to the location after the 
+		/// last element in the list.
+		/// </returns> --------------------------------------------------------
+		[[nodiscard]] const_stable_iterator stable_end() const noexcept {
+			return const_stable_iterator(&_sentinel);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
 		/// Returns the first element in the list.
 		/// </summary>
 		/// 
@@ -747,6 +804,31 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
+		/// Inserts the given element into the list after the given iterator 
+		/// position.
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The iterator position to insert the element after.
+		/// </param>
+		/// 
+		/// <param name="element">
+		/// Const lvalue reference to the element to be inserted.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		stable_iterator insertAfter(
+			const_stable_iterator position, 
+			const_reference element
+		) {
+			iterator result = insertAt(position.node(), element);
+			return stable_iterator((++result)._node);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
 		/// Inserts the given element into the list before the given iterator 
 		/// position.
 		/// </summary>
@@ -754,6 +836,7 @@ namespace collections {
 		/// <param name="position">
 		/// The iterator position to insert the element before.
 		/// </param>
+		/// 
 		/// <param name="element">
 		/// Rvalue reference to the element to be inserted.
 		/// </param>
@@ -762,7 +845,32 @@ namespace collections {
 		/// Returns an iterator to the inserted element.
 		/// </returns> --------------------------------------------------------
 		iterator insert(const_iterator position, value_type&& element) {
-			return insertAt(position.node(), element);
+			return insertAt(position.node(), std::move(element));
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts the given element into the list after the given iterator 
+		/// position.
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The iterator position to insert the element after.
+		/// </param>
+		/// 
+		/// <param name="element">
+		/// Const lvalue reference to the element to be inserted.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		stable_iterator insertAfter(
+			const_stable_iterator position, 
+			value_type&& element
+		) {
+			iterator result = insertAt(position.node(), std::move(element));
+			return stable_iterator((++result)._node);
 		}
 
 		// --------------------------------------------------------------------
@@ -868,6 +976,23 @@ namespace collections {
 		/// </returns> --------------------------------------------------------
 		iterator remove(const_iterator position) {
 			return remove(position.node());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Removes the element after the given iterator position.
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The iterator to the value preceding the element to be removed.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns an iterator to the value following the removed element.
+		/// </returns> --------------------------------------------------------
+		stable_iterator removeAfter(const_stable_iterator position) {
+			iterator result = remove(position.node());
+			return stable_iterator((++result)._node);
 		}
 
 		// --------------------------------------------------------------------
@@ -1159,7 +1284,7 @@ namespace collections {
 			list.clear();
 
 			for (size_type i = 0; i < size; ++i) {
-				value_type value;
+				value_type value{};
 				is >> value;
 				list.insert(list.end(), value);
 			}
@@ -1234,6 +1359,7 @@ namespace collections {
 				a._sentinel.to(next) = &a._sentinel;
 			if (a._tail == &b._sentinel)
 				a._tail = &a._sentinel;
+			a._tail->to(next) = &a._sentinel;
 		}
 
 		void onMove(ForwardList&& other) noexcept {
@@ -1521,6 +1647,19 @@ namespace collections {
 				return _node->to(next)->value();
 			}
 
+			// ----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Arrow Operator ~~~
+			/// </summary>
+			///
+			/// <returns>
+			/// Returns a pointer to the element pointed to by the iterator in 
+			/// its current state.
+			///	</returns> ----------------------------------------------------
+			pointer operator->() const {
+				return &_node->to(next)->value();
+			}
+
 			// -----------------------------------------------------------------
 			/// <summary>
 			/// ~~~ Pre-Increment Operator ~~~
@@ -1576,9 +1715,195 @@ namespace collections {
 			}
 		};
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// ForwardListIterator is a class that implements forward iteration 
+		/// over a singly linked list.
+		/// </summary>
+		///
+		/// <typeparam name="element_t">
+		/// The type of the elements iterated over by the ForwardListIterator.
+		/// </typeparam> -------------------------------------------------------
+		template <bool isConst>
+		class StableForwardListIterator { //TODO implement explicit conversion constructor from iterators -> stable_iterators and visa-versa
+		private:
+			using pNode = std::conditional_t<isConst, const_node_ptr, node_ptr>;
+
+			pNode _node;
+
+			explicit StableForwardListIterator(pNode node) : _node(node) {}
+
+			[[nodiscard]] constexpr node_ptr node() const {
+				return const_cast<node_ptr>(_node);
+			}
+
+			friend class ForwardList;
+
+		public:
+
+			using value_type = std::conditional_t<isConst, const element_t, element_t>;
+			using difference_type = std::ptrdiff_t;
+			using pointer = value_type*;
+			using reference = value_type&;
+			using iterator_category = std::forward_iterator_tag;
+
+			// -----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Default Constructor ~~~
+			///
+			///	<para>
+			/// Constructs an empty StableForwardListIterator.
+			/// </para></summary> ----------------------------------------------
+			StableForwardListIterator() = default;
+
+			// -----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Copy Constructor ~~~
+			///
+			///	<para>
+			/// Constructs a copy of the given StableForwardListIterator.
+			/// </para></summary> ----------------------------------------------
+			StableForwardListIterator(const StableForwardListIterator& copy) 
+				= default;
+
+			// -----------------------------------------------------------------
+			/// <summary>
+			/// Destructs the StableForwardListIterator.
+			///	</summary> -----------------------------------------------------
+			~StableForwardListIterator() = default;
+
+			// -----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Copy Assignment Operator ~~~
+			///
+			/// <para>
+			///
+			/// </para></summary>
+			///
+			/// <param name="other">
+			/// The StableForwardListIterator to copy from.
+			/// </param>
+			///
+			/// <returns>
+			/// Returns this StableForwardListIterator with the copied data.
+			/// </returns> -----------------------------------------------------
+			StableForwardListIterator& operator=(
+				const StableForwardListIterator& other) = default;
+
+			// -----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Implicit Conversion Constructor ~~~
+			///
+			/// <para>
+			/// Constructs a copy of the given StableForwardListIterator for 
+			/// implicit conversion from non-const version to a const 
+			/// StableForwardListIterator.
+			/// </para></summary>
+			///
+			/// <param name="other">
+			/// The non-const StableForwardListIterator to copy from.
+			/// </param>
+			///
+			/// <typeparam name="wasConst">
+			/// The 'const'-ness of the provided StableForwardListIterator to 
+			/// copy.
+			/// </typeparam> ---------------------------------------------------
+			template<
+				bool wasConst, 
+				class = std::enable_if_t<isConst && !wasConst>
+			>
+			StableForwardListIterator(StableForwardListIterator<wasConst> copy)
+				: StableForwardListIterator(copy._node) {}
+
+			// -----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Dereference Operator ~~~
+			/// </summary>
+			///
+			/// <returns>
+			/// Returns a reference to the element pointed to by the iterator
+			/// in its current state. 
+			///	</returns> -----------------------------------------------------
+			reference operator*() const {
+				return _node->value();
+			}
+
+			// ----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Arrow Operator ~~~
+			/// </summary>
+			///
+			/// <returns>
+			/// Returns a pointer to the element pointed to by the iterator in 
+			/// its current state.
+			///	</returns> ----------------------------------------------------
+			pointer operator->() const {
+				return &_node->value();
+			}
+
+			// -----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Pre-Increment Operator ~~~
+			/// </summary>
+			///
+			/// <returns>
+			/// Moves the iterator to the next element and returns the iterator
+			/// after updating.
+			///	</returns> -----------------------------------------------------
+			StableForwardListIterator& operator++() {
+				_node = _node->to(next);
+				return *this;
+			}
+
+			// -----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Post-Increment Operator ~~~
+			/// </summary>
+			///
+			/// <returns>
+			/// Moves the iterator to the next element and returns a copy of
+			/// the iterator before updating.
+			///	</returns> -----------------------------------------------------
+			StableForwardListIterator operator++(int) {
+				auto copy = *this;
+				_node = _node->to(next);
+				return copy;
+			}
+
+			// -----------------------------------------------------------------
+			/// <summary>
+			/// ~~~ Equality Operator ~~~
+			/// </summary>
+			///
+			/// <param name="lhs">
+			/// The StableForwardListIterator appearing on the left-hand side of 
+			/// the '==' operator.
+			/// </param>
+			/// <param name="rhs">
+			/// The StableForwardListIterator appearing on the right-hand side 
+			/// of the '==' operator.
+			/// </param>
+			///
+			/// <returns>
+			/// Returns true if the StableForwardListIterator are both pointing 
+			/// to the same element, false otherwise.
+			///	</returns> -----------------------------------------------------
+			friend bool operator==(
+				const StableForwardListIterator& lhs,
+				const StableForwardListIterator& rhs
+			) {
+				return lhs._node == rhs._node;
+			}
+		};
+
 		static_assert(
 			std::forward_iterator<iterator>,
 			"ForwardListIterator is not a valid forward iterator."
+		);
+
+		static_assert(
+			std::forward_iterator<stable_iterator>,
+			"StableForwardListIterator is not a valid forward iterator."
 		);
 	};
 
