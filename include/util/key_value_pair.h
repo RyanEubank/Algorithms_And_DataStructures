@@ -55,7 +55,7 @@ namespace collections { //TODO fix comments in class and move class to container
 		/// </typeparam>
 		/// 
 		/// <typeparam name="V">
-		/// The value type or type values are constructible from.
+		/// The mapped value type or type values are constructible from.
 		/// </typeparam>
 		/// 
 		/// <param name="k">
@@ -76,11 +76,11 @@ namespace collections { //TODO fix comments in class and move class to container
 		/// Copy assigns the key and value type from the provided pair.
 		/// </summary>
 		/// 
-		/// <typeparam name="V">
+		/// <typeparam name="K">
 		/// The key type or a type keys are constructible from.
 		/// </typeparam>
 		/// 
-		/// <typeparam name="K">
+		/// <typeparam name="V">
 		/// The value type or a type values are constructible from.
 		/// </typeparam>
 		/// 
@@ -102,14 +102,73 @@ namespace collections { //TODO fix comments in class and move class to container
 
 		// ---------------------------------------------------------------------
 		/// <summary>
+		/// Swaps the keys and values of the specified pairs.
+		/// </summary>
+		/// 
+		/// <typeparam name="K">
+		/// The key type or a type keys are swappable with.
+		/// </typeparam>
+		/// 
+		/// <typeparam name="V">
+		/// The mapped value type or a type values are swappable with.
+		/// </typeparam>
+		/// 
+		/// <param name="lhs">
+		/// The pait on the left to be swapped.
+		/// </param>
+		/// 
+		/// <param name="rhs">
+		/// The pair on the right to be swapped.
+		/// </param> -----------------------------------------------------------
+		template <class K, class V> requires 
+			std::is_swappable_with_v<key_type, K> &&
+			std::is_swappable_with_v<value_type, V>
+		friend void swap(pair<key_type, value_type>& lhs, pair<K, V>& rhs) 
+		noexcept(
+			std::is_nothrow_swappable_with_v<key_type, K> && 
+			std::is_nothrow_swappable_with_v<value_type, V>
+		) {
+			lhs.swap(rhs);
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Swaps the keys and values of the current pair with the specified 
+		/// pair.
+		/// </summary>
+		/// 
+		/// <typeparam name="K">
+		/// The key type or a type keys are swappable with.
+		/// </typeparam>
+		/// 
+		/// <typeparam name="V">
+		/// The mapped value type or a type values are swappable with.
+		/// </typeparam>
+		/// 
+		/// <param name="other">
+		/// The other pair to swap keys/values with.
+		/// </param> -----------------------------------------------------------
+		template <class K, class V> requires 
+			std::is_swappable_with_v<key_type, K> &&
+			std::is_swappable_with_v<value_type, V>
+		void swap(pair<K, V>& other) noexcept(
+			std::is_nothrow_swappable_with_v<key_type, K> && 
+			std::is_nothrow_swappable_with_v<value_type, V>
+		) {
+			using std::swap;
+			swap(_pair, other._pair);
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
 		/// Move assigns the key and value type from the provided pair.
 		/// </summary>
 		/// 
-		/// <typeparam name="V">
+		/// <typeparam name="K">
 		/// The key type or a type keys are constructible from.
 		/// </typeparam>
 		/// 
-		/// <typeparam name="K">
+		/// <typeparam name="V">
 		/// The value type or a type values are constructible from.
 		/// </typeparam>
 		/// 
@@ -127,6 +186,18 @@ namespace collections { //TODO fix comments in class and move class to container
 		{
 			_pair = std::move(other._pair);
 			return *this;
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Returns the key.
+		/// </summary>
+		/// 
+		/// <returns>
+		/// Returns a reference to the pair's key.
+		/// </returns> ---------------------------------------------------------
+		[[nodiscard]] key_type& key() {
+			return _pair.first;
 		}
 
 		// ---------------------------------------------------------------------
