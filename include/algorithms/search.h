@@ -21,6 +21,7 @@
 #include <iterator>
 #include <ranges>
 
+#include "../concepts/associative.h"
 #include "../concepts/collection.h"
 
 namespace collections {
@@ -100,7 +101,7 @@ namespace collections {
 		/// iterator if the value is not found.
 		/// </returns> --------------------------------------------------------
 		template <class T, std::ranges::input_range range>
-		constexpr auto operator()(const range& rg, const T& value) const {
+		constexpr auto operator()(range&& rg, const T& value) const {
 			return (*this)(std::ranges::begin(rg), std::ranges::end(rg), value);
 		}
 
@@ -128,8 +129,8 @@ namespace collections {
 		/// Returns a valid iterator to the searched element or the end 
 		/// iterator if the value is not found.
 		/// </returns> --------------------------------------------------------
-		template <class T, associative_collection collection>
-		constexpr auto operator()(const collection& c, const T& value) const {
+		template <class T, associative collection>
+		constexpr auto operator()(collection&& c, const T& value) const {
 			return c.find(value);
 		}
 	};
@@ -212,7 +213,7 @@ namespace collections {
 			std::ranges::input_range range, 
 			std::predicate <T, std::ranges::range_value_t<range>> Predicate
 		>
-		constexpr auto operator()(const range& rg, Predicate p) const {
+		constexpr auto operator()(range&& rg, Predicate p) const {
 			return (*this)(std::ranges::begin(rg), std::ranges::end(rg), p);
 		}
 	};
