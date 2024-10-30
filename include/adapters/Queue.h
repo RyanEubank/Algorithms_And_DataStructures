@@ -158,11 +158,11 @@ namespace collections {
 		/// constructs the allocator if unspecified.
 		/// </param> ----------------------------------------------------------
 		template <
-			std::input_iterator iterator, 
-			std::sentinel_for<iterator> sentinel
+			std::input_iterator in_iterator, 
+			std::sentinel_for<in_iterator> sentinel
 		>
 		Queue(
-			iterator begin,
+			in_iterator begin,
 			sentinel end,
 			const allocator_type& alloc = allocator_type{}
 		) : _container(begin, end, alloc) {
