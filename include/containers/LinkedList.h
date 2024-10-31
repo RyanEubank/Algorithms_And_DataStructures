@@ -1419,7 +1419,7 @@ namespace collections {
 				clear();
 				auto start = std::move_iterator(other.begin());
 				auto end = std::move_iterator(other.end());
-				insert(end(), start, end);
+				insert(this->end(), start, end);
 			}
 		}
 
