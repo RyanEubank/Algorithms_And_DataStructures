@@ -39,11 +39,37 @@ namespace collections { //TODO fix comments in class and move class to container
 
 	public:
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Default constructs a pair from a defaulted key and value.
+		/// </summary> ---------------------------------------------------------
 		key_value_pair() : _pair() {}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Constructs a key_value_pair by copying the from the specified 
+		/// std::pair.
+		/// </summary> 
+		/// 
+		/// <param name="p">
+		/// The pair to construct the key and value from.
+		/// </param> -----------------------------------------------------------
 		key_value_pair(const std::pair<key_type, value_type>& p) : _pair(p) {}
 
-		key_value_pair(std::pair<key_type, value_type>&& p) : _pair(std::move(p)) {}
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Constructs a key_value_pair by moving the from the specified 
+		/// std::pair.
+		/// </summary>
+		/// 
+		/// <param name="p">
+		/// The pair to construct the key and value from.
+		/// </param>
+		key_value_pair(std::pair<key_type, value_type>&& p) : 
+			_pair(std::move(p)) 
+		{
+		
+		}
 
 		// ---------------------------------------------------------------------
 		/// <summary>
