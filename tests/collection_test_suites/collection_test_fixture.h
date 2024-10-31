@@ -76,37 +76,37 @@ namespace collection_tests {
 
 		template<class U>
 		struct conditional_traits {
-			using reverse_iterator = void;
-			using const_reverse_iterator = void;
-			using key_type = void;
-			using mapped_type = void;
+			using reverse_iterator			= void;
+			using const_reverse_iterator	= void;
+			using key_type					= void;
+			using mapped_type				= void;
 		};
 
 		template<class U> 
 			requires (std::ranges::bidirectional_range<U> && !associative<U>)
 		struct conditional_traits<U> {
-			using reverse_iterator = U::reverse_iterator;
-			using const_reverse_iterator = U::reverse_iterator;
-			using key_type = void;
-			using mapped_type = void;
+			using reverse_iterator			= U::reverse_iterator;
+			using const_reverse_iterator	= U::reverse_iterator;
+			using key_type					= void;
+			using mapped_type				= void;
 		};
 
 		template<class U> 
 			requires (!std::ranges::bidirectional_range<U> && associative<U>)
 		struct conditional_traits<U> {
-			using reverse_iterator = void;
-			using const_reverse_iterator = void;
-			using key_type = U::key_type;
-			using mapped_type = U::key_type;
+			using reverse_iterator			= void;
+			using const_reverse_iterator	= void;
+			using key_type					= U::key_type;
+			using mapped_type				= U::key_type;
 		};
 
 		template<class U> 
 			requires (std::ranges::bidirectional_range<U> && associative<U>)
 		struct conditional_traits<U> {
-			using reverse_iterator = U::reverse_iterator;
-			using const_reverse_iterator = U::reverse_iterator;
-			using key_type = U::key_type;
-			using mapped_type = U::key_type;
+			using reverse_iterator			= U::reverse_iterator;
+			using const_reverse_iterator	= U::reverse_iterator;
+			using key_type					= U::key_type;
+			using mapped_type				= U::key_type;
 		};
 
 		using collection_type	= T;

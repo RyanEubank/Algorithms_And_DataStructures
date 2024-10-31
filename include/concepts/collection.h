@@ -34,11 +34,6 @@ namespace collections {
 	template <class T, class U>
 	using rebind = std::allocator_traits<T>::template rebind_alloc<U>;
 
-	struct IndexRange {
-		size_t begin;
-		size_t end;
-	};
-
 	// -------------------------------------------------------------------------
 	/// <summary><para>
 	/// Defines the minimal set of requiredc type aliases for collections.
@@ -110,10 +105,10 @@ namespace collections {
 	/// </summary> -------------------------------------------------------------
 	template <
 		class T,
-		class iterator = input_iterator_archetype<typename T::value_type>,
-		class sentinel = iterator,
-		class range = input_range_archetype<typename T::value_type>,
-		class ilist = std::initializer_list<typename T::value_type>
+		class iterator	= input_iterator_archetype<typename T::value_type>,
+		class sentinel	= iterator,
+		class range		= input_range_archetype<typename T::value_type>,
+		class ilist		= std::initializer_list<typename T::value_type>
 	>
 	concept collection_constructible =
 		std::input_iterator<iterator> &&

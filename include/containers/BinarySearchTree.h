@@ -350,7 +350,7 @@ namespace collections {
 	>
 	using MapBST = BinarySearchTree<
 		key_value_pair<const key_t, element_t>,
-		compare_t<key_t>,
+		compare_t<key_t>, //TODO compare on kv pairs so a SimpleBST<pair<K, V>> is equivalent to MapBST<K, V>
 		std::allocator<key_value_pair<key_t, element_t>>,
 		false
 	>;

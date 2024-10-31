@@ -28,6 +28,11 @@
 
 namespace collections {
 
+	struct IndexRange {
+		size_t begin;
+		size_t end;
+	};
+
 	// -------------------------------------------------------------------------
 	/// <summary><para>
 	/// Defines requirements for collections, containers, and adapters that can
