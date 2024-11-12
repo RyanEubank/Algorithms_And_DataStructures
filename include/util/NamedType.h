@@ -48,7 +48,7 @@ namespace collections {
 		/// <param name="value">
 		/// The underlying value contained by the NamedType.
 		/// </param> ----------------------------------------------------------
-		explicit NamedType(T const& value) : value_(value) {}
+		explicit NamedType(T const& value) : _value(value) {}
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -59,7 +59,10 @@ namespace collections {
 		/// The underlying value contained by the NamedType.
 		/// </param> ----------------------------------------------------------
 		explicit NamedType(T&& value) requires !std::is_reference_v<T> :
-			value_(std::move(value)) {}
+			_value(std::move(value))
+		{
+
+		}
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -69,7 +72,7 @@ namespace collections {
 		/// <returns>
 		/// A reference to the underlying value.
 		/// </returns> --------------------------------------------------------
-		T& get() { return value_; }
+		T& get() { return _value; }
 
 		// --------------------------------------------------------------------
 		/// <summary>
@@ -79,9 +82,9 @@ namespace collections {
 		/// <returns>
 		/// A reference to the underlying value.
 		/// </returns> --------------------------------------------------------
-		T const& get() const { return value_; }
+		T const& get() const { return _value; }
 
-	private:
-		T value_;
+	protected:
+		T _value;
 	};
 }
