@@ -53,19 +53,19 @@ namespace collection_tests {
 
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
-		SplayTreeTest,
+		AVLTreeTest,
 		AssociativeBoundTests,
 		tree_test_params
 	);
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
-		SplayTreeTest,
+		AVLTreeTest,
 		BagTests,
 		bag_test_params
 	);
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
-		SplayTreeTest,
+		AVLTreeTest,
 		MapTests,
 		map_test_params
 	);

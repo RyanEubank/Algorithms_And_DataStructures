@@ -31,5 +31,4 @@ namespace collection_tests {
 		SizeTests,
 		test_params
 	);
-
 }
