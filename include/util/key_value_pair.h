@@ -451,31 +451,44 @@ namespace collections { //TODO fix comments in class and move class to container
 			std::basic_istream<char_t>& is,
 			key_value_pair& pair
 		) {
-			std::string input;
-			std::getline(is, input, '\0');
+			const std::string k = "key: ";
+			const std::string v = "value: ";
+			size_t offset = is.tellg();
 
-			size_t input_length = input.length();
-			size_t first_start = 6;
-			size_t first_length = input.find(", value: ") - first_start;
-			size_t second_start = first_start + first_length + 9;
-			size_t second_length = input_length - second_start - 2;
+			std::string buffer;
+			std::getline(is, buffer, '\n');
 
-			std::basic_istringstream<char_t> first(
-				input.substr(first_start, first_length));
+			size_t begin = buffer.find(k) + k.length();
+			size_t length = buffer.find(v) - begin - 2;
 
-			std::basic_istringstream<char_t> second(
-				input.substr(second_start, second_length));
+			std::basic_istringstream<char_t> input(buffer.substr(begin, length));
+
+			// TODO neccessary for const keys - which are causing many related 
+			// issues and need to be refactored to internally mutable keys that 
+			// are read only through a collection's public interfaces.
+			auto& key = 
+				const_cast<std::remove_const_t<key_type>&>(pair._pair.first);
 
 			if constexpr (std::convertible_to<key_type, std::string>)
-				std::getline(first, pair._pair.first, '\0');
+				std::getline(input, key, '\0');
 			else
-				first >> pair._pair.first;
+				input >> key;
 
+			begin += (length + 2 + v.length());
+			size_t next = buffer.find(k, begin);
+
+			length = (next != std::string::npos)
+				? (next - begin - 3) 
+				: (buffer.length() - begin - 1);
+
+			input = std::basic_istringstream<char_t>(buffer.substr(begin, length));
+			 
 			if constexpr (std::convertible_to<value_type, std::string>)
-				std::getline(second, pair._pair.second, '\0');
+				std::getline(input, pair._pair.second, '\0');
 			else
-				second >> pair._pair.second;
+				input >> pair._pair.second;
 
+			is.seekg(offset + begin + length + 2);
 			return is;
 		}
 	};
