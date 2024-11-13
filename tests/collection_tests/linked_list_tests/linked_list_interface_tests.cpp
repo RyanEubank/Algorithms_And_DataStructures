@@ -18,50 +18,18 @@
 #include <string>
 #include <gtest/gtest.h>
 
-#include "containers/ForwardList.h"
+#include "containers/LinkedList.h"
 
-#include "../../collection_test_suites/iterator_tests/input_iterator_tests.h"
-#include "../../collection_test_suites/iterator_tests/forward_iterator_tests.h"
+#include "../../collection_test_suites/list_interface_tests.h"
 
 namespace collection_tests {
 
-	template <class T>
-	struct stable_iterator_wrapper : public ForwardList<T> {
-
-		using base = ForwardList<T>;
-		using base::base;
-
-		auto begin() {
-			return this->stable_begin();
-		}
-
-		auto begin() const {
-			return this->stable_begin();
-		}
-
-		auto end() {
-			return this->stable_end();
-		}
-
-		auto end() const {
-			return this->stable_end();
-		}
-	};
-
-	using test_params = testing::Types<
-		ForwardList<std::string>,
-		stable_iterator_wrapper<std::string>
-	>;
+	using test_params = testing::Types<LinkedList<std::string>>;
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(
-		ForwardListTest,
-		InputIteratorTests,
+		LinkedListTest,
+		ListInterfaceTests,
 		test_params
 	);
 
-	INSTANTIATE_TYPED_TEST_SUITE_P(
-		ForwardListTest,
-		ForwardIteratorTests,
-		test_params
-	);
 }

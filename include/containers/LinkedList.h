@@ -1086,6 +1086,42 @@ namespace collections {
 			return insertAt(position.node(), std::forward<Args>(args)...);
 		}
 
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Splices nodes in the range (begin, end] before the node specified by
+		/// position.
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The postion in the list to splice the range before.
+		/// </param>
+		/// 
+		/// <param name="other">
+		/// A reference to the other list nodes are being taken from. This can
+		/// be equal to this list.
+		/// </param>
+		/// 
+		/// <param name="begin">
+		/// An iterator to the start position of the range being spliced.
+		/// </param>
+		/// 
+		/// <param name="end">
+		/// An iterator to the last position of he range being spliced.
+		/// </param> -----------------------------------------------------------
+		void splice(
+			const_iterator position,
+			LinkedList& other,
+			const_iterator begin, 
+			const_iterator end
+		) {
+			size_type dist = std::distance(begin, end);
+			auto tail = end.node()->to(prev);
+			other.snip(begin.node(), end.node());
+			splice(position.node(), begin.node(), tail);
+			other._size -= dist;
+			_size += dist;
+		}
+
 		// --------------------------------------------------------------------
 		/// <summary> 
 		/// Swaps the contents of the given LinkedLists.

@@ -56,7 +56,7 @@ namespace collections {
 	/// linked list.
 	/// </typeparam> -----------------------------------------------------------
 	template <class element_t, class allocator_t = std::allocator<element_t>>
-	class ForwardList final {
+	class ForwardList {
 	private:
 	
 		template <bool isConst>
@@ -817,7 +817,7 @@ namespace collections {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns an iterator to the inserted element.
+		/// Returns a stable iterator to the inserted element.
 		/// </returns> --------------------------------------------------------
 		stable_iterator insertAfter(
 			const_stable_iterator position, 
@@ -863,7 +863,7 @@ namespace collections {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns an iterator to the inserted element.
+		/// Returns a stable iterator to the inserted element.
 		/// </returns> --------------------------------------------------------
 		stable_iterator insertAfter(
 			const_stable_iterator position, 
@@ -880,7 +880,7 @@ namespace collections {
 		/// </summary>
 		/// 
 		/// <param name="position">
-		/// The iterator position to insert the element before.
+		/// The iterator position to insert the elements before.
 		/// </param>
 		/// <param name="begin">
 		/// The beginning iterator of the range to insert.
@@ -909,6 +909,39 @@ namespace collections {
 			}
 
 			return iterator(position.node());
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Inserts the given range into the list after the given iterator 
+		/// position.
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The iterator position to insert the elements after.
+		/// </param>
+		/// <param name="begin">
+		/// The beginning iterator of the range to insert.
+		/// </param>
+		/// <param name="end">
+		/// The end iterator of the range to insert.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns a stable iterator to the first element inserted, or 
+		/// position if begin == end.
+		/// </returns> --------------------------------------------------------
+		template <
+			std::input_iterator in_iterator,
+			std::sentinel_for<in_iterator> sentinel
+		>
+		stable_iterator insertAfter(
+			const_stable_iterator position, 
+			in_iterator begin, 
+			sentinel end
+		) {
+			iterator result = insert(const_iterator(position._node), begin, end);
+			return stable_iterator((++result)._node);
 		}
 
 		// --------------------------------------------------------------------
@@ -988,7 +1021,7 @@ namespace collections {
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns an iterator to the value following the removed element.
+		/// Returns a stable iterator to the value following the removed element.
 		/// </returns> --------------------------------------------------------
 		stable_iterator removeAfter(const_stable_iterator position) {
 			iterator result = remove(position.node());
@@ -1116,7 +1149,7 @@ namespace collections {
 		/// The iterator position to insert the element before.
 		/// </param>
 		/// <param name="args">
-		///The arguments to construct the new element with.
+		/// The arguments to construct the new element with.
 		/// </param>
 		///
 		/// <returns>
@@ -1125,6 +1158,98 @@ namespace collections {
 		template <class ...Args>
 		iterator emplace(const_iterator position, Args&&... args) {
 			return insertAt(position.node(), std::forward<Args>(args)...);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Constructs the given element in-place with the provided arguments
+		/// after the given iterator position.
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The iterator position to insert the element after.
+		/// </param>
+		/// <param name="args">
+		/// The arguments to construct the new element with.
+		/// </param>
+		///
+		/// <returns>
+		/// Returns an iterator to the inserted element.
+		/// </returns> --------------------------------------------------------
+		template <class ...Args>
+		stable_iterator emplaceAfter(
+			const_stable_iterator position, 
+			Args&&... args
+		) {
+			iterator result = 
+				insertAt(position.node(), std::forward<Args>(args)...);
+			return stable_iterator((++result)._node);
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// Splices nodes in the range (begin, end] after the node specified by
+		/// position.
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// The postion in the list to splice the range after.
+		/// </param>
+		/// 
+		/// <param name="other">
+		/// A reference to the other list nodes are being taken from. This can
+		/// be equal to this list.
+		/// </param>
+		/// 
+		/// <param name="begin">
+		/// An iterator to the position before the range being spliced.
+		/// </param>
+		/// 
+		/// <param name="end">
+		/// An iterator to the last position being spliced.
+		/// </param> -----------------------------------------------------------
+		void splice(
+			const_iterator position,
+			ForwardList& other,
+			const_iterator begin, 
+			const_iterator end
+		) {
+			size_type dist = std::distance(begin, end);
+			auto head = begin.node()->to(next);
+			other.snip(begin.node(), end.node());
+			splice(position.node(), head, end.node());
+			other._size -= dist;
+			_size += dist;
+		}
+
+		// ---------------------------------------------------------------------
+		/// <summary>
+		/// 
+		/// </summary>
+		/// 
+		/// <param name="position">
+		/// 
+		/// </param>
+		/// 
+		/// <param name="begin">
+		/// 
+		/// </param>
+		/// 
+		/// <param name="end">
+		/// 
+		/// </param> -----------------------------------------------------------
+		void spliceAfter(
+			const_stable_iterator position,
+			ForwardList& other,
+			const_stable_iterator begin, 
+			const_stable_iterator end
+		) {
+			size_type dist = std::distance(begin, end);
+			auto head = begin.node()->to(next);
+			other.snip(begin.node(), end.node());
+			splice(position.node(), head, end.node());
+			other._size -= dist;
+			_size += dist;
 		}
 
 		// --------------------------------------------------------------------
@@ -1490,14 +1615,18 @@ namespace collections {
 		}
 
 		iterator remove(node_ptr head, node_ptr tail) {
+			node_ptr begin = head->to(next); 
+			node_ptr end = tail->to(next);
+			snip(head, tail);
+			_size -= destroy(begin, end);
+			return iterator(head);
+		}
+
+		void snip(node_ptr head, node_ptr tail) {
+			head->to(next) = tail->to(next);
+
 			if (_tail == tail)
 				_tail = head;
-
-			node_ptr n = tail->to(next);
-			_size -= destroy(head->to(next), tail->to(next));
-			head->to(next) = n;
-
-			return iterator(head);
 		}
 
 		void splice(node_ptr position, node_ptr head, node_ptr tail) {
