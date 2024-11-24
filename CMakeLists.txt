@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.24)
 
 project(
 	Algorithms_DataStructures_Library
@@ -11,8 +11,8 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
 	include(CTest)
 
-	# Project requires C++20
-	set(CMAKE_CXX_STANDARD 20)
+	# Project requires C++23
+	set(CMAKE_CXX_STANDARD 23)
 	set(CMAKE_CXX_STANDARD_REQUIRED ON)
 	set(CMAKE_CXX_EXTENSIONS OFF)
 
