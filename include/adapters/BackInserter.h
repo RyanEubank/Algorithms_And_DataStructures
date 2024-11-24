@@ -22,6 +22,7 @@
 #include <ranges>
 
 #include "../concepts/collection.h"
+#include "../concepts/sequential.h"
 
 namespace collections {
 
@@ -33,14 +34,15 @@ namespace collections {
 	/// <typeparam name="collection">
 	/// The collection type to be iterator over.
 	/// </typeparam> ----------------------------------------------------------
-	template <class collection>
+	template <sequential collection>
 	class back_insert_iterator {
 	public:
 		
-		using value_type = void;
+		using value_type = collection::value_type;
 		using difference_type = std::ptrdiff_t;
-		using pointer = void;
-		using reference = void;
+		using pointer = collection::pointer;
+		using reference = collection::reference;
+		using const_reference = collection::const_reference;
 		using iterator_category = std::output_iterator_tag;
 
 		// --------------------------------------------------------------------
@@ -88,9 +90,7 @@ namespace collections {
 		/// <returns>
 		/// Returns the iterator after insertion.
 		/// </returns> --------------------------------------------------------
-		back_insert_iterator& operator=(
-			const typename collection::value_type& value
-		) {
+		back_insert_iterator& operator=(const_reference value) {
 			_collection.insertBack(value);
 			return *this;
 		}
@@ -108,9 +108,7 @@ namespace collections {
 		/// <returns>
 		/// Returns the iterator after insertion.
 		/// </returns> --------------------------------------------------------
-		back_insert_iterator& operator=(
-			typename collection::value_type&& value
-		) {
+		back_insert_iterator& operator=(value_type&& value) {
 			_collection.insertBack(std::move(value));
 			return *this;
 		}
@@ -156,7 +154,6 @@ namespace collections {
 
 	private:
 		collection& _collection;
-
 	};
 
 	// ------------------------------------------------------------------------
