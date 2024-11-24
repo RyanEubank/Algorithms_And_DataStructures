@@ -470,7 +470,7 @@ namespace collections {
 		/// <returns>
 		/// Returns a pointer to the internal array.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] pointer asRawArray() noexcept {
+		[[nodiscard]] pointer asRawPointer() noexcept {
 			return _begin;
 		}
 
@@ -482,7 +482,7 @@ namespace collections {
 		/// <returns>
 		/// Returns a const pointer to the internal array.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] const_pointer asRawArray() const noexcept {
+		[[nodiscard]] const_pointer asRawPointer() const noexcept {
 			return _begin;
 		}
 

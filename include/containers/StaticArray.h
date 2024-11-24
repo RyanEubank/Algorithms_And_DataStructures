@@ -93,7 +93,7 @@ namespace collections {
 		/// <returns>
 		/// Returns the internal array as a raw pointer.
 		/// </returns> --------------------------------------------------------
-		constexpr pointer asRawArray() noexcept {
+		constexpr pointer asRawPointer() noexcept {
 			return this->_array;
 		}
 
@@ -105,7 +105,7 @@ namespace collections {
 		/// <returns>
 		/// Returns the internal array as a constant pointer.
 		/// </returns> --------------------------------------------------------
-		constexpr const_pointer asRawArray() const noexcept {
+		constexpr const_pointer asRawPointer() const noexcept {
 			return this->_array;
 		}
 
