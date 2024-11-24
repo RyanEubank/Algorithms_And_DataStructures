@@ -69,6 +69,65 @@ namespace collections {
 
 		// --------------------------------------------------------------------
 		/// <summary>
+		/// Fills the range given by the iterator pair with the specified value.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being repeated.
+		/// </typeparam>
+		/// <typeparam name="src_iterator">
+		/// The type of the inputr iterator being iterated over.
+		/// </typeparam>
+		/// <typeparam name="src_sentinel">
+		/// The type of the src sentinel or end iterator.
+		/// </typeparam>
+		/// <typeparam name="dest_iterator">
+		/// The type of the output iterator being iterated over.
+		/// </typeparam>
+		/// <typeparam name="src_sentinel">
+		/// The type of the destination sentinel or end iterator.
+		/// </typeparam>
+		/// 
+		/// <param name="src_begin">
+		/// The beginning iterator to start repeating from.
+		/// </param>
+		/// <param name="src_end">
+		/// The sentinel or end iterator to stop repeating from.
+		/// </param>
+		/// <param name="dest_begin">
+		/// The beginning iterator to start copying to.
+		/// </param>
+		/// <param name="dest_end">
+		/// The sentinel or end iterator to stop copying to.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the output begin iterator after it has be iterated to the 
+		/// end.
+		/// </returns> --------------------------------------------------------
+		template <
+			std::input_iterator src_iterator,
+			std::sentinel_for<src_iterator> src_sentinel,
+			class dest_iterator,
+			std::sentinel_for<dest_iterator> dest_sentinel
+		> requires std::output_iterator<dest_iterator, std::iter_value_t<dest_iterator>>
+		constexpr dest_iterator operator()(
+			dest_iterator dest_begin,
+			dest_sentinel dest_end,
+			src_iterator src_begin,
+			src_sentinel src_end
+		) const {
+			auto current = src_begin;
+			while (dest_begin != dest_end) {
+				*dest_begin++ = *current;
+				if (++current == src_end)
+					current = src_begin;
+			}
+			return dest_begin;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
 		/// Fills the given range with the specified value.
 		/// </summary>
 		/// 
@@ -98,6 +157,50 @@ namespace collections {
 			return (*this)
 				(std::ranges::begin(rg), std::ranges::end(rg), value);
 		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Fills the given range with the specified list of values to repeat.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being repeated.
+		/// </typeparam>
+		/// <typeparam name="range">
+		/// The type of the range being filled.
+		/// </typeparam>
+		/// 
+		/// <param name="rg">
+		/// The range to be filled.
+		/// </param>
+		/// <param name="values">
+		/// The list of values to repeat.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the starting iterator of the range after it has been 
+		/// iterated to the end.
+		/// </returns> --------------------------------------------------------
+		template <std::ranges::input_range input, class output>
+			requires std::ranges::output_range<output, std::ranges::range_value_t<output>>
+		constexpr std::ranges::borrowed_iterator_t<output> operator()(
+			output&& dest,
+			input&& src
+		) const {
+			if constexpr (std::ranges::sized_range<input> && 
+				std::ranges::sized_range<output>
+			) {
+				if (std::ranges::size(src) > std::ranges::size(dest))
+					throw std::invalid_argument("Sourse range larger than destination.");
+			}
+
+			return (*this) (
+				std::ranges::begin(dest), 
+				std::ranges::end(dest),
+				std::ranges::begin(src),
+				std::ranges::end(src)
+			);
+		}
 	};
 
 	struct fill_n_ {
@@ -117,15 +220,16 @@ namespace collections {
 		/// <param name="destination">
 		/// The beginning iterator to start filling at.
 		/// </param>
-		/// <param name="end">
-		/// The sentinel or end iterator to stop filling at.
+		/// <param name="count">
+		/// The number of times value is copied over.
 		/// </param>
 		/// <param name="value">
 		/// The value to fill the range with.
 		/// </param>
 		/// 
 		/// <returns>
-		/// Returns the start iterator after it has be iterated to the end.
+		/// Returns the destination iterator after it has been iterated count 
+		/// times.
 		/// </returns> --------------------------------------------------------
 		template <
 			class T,
@@ -138,6 +242,51 @@ namespace collections {
 		) const {
 			for (size_t i = 0; i < count; ++i)
 				*destination++ = value;
+			return destination;
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Fills the specified destination with repeated copies of values up
+		/// to count number of items.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being repeated.
+		/// </typeparam>
+		/// <typeparam name="iterator">
+		/// The type of the output iterator being iterated over.
+		/// </typeparam>
+		/// 
+		/// <param name="destination">
+		/// The beginning iterator to start filling at.
+		/// </param>
+		/// <param name="count">
+		/// The number of items to fill or repeat.
+		/// </param>
+		/// <param name="value">
+		/// The range of values to fill the destination with.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the destination iterator after it has be iterated to the 
+		/// end.
+		/// </returns> --------------------------------------------------------
+		template <
+			class iterator,
+			std::ranges::input_range input
+		> requires std::output_iterator<iterator, std::iter_value_t<iterator>>
+		constexpr iterator operator()(
+			iterator destination,
+			size_t count,
+			input&& values
+		) const {
+			auto current = values.begin();
+			for (size_t i = 0; i < count; ++i) {
+				*destination++ = *current;
+				if (++current == values.end())
+					current = values.begin();
+			}
 			return destination;
 		}
 
@@ -173,8 +322,47 @@ namespace collections {
 			size_t count,
 			const T& value
 		) const {
-			return (*this)
-				(std::ranges::begin(rg), count, value);
+			return (*this) (std::ranges::begin(rg), count, value);
+		}
+
+		// --------------------------------------------------------------------
+		/// <summary>
+		/// Fills the given destination range with the specified number of
+		/// repeated copies from the input range.
+		/// </summary>
+		/// 
+		/// <typeparam name="T">
+		/// The type of the value being inserted.
+		/// </typeparam>
+		/// <typeparam name="output">
+		/// The type of the range being filled.
+		/// </typeparam>
+		/// 
+		/// <param name="dest">
+		/// The range to be filled.
+		/// </param>
+		/// <param name="count">
+		/// The number of elements to fill.
+		/// </param>
+		/// <param name="values">
+		/// The range of values to fill the destination with.
+		/// </param>
+		/// 
+		/// <returns>
+		/// Returns the starting iterator of the range after it has been 
+		/// iterated to the end.
+		/// </returns> --------------------------------------------------------
+		template <
+			std::ranges::input_range input, 
+			class output
+		> requires 
+			std::ranges::output_range<output, std::ranges::range_value_t<output>>
+		constexpr std::ranges::borrowed_iterator_t<output> operator()(
+			output&& dest,
+			size_t count,
+			input&& values
+		) const {
+			return (*this) (std::ranges::begin(dest), count, values);
 		}
 	};
 
