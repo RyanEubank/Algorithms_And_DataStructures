@@ -1547,8 +1547,9 @@ namespace collections {
 		/// iteration over a doubly linked list.
 		/// </summary>
 		///
-		/// <typeparam name="element_t">
-		/// The type of the elements iterated over by the LinkedListIterator.
+		/// <typeparam name="isConst">
+		/// Whether the iterator is a const_iterator (iterates over const 
+		/// elements) or not.
 		/// </typeparam> -------------------------------------------------------
 		template <bool isConst>
 		class LinkedListIterator {

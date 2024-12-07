@@ -1672,8 +1672,9 @@ namespace collections {
 		/// over a singly linked list.
 		/// </summary>
 		///
-		/// <typeparam name="element_t">
-		/// The type of the elements iterated over by the ForwardListIterator.
+		/// <typeparam name="isConst">
+		/// Whether the iterator is a const_iterator (iterates over const 
+		/// elements) or not.
 		/// </typeparam> -------------------------------------------------------
 		template <bool isConst>
 		class ForwardListIterator {
@@ -1850,8 +1851,9 @@ namespace collections {
 		/// over a singly linked list.
 		/// </summary>
 		///
-		/// <typeparam name="element_t">
-		/// The type of the elements iterated over by the ForwardListIterator.
+		/// <typeparam name="isConst">
+		/// Whether the iterator is a const_iterator (iterates over const 
+		/// elements) or not.
 		/// </typeparam> -------------------------------------------------------
 		template <bool isConst>
 		class StableForwardListIterator { //TODO implement explicit conversion constructor from iterators -> stable_iterators and visa-versa

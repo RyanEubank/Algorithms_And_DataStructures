@@ -1881,7 +1881,8 @@ namespace collections::impl {
 		/// </summary>
 		///
 		/// <typeparam name="isConst">
-		/// Boolean whether the type is an iterator or const_iterator.
+		/// Whether the iterator is a const_iterator (iterates over const 
+		/// elements) or not.
 		/// </typeparam> --------------------------------------------------
 		template <bool isConst>
 		class BinaryTreeIterator { //TODO extract binary tree iterator as an adpater to a node type interface so it can e adapted to other 'nodes' like heap iterators
