@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <assert.h>
 #include <iterator>
 
 namespace collections {
@@ -49,9 +48,7 @@ namespace collections {
 		archetype operator++(int) { return *this; }
 
 		friend void operator,(const archetype&, const archetype&) = delete;
-		friend bool operator==(const archetype& lhs, const archetype& rhs) {
-			return true;
-		}
+		friend bool operator==(const archetype& lhs, const archetype& rhs) { return true; }
 	};
 
 	static_assert(std::input_iterator<input_iterator_archetype<int>>);
