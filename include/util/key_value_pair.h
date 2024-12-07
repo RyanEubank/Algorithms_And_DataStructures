@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <concepts>
 #include <compare>
 #include <type_traits>
 #include <utility>
