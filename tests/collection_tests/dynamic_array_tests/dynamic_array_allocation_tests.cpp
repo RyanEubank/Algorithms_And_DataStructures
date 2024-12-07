@@ -82,6 +82,20 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
+	/// Tests that the reserve constructor of a DynamicArray throws an exception
+	/// if attempting to allocate 0 bytes.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST(
+		AllocationTest,
+		ReserveConstructorThrowsOnAllocateZeroSize
+	) {
+		FORWARD_TEST_TYPES();
+		auto func = [](){ collection_type obj(Reserve{ 0 }); };
+		EXPECT_THROW(func(), std::exception);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
 	/// Tests that the trim method corrctly reallocates space to match the
 	/// size of the array's actual contents.
 	/// </summary> ------------------------------------------------------------
@@ -163,6 +177,29 @@ namespace collection_tests {
 
 	// ------------------------------------------------------------------------
 	/// <summary>
+	/// Tests that the reserve method of a DynamicArray throws an exception
+	/// if attempting to allocate 0 bytes.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST(
+		AllocationTest,
+		ReserveMethodThrowsOnAllocateZeroSize
+	) {
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
+
+		EXPECT_CALL(this->allocator(), allocate(3)).Times(1);
+		collection_type obj1{a, b, c };
+		collection_type obj2{};
+
+		auto func1 = [&](){ obj1.reserve(0); };
+		auto func2 = [&](){ obj2.reserve(0); };
+
+		EXPECT_THROW(func1(), std::exception);
+		EXPECT_THROW(func2(), std::exception);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
 	/// Tests that the resize method correctly allocates and constructs the 
 	/// requested elements on empty objects.
 	/// </summary> ------------------------------------------------------------
@@ -201,6 +238,29 @@ namespace collection_tests {
 		EXPECT_CALL(this->allocator(), deallocate(_, 3)).Times(1);
 		obj.resize(newSize, d);
 		EXPECT_CALL(this->allocator(), deallocate(_, newSize)).Times(1);
+	}
+
+	// ------------------------------------------------------------------------
+	/// <summary>
+	/// Tests that the resize method of a DynamicArray throws an exception
+	/// if attempting to resize to 0 bytes.
+	/// </summary> ------------------------------------------------------------
+	TYPED_TEST(
+		AllocationTest,
+		ResizeMethodThrowsOnAllocateZeroSize
+	) {
+		FORWARD_TEST_TYPES();
+		DECLARE_TEST_DATA();
+
+		EXPECT_CALL(this->allocator(), allocate(3)).Times(1);
+		collection_type obj1{a, b, c };
+		collection_type obj2{};
+
+		auto func1 = [&](){ obj1.resize(0); };
+		auto func2 = [&](){ obj2.resize(0); };
+
+		EXPECT_THROW(func1(), std::exception);
+		EXPECT_THROW(func2(), std::exception);
 	}
 
 	// ------------------------------------------------------------------------

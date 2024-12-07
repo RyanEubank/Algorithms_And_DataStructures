@@ -1465,6 +1465,7 @@ namespace collections {
 
 		static constexpr auto ERR_MAX_SIZE = "Capacity exceeds maximum size.\n";
 		static constexpr auto ERR_TOO_SMALL = "Capacity too small for contents.\n";
+		static constexpr auto ERR_ZERO_SIZE = "Cannot allocate zero size array.\n";
 
 		[[no_unique_address, msvc::no_unique_address]] 
 		allocator_type _allocator;
@@ -1684,6 +1685,8 @@ namespace collections {
 		}
 
 		void validateCapacity(size_type capacity) {
+			if (capacity == 0)
+				allocationError(ERR_ZERO_SIZE);
 			if (capacity >  max_size())
 				allocationError(ERR_MAX_SIZE);
 			if (capacity < size())
