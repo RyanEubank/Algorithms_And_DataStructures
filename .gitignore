@@ -4,7 +4,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 # manual testing and misc files
-manual/*.cpp
+manual/*
+!manual/CMakeLists.txt
 
 # User-specific files
 *.rsuser
