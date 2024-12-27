@@ -109,7 +109,7 @@ namespace collections {
 		/// <param name="alloc">
 		/// The allocator instance used by the array.
 		/// </param> -----------------------------------------------------------
-		constexpr explicit DynamicArray(const allocator_type& alloc) 
+		explicit DynamicArray(const allocator_type& alloc) 
 			noexcept(std::is_nothrow_copy_constructible_v<allocator_type>) :
 			_begin(nullptr),
 			_end(nullptr),
@@ -130,7 +130,7 @@ namespace collections {
 		/// <param name="copy">
 		/// The array to be copied.
 		/// </param> -----------------------------------------------------------
-		DynamicArray(const DynamicArray& copy) : DynamicArray(
+		constexpr DynamicArray(const DynamicArray& copy) : DynamicArray(
 			copy.begin(),
 			copy.end(),
 			alloc_traits::select_on_container_copy_construction(copy._allocator)) 
@@ -150,7 +150,7 @@ namespace collections {
 		/// <param name="other">
 		/// The array to be moved into this one.
 		/// </param> -----------------------------------------------------------
-		DynamicArray(DynamicArray&& other) 
+		constexpr DynamicArray(DynamicArray&& other) 
 			noexcept(std::is_nothrow_move_constructible_v<allocator_type>) : 
 			_begin(std::move(other._begin)),
 			_end(std::move(other._end)),
@@ -230,7 +230,7 @@ namespace collections {
 		/// The allocator instance used by the array. Default constructs the 
 		/// allocator if unspecified.
 		/// </param> ----------------------------------------------------------
-		DynamicArray(
+		constexpr DynamicArray(
 			std::initializer_list<value_type> init,
 			const allocator_type& alloc = allocator_type{}
 		) : DynamicArray(init.begin(), init.end(), alloc) {
@@ -403,7 +403,7 @@ namespace collections {
 		/// Returns a reference to the element at the specified index in the
 		/// array.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] reference operator[](size_type index) {
+		[[nodiscard]] constexpr reference operator[](size_type index) {
 			return _begin[index];
 		}
 
@@ -420,7 +420,7 @@ namespace collections {
 		/// Returns a const reference to the element at the specified index 
 		/// in the array.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] const_reference operator[](size_type index) const {
+		[[nodiscard]] constexpr const_reference operator[](size_type index) const {
 			return _begin[index];
 		}
 
@@ -470,7 +470,7 @@ namespace collections {
 		/// <returns>
 		/// Returns a pointer to the internal array.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] pointer asRawPointer() noexcept {
+		[[nodiscard]] constexpr pointer asRawPointer() noexcept {
 			return _begin;
 		}
 
@@ -482,7 +482,7 @@ namespace collections {
 		/// <returns>
 		/// Returns a const pointer to the internal array.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] const_pointer asRawPointer() const noexcept {
+		[[nodiscard]] constexpr const_pointer asRawPointer() const noexcept {
 			return _begin;
 		}
 
@@ -495,7 +495,7 @@ namespace collections {
 		/// Returns the capacity of the internal array, or total reserved 
 		/// space in number of elements it can hold.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] size_type capacity() const noexcept {
+		[[nodiscard]] constexpr size_type capacity() const noexcept {
 			return _final - _begin;
 		}
 
@@ -508,7 +508,7 @@ namespace collections {
 		/// Returns a reference to the allocator managing memory for the 
 		/// container.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] allocator_type allocator() const noexcept {
+		[[nodiscard]] constexpr allocator_type allocator() const noexcept {
 			return _allocator;
 		}
 
@@ -520,7 +520,7 @@ namespace collections {
 		/// <returns>
 		/// Returns the number of valid, constructed elements in the array.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] size_type size() const noexcept {
+		[[nodiscard]] constexpr size_type size() const noexcept {
 			return _end - _begin;
 		}
 
@@ -532,7 +532,7 @@ namespace collections {
 		/// <returns>
 		/// Returns the size limit of the container type.
 		/// </returns> ---------------------------------------------------------
-		[[nodiscard]] size_type max_size() const noexcept {
+		[[nodiscard]] constexpr size_type max_size() const noexcept {
 			return alloc_traits::max_size(_allocator);
 		}
 
@@ -544,7 +544,7 @@ namespace collections {
 		/// <returns>
 		/// Returns true is the array contains zero elements, false otherwise.
 		/// </returns> --------------------------------------------------------
-		[[nodiscard]] bool isEmpty() const noexcept {
+		[[nodiscard]] constexpr bool isEmpty() const noexcept {
 			return _end == _begin;
 		}
 
