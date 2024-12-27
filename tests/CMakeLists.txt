@@ -272,3 +272,14 @@ add_dependencies(
 	ternary_heap_size_tests
 	ternary_heap_interface_tests
 )
+
+package_add_test(matrix_constructor_tests collection_tests/matrix_tests/matrix_constructor_tests.cpp)
+package_add_test(matrix_access_tests collection_tests/matrix_tests/matrix_access_tests.cpp)
+
+add_custom_target(matrix_tests)
+add_dependencies(
+	matrix_tests
+	matrix_access_tests
+	matrix_constructor_tests
+)
+
